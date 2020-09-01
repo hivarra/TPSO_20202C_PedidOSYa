@@ -6,7 +6,22 @@
  */
 
 #include "shared.h"
+#define CONEXIONES_MAXIMAS 10
 
+pthread_mutex_t lock_logger;
+
+char* procesos_str[] = { "APP", "CLIENTE", "COMANDA", "RESTAURANTE", "SINDICATO", NULL };
+char* mensajes_str[] = { "HANDSHAKE"};
+
+char* get_nombre_proceso(int enum_proceso) {
+
+	return procesos_str[enum_proceso];
+}
+
+char* get_nombre_mensaje(int enum_mensaje) {
+
+	return mensajes_str[enum_mensaje];
+}
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso) {
 	t_log* logger = log_create(nombreLog, nombreProceso, false, LOG_LEVEL_INFO);
@@ -277,6 +292,14 @@ void exit_gracefully(int return_nr, t_log *logger) {
   destruir_logger(logger);
 
   exit(return_nr);
+}
+t_tipoProceso tipo_proceso_string_to_enum(char *sval) {
+	t_tipoProceso result = APP;
+	int i = 0;
+	for (i = 0; procesos_str[i] != NULL; ++i, ++result)
+		if (0 == strcmp(sval, procesos_str[i]))
+			return result;
+	return -1;
 }
 t_tipoMensaje tipo_mensaje_string_to_enum(char *sval) {
 	t_tipoMensaje result = HANDSHAKE;

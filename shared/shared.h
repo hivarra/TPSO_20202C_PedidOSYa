@@ -13,22 +13,16 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include <commons/log.h>
-#include <commons/config.h>
-#include <commons/string.h>
-#include <commons/bitarray.h>
-#include <commons/collections/list.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <pthread.h>
 #include <libgen.h>
 #include <semaphore.h>
-
-#define CONEXIONES_MAXIMAS 10
-pthread_mutex_t lock_logger;
-
-char* procesos_str[] = { "APP", "CLIENTE", "COMANDA", "RESTAURANTE", "SINDICATO", NULL };
-char* mensajes_str[] = { "HANDSHAKE"};
+#include <commons/log.h>
+#include <commons/config.h>
+#include <commons/string.h>
+#include <commons/bitarray.h>
+#include <commons/collections/list.h>
 
 /* ---------- Definición de tipos ---------- */
 typedef enum tipoProceso {
@@ -60,8 +54,8 @@ char* get_nombre_mensaje(int enum_mensaje);
 
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso);
+void loggear(t_log* logger, t_log_level level, const char* message_format, ...) ;
 void destruir_logger(t_log* logger);
-
 /* ---------- Configuración ---------- */
 t_config* cargarConfiguracion(char *nombreArchivo, t_log* logger);
 void destruir_config(t_config* config);
