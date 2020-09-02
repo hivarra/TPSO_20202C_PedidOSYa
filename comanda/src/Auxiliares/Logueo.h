@@ -8,7 +8,7 @@
 #ifndef AUXILIARES_LOGUEO_H_
 #define AUXILIARES_LOGUEO_H_
 
-#include "shared.h"
+#include <shared.h>
 #include "Configuracion.h"
 
 t_log* logger;

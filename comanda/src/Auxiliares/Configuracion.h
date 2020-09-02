@@ -8,7 +8,7 @@
 #ifndef AUXILIARES_CONFIGURACION_H_
 #define AUXILIARES_CONFIGURACION_H_
 
-#include "shared.h"
+#include <shared.h>
 #include "Logueo.h"
 
 // Definición de tipos

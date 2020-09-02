@@ -9,7 +9,7 @@
 #define AUXILIARES_CONEXION_H_
 #define IP_COMANDA "127.0.0.1"
 
-#include "shared.h"
+#include <shared.h>
 #include "Configuracion.h"
 
 int socket_comanda;
