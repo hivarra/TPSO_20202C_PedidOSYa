@@ -8,7 +8,7 @@
 #ifndef COMANDA_H_
 #define COMANDA_H_
 
-#include "shared.h"
+#include <shared.h>
 #include "Auxiliares/Logueo.h"
 #include "Auxiliares/Configuracion.h"
 #include "Auxiliares/Conexion.h"
