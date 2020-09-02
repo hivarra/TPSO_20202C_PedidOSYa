@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 //	inicializar_MQ();
 	/* 4. Escuchando conexiones*/
 //	escuchar_conexiones();
-
+	mostrar_propiedades();
 	destruir_logger(logger);
 
 	puts("Fin COMANDA");

@@ -23,6 +23,7 @@
 #include <commons/string.h>
 #include <commons/bitarray.h>
 #include <commons/collections/list.h>
+#include <commons/error.h>
 
 /* ---------- Definición de tipos ---------- */
 typedef enum tipoProceso {

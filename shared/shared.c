@@ -365,8 +365,8 @@ char* getConfigPath(char* nombre_archivo) {
 
 char* getLogPath(char* nombre_archivo) {
 
-	char* path = string_from_format("%s", getParentPath());
-	string_append(&path, "/log/");
+	char* path = string_new();
+	string_append(&path, "/home");
 	string_append(&path, nombre_archivo);
 	return path;
 }
