@@ -18,11 +18,11 @@ int main(int argc, char **argv) {
 	cargar_configuracion_comanda(path_config);
 	/* 2. Log */
 	cargar_logger_comanda();
+	mostrar_propiedades();
 	/* 3. Inicializo memoria*/
 //	inicializar_MQ();
 	/* 4. Escuchando conexiones*/
-//	escuchar_conexiones();
-	mostrar_propiedades();
+	escuchar_conexiones();
 	destruir_logger(logger);
 
 	puts("Fin COMANDA");
