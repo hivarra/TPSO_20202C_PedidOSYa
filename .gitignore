@@ -1,3 +1,6 @@
+# Lang files
+*.xml
+
 # Prerequisites
 *.d
 
