@@ -10,10 +10,11 @@
 
 #include <shared.h>
 #include "Auxiliares/Configuracion.h"
+#include "Auxiliares/Consola.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-t_log *logger;
+//t_log *logger;
 
 void configurarProceso(char **argv);
 

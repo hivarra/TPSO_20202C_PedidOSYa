@@ -17,6 +17,8 @@ int main(int argc, char **argv) {
 
 	configurarProceso(argv);
 
+	crearConsola();
+
 	return EXIT_SUCCESS;
 }
 
@@ -30,6 +32,6 @@ void configurarProceso(char **argv) {
 
 	/* 2. Log */
 	char* path_log = getLogPath(cliente_config.archivo_log);
-	printf("Path log: %s", path_log);
+	logger = configurar_logger(path_log, "cliente");
 
 }
