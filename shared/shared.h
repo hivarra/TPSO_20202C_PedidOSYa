@@ -46,6 +46,7 @@ typedef enum tipoMensaje {
 	OBTENER_PEDIDO,
 	FINALIZAR_PEDIDO,
 	TERMINAR_PEDIDO,
+	OBTENER_RECETA,
 	// Agregar los que falten
 	SALIR // Para la consola
 }t_tipoMensaje;
