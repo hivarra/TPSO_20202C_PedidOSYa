@@ -8,12 +8,28 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+
 #include "cliente.h"
 
-int main(void) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
-	printf("Checking si linkea shared lib...\npor ej. ParentPath:%s\n", getParentPath());
+int main(int argc, char **argv) {
+
+	//	printf("Checking si linkea shared lib...\npor ej. ParentPath:%s\n", getParentPath());
+
+	configurarProceso(argv);
+
 	return EXIT_SUCCESS;
+}
+
+void configurarProceso(char **argv) {
+
+	/* 0. Setear config path */
+	char* path_config = getConfigPath(argv[1]);
+
+	/* 1. Configuración */
+	cargarConfigCliente(path_config);
+
+	/* 2. Log */
+	char* path_log = getLogPath(cliente_config.archivo_log);
+	printf("Path log: %s", path_log);
+
 }
