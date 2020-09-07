@@ -9,6 +9,13 @@
 #define CLIENTE_H_
 
 #include <shared.h>
+#include "Auxiliares/Configuracion.h"
+#include "Auxiliares/Consola.h"
+#include <stdio.h>
+#include <stdlib.h>
 
+//t_log *logger;
+
+void configurarProceso(char **argv);
 
 #endif /* CLIENTE_H_ */

@@ -11,7 +11,23 @@
 pthread_mutex_t lock_logger;
 
 char* procesos_str[] = { "APP", "CLIENTE", "COMANDA", "RESTAURANTE", "SINDICATO", NULL };
-char* mensajes_str[] = { "HANDSHAKE"};
+char* mensajes_str[] = {
+		"HANDSHAKE"
+		, "CONSULTAR_RESTAURANTES"
+		, "SELECCIONAR_RESTAURANTE"
+		, "OBTENER_RESTAURANTE"
+		, "CONSULTAR_PLATOS"
+		, "CREAR_PEDIDO"
+		, "GUARDAR_PEDIDO"
+		, "ANADIR_PLATO"
+		, "GUARDAR_PLATO"
+		, "CONFIRMAR_PEDIDO"
+		, "PLATO_LISTO"
+		, "CONSULTAR_PEDIDO"
+		, "OBTENER_PEDIDO"
+		, "FINALIZAR_PEDIDO"
+		, "TERMINAR_PEDIDO"
+		, "SALIR"};
 
 char* get_nombre_proceso(int enum_proceso) {
 
