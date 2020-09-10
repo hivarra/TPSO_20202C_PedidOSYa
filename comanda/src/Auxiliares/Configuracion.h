@@ -13,11 +13,11 @@
 
 // Definición de tipos
 typedef struct {
-	int tamanio_memoria;
-	int tamanio_swap;
+	uint32_t tamanio_memoria;
+	uint32_t tamanio_swap;
 	char* algoritmo_reemplazo;
-	int puerto_comanda;
-	int frecuencia_compactacion;
+	uint32_t puerto_comanda;
+	uint32_t frecuencia_compactacion;
 	char* archivo_log;
 
 } t_comanda_conf;

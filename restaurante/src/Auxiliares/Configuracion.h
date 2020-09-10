@@ -13,12 +13,12 @@
 
 // Definición de tipos
 typedef struct {
-	int puerto_escucha;
+	uint32_t puerto_escucha;
 	char* ip_sindicato;
-	int puerto_sindicato;
+	uint32_t puerto_sindicato;
 	char* ip_app;
-	int puerto_app;
-	int quantum;
+	uint32_t puerto_app;
+	uint32_t quantum;
 	char* archivo_log;
 	char* algoritmo_planificacion;
 	char* nombre_restaurante;

@@ -7,6 +7,7 @@
 
 #ifndef SINDICATO_H_
 #define SINDICATO_H_
+#define PATH_LOG "/utnso/logs/sindicato.log"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +25,9 @@
 #include <semaphore.h>
 
 #include "shared.h"
-#include "Auxiliares/configuracion.h"
+#include "Auxiliares/Configuracion.h"
+#include "Auxiliares/Logueo.h"
+#include "Auxiliares/Conexion.h"
 
 
 
