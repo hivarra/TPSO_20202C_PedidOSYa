@@ -47,8 +47,9 @@ typedef enum tipoMensaje {
 	FINALIZAR_PEDIDO,
 	TERMINAR_PEDIDO,
 	OBTENER_RECETA,
+	SALIR
 	// Agregar los que falten
-	SALIR // Para la consola
+	// Para la consola
 }t_tipoMensaje;
 
 typedef struct {

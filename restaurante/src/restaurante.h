@@ -9,7 +9,10 @@
 #define RESTAURANTE_H_
 
 #include <shared.h>
-
+#include "Auxiliares/Logueo.h"
+#include "Auxiliares/Configuracion.h"
+#include "Auxiliares/Conexion.h"
+#include "Auxiliares/Utils.h"
 
 
 #endif /* RESTAURANTE_H_ */
