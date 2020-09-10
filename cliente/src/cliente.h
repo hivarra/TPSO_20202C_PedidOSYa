@@ -16,6 +16,6 @@
 
 //t_log *logger;
 
-void configurarProceso(char **argv);
+void configurarProceso();
 
 #endif /* CLIENTE_H_ */

@@ -30,23 +30,40 @@ int crearConsola() {
 	}
 }
 
-int procesar_comando(char *line) {
+void procesar_mensaje(char** parametros){
+	int socket = inicializar_conexion(parametros[0]);
+	procesar_solicitud(socket, parametros);
+	close(socket);
+}
 
-	printf("Se ingresó: %s\n", line);
+int inicializar_conexion(char* proceso){
+	t_tipoProceso proceso_enum = tipo_proceso_string_to_enum(proceso);
+	int socket;
 
-	char* comando = strtok(line, " ");
-	char* parametro;
-
-	t_tipoMensaje mensaje_e = tipo_mensaje_string_to_enum(comando);
-	if (mensaje_e == -1) {
-		log_error(logger, "CONSOLA: Se ingresó un comando desconocido: %s.", comando);
-	} else {
-		log_info(logger, "CONSOLA: Se ejecutó el comando %s.", comando);
+	switch(proceso_enum){
+	case APP :;
+		socket = conectar_a_servidor(cliente_config.ip_app, cliente_config.puerto_app, CLIENTE, APP, logger);
+		printf("Se creo la conexión con APP. Socket: %d\n", socket);
+		break;
+	case COMANDA :;
+		socket = conectar_a_servidor(cliente_config.ip_comanda, cliente_config.puerto_comanda, CLIENTE, COMANDA, logger);
+		printf("Se creo la conexión con COMANDA. Socket: %d\n", socket);
+		break;
+	case SINDICATO :;
+		socket = conectar_a_servidor(cliente_config.ip_sindicato, cliente_config.puerto_sindicato, CLIENTE, SINDICATO, logger);
+		printf("Se creo la conexión con SINDICATO. Socket: %d\n", socket);
+		break;
+	default:;
+		log_info(logger, "El proceso al que se intenta conectar no existe capo...");
+		break;
 	}
+	return socket;
+}
 
-	printf("Valor del enum: %d\n", mensaje_e);
+void procesar_solicitud(int socket, char** parametros){
+	t_tipoMensaje mensaje_enum = tipo_mensaje_string_to_enum(parametros[1]);
 
-	switch(mensaje_e) {
+	switch(mensaje_enum) {
 		case CONSULTAR_RESTAURANTES:;
 			break;
 		case SELECCIONAR_RESTAURANTE:;
@@ -77,11 +94,38 @@ int procesar_comando(char *line) {
 			break;
 		case SALIR:;
 			puts("Muchas gracias por utilizar PedidOS Ya!. Vuelva pronto!\n");
-			return -1;
+			break;
+//			return -1;
 		default:;
-			printf("No se reconoce el comando %s .\n", comando);
-
+			printf("No se reconoce el mensaje %s .\n", parametros[1]);
+			break;
 	}
+}
+
+int validar(char* parametro){
+	return parametro==NULL;
+}
+
+int procesar_comando(char *line) {
+
+	printf("Se ingresó: %s\n", line);
+	char** parametros = string_n_split(line,string_length(line), " ");
+
+	int i=0;
+	while(parametros[i]!=NULL){
+		printf("Parametro %d:%s\n", i, parametros[i]);
+		i++;
+	}
+	if (validar(parametros[0])){
+		log_info(logger, "Proceso inválido");
+		return -1;
+	}
+	if(validar(parametros[1])){
+		log_info(logger, "Mensaje inválido");
+		return -1;
+	}
+	pthread_t hilo_envio_mensajes;
+	pthread_create(&hilo_envio_mensajes, NULL, (void*)procesar_mensaje, parametros);
 
 	return 0;
 }

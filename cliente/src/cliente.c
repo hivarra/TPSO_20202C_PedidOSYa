@@ -11,26 +11,23 @@
 
 #include "cliente.h"
 
-int main(int argc, char **argv) {
+int main(void) {
 
 	//	printf("Checking si linkea shared lib...\npor ej. ParentPath:%s\n", getParentPath());
 
-	configurarProceso(argv);
+	configurarProceso();
 
 	crearConsola();
 
 	return EXIT_SUCCESS;
 }
 
-void configurarProceso(char **argv) {
+void configurarProceso() {
 
-	/* 0. Setear config path */
-	char* path_config = getConfigPath(argv[1]);
+	/* 0. Configuración */
+	cargarConfigCliente();
 
-	/* 1. Configuración */
-	cargarConfigCliente(path_config);
-
-	/* 2. Log */
+	/* 1. Log */
 	char* path_log = getLogPath(cliente_config.archivo_log);
 	logger = configurar_logger(path_log, "cliente");
 

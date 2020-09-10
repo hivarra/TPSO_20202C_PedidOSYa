@@ -7,6 +7,7 @@
 
 #ifndef AUXILIARES_CONFIGURACION_H_
 #define AUXILIARES_CONFIGURACION_H_
+#define PATH  "../config/cliente.config"
 
 #include <shared.h>
 
@@ -27,6 +28,6 @@ typedef struct {
 t_config* config;
 t_cliente_config cliente_config;
 
-void cargarConfigCliente(char* path);
+void cargarConfigCliente();
 
 #endif /* AUXILIARES_CONFIGURACION_H_ */

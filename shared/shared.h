@@ -121,12 +121,12 @@ void destruir_config(t_config* config);
 int definirSocket(t_log* logger);
 int bindearSocketYEscuchar(int socket, char *ip, int puerto, t_log* logger);
 int aceptarConexiones(int socket, t_log* logger);
-int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
+int conectar_a_servidor(char* ip, int puerto, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
 int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
-int enviarMensaje(int tipoProcesoEmisor, int id_proceso, int tipoMensaje, int len, void* content,
+int enviarMensaje(int tipoProcesoEmisor, int tipoMensaje, int len, void* content,
 		int socketReceptor, int tipoProcesoReceptor, t_log* logger);
 t_mensaje* recibirMensaje(int socketEmisor, t_log* logger);
-void* serializar(int tipoProceso, int id_proceso, int tipoMensaje, int len, void* content);
+void* serializar(int tipoProceso, int tipoMensaje, int len, void* content);
 t_mensaje* deserializar(void* buffer);
 void destruirMensaje(t_mensaje* msg);
 

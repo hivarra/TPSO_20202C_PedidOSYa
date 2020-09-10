@@ -7,9 +7,9 @@
 
 #include "Configuracion.h"
 
-void cargarConfigCliente(char* path) {
+void cargarConfigCliente() {
 
-	config = config_create(path);
+	config = config_create(PATH);
 
 	if (config_has_property(config, "IP_COMANDA"))
 		cliente_config.ip_comanda = config_get_string_value(config, "IP_COMANDA");
