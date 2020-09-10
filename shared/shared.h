@@ -53,9 +53,9 @@ typedef enum tipoMensaje {
 
 typedef struct {
 	t_tipoProceso 	tipoProceso;
-	int32_t			idProceso;
+	uint32_t			idProceso;
 	t_tipoMensaje 	tipoMensaje;
-	int32_t 		longitud;
+	uint32_t 		longitud;
 }__attribute__((packed)) t_header;
 
 
@@ -64,7 +64,46 @@ typedef struct {
 	void* 			content;
 }__attribute__((packed)) t_mensaje;
 
-/*TODO:Protocolos*/
+/*Protocolos*/
+
+typedef struct {
+	uint32_t longitud_restaurante;
+	char* nombre_restaurante;
+	uint32_t id_pedido;
+}__attribute__((packed)) t_guardar_pedido;
+
+typedef struct {
+	uint32_t longitud_restaurante;
+	char* nombre_restaurante;
+	uint32_t id_pedido;
+	uint32_t longitud_comida;
+	char* comida;
+	uint32_t cantidad_comida;
+}__attribute__((packed)) t_guardar_plato;
+
+typedef struct {
+	uint32_t id_pedido;
+}__attribute__((packed)) t_confirmar_pedido;
+
+typedef struct {
+	uint32_t longitud_restaurante;
+	char* nombre_restaurante;
+	uint32_t id_pedido;
+	uint32_t longitud_comida;
+	char* comida;
+}__attribute__((packed)) t_plato_listo;
+
+typedef struct {
+	uint32_t longitud_restaurante;
+	char* nombre_restaurante;
+	uint32_t id_pedido;
+}__attribute__((packed)) t_finalizar_pedido;
+
+typedef struct {
+	uint32_t longitud_restaurante;
+	char* nombre_restaurante;
+	uint32_t id_pedido;
+}__attribute__((packed)) t_obtener_pedido;
 
 char* get_nombre_proceso(int enum_proceso);
 char* get_nombre_mensaje(int enum_mensaje);
