@@ -68,17 +68,14 @@ typedef struct {
 /*Protocolos*/
 
 typedef struct {
-	uint32_t longitud_restaurante;
-	char* nombre_restaurante;
+	char nombre_restaurante[32];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_guardar_pedido;
 
 typedef struct {
-	uint32_t longitud_restaurante;
-	char* nombre_restaurante;
+	char nombre_restaurante[32];
 	uint32_t id_pedido;
-	uint32_t longitud_comida;
-	char* comida;
+	char comida[32];
 	uint32_t cantidad_comida;
 }__attribute__((packed)) t_guardar_plato;
 
@@ -87,22 +84,18 @@ typedef struct {
 }__attribute__((packed)) t_confirmar_pedido;
 
 typedef struct {
-	uint32_t longitud_restaurante;
-	char* nombre_restaurante;
+	char nombre_restaurante[32];
 	uint32_t id_pedido;
-	uint32_t longitud_comida;
-	char* comida;
+	char* comida[32];
 }__attribute__((packed)) t_plato_listo;
 
 typedef struct {
-	uint32_t longitud_restaurante;
-	char* nombre_restaurante;
+	char nombre_restaurante[32];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_finalizar_pedido;
 
 typedef struct {
-	uint32_t longitud_restaurante;
-	char* nombre_restaurante;
+	char nombre_restaurante[32];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_obtener_pedido;
 
