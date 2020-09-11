@@ -33,7 +33,6 @@ int crearConsola() {
 void procesar_mensaje(char** parametros){
 	int socket = inicializar_conexion(parametros[0]);
 	procesar_solicitud(socket, parametros);
-	close(socket);
 }
 
 int inicializar_conexion(char* proceso){
@@ -89,6 +88,7 @@ void procesar_solicitud(int socket, char** parametros){
 		case OBTENER_PEDIDO:;
 			break;
 		case FINALIZAR_PEDIDO:;
+			close(socket);
 			break;
 		case TERMINAR_PEDIDO:;
 			break;
@@ -110,7 +110,7 @@ int procesar_comando(char *line) {
 
 	printf("Se ingresó: %s\n", line);
 	char** parametros = string_n_split(line,string_length(line), " ");
-
+	/*TODO:liberar parametros*/
 	int i=0;
 	while(parametros[i]!=NULL){
 		printf("Parametro %d:%s\n", i, parametros[i]);

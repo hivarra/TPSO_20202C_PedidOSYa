@@ -48,8 +48,20 @@ void connection_handler(void* socket_emisor){
 	switch (msg->header.tipoMensaje) {
 
 	case GUARDAR_PEDIDO:
-		;
-//		TODO:
+//		t_guardar_pedido* msj_guardar_pedido = malloc(msg->header.longitud);
+//		memcpy(msj_guardar_pedido, msg->content, msg->header.longitud);
+//
+//		log_trace(logger, "MENSAJE GUARDAR_PEDIDO\n");
+//		log_trace(logger, "NOMBRE_RESTAURANTE: %s\n",
+//				msj_guardar_pedido->nombre_restaurante);
+//		log_trace(logger, "ID_PEDIDO: %d\n", msj_guardar_pedido->id_pedido);
+		/*TODO:*/
+//		int resultado = guardar_mensaje(msg->header.tipoMensaje, msj_guardar_pedido);
+//
+//		enviarMensaje(COMANDA, RESULTADO_GUARDAR, sizeof(int), &resultado, cliente_socket, msg->header.tipoProceso, logger);
+
+		free(msj_guardar_pedido);
+
 		break;
 
 	case GUARDAR_PLATO:

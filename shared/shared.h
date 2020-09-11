@@ -47,6 +47,7 @@ typedef enum tipoMensaje {
 	FINALIZAR_PEDIDO,
 	TERMINAR_PEDIDO,
 	OBTENER_RECETA,
+	RESULTADO_GUARDAR,
 	SALIR
 	// Agregar los que falten
 	// Para la consola
@@ -98,6 +99,10 @@ typedef struct {
 	char nombre_restaurante[32];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_obtener_pedido;
+
+typedef struct {
+	uint32_t resultado;
+}__attribute__((packed)) t_resultado_guardar;
 
 char* get_nombre_proceso(int enum_proceso);
 char* get_nombre_mensaje(int enum_mensaje);

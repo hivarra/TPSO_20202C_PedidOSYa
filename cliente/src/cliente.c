@@ -28,7 +28,6 @@ void configurarProceso() {
 	cargarConfigCliente();
 
 	/* 1. Log */
-	char* path_log = getLogPath(cliente_config.archivo_log);
-	logger = configurar_logger(path_log, "cliente");
+	logger = configurar_logger(cliente_config.archivo_log, "cliente");
 
 }
