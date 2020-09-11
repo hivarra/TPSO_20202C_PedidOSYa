@@ -34,12 +34,6 @@ void cargar_configuracion_comanda(char * path_config) {
 	} else {
 		error_show("Error al cargar PUERTO_ESCUCHA de archivo de configuracion");
 	}
-
-	if (config_has_property(config, "FRECUENCIA_COMPACTACION")) {
-		comanda_conf.frecuencia_compactacion = config_get_int_value(config, "FRECUENCIA_COMPACTACION");
-	} else {
-		error_show("Error al cargar FRECUENCIA_COMPACTACION de archivo de configuracion");
-	}
 	if (config_has_property(config, "ARCHIVO_LOG")) {
 		comanda_conf.archivo_log = config_get_string_value(config, "ARCHIVO_LOG");
 	} else {
@@ -55,6 +49,5 @@ void mostrar_propiedades() {
 	log_info(logger,"Tamanio swap: %d", comanda_conf.tamanio_swap);
 	log_info(logger,"Algoritmo reemplazo: %s", comanda_conf.algoritmo_reemplazo);
 	log_info(logger,"Puerto escucha: %d", comanda_conf.puerto_comanda);
-	log_info(logger,"Frecuencia compactacion: %d", comanda_conf.frecuencia_compactacion);
 	log_info(logger,"Archivo log: %s", comanda_conf.archivo_log);
 }

@@ -80,6 +80,7 @@ void cargar_configuracion_app(char * path_config) {
 	} else {
 		error_show("Error al cargar POSICION_REST_DEFAULT_Y de archivo de configuracion");
 	}
+	free(path_config);
 }
 void mostrar_propiedades() {
 

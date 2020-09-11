@@ -17,7 +17,6 @@ typedef struct {
 	uint32_t tamanio_swap;
 	char* algoritmo_reemplazo;
 	uint32_t puerto_comanda;
-	uint32_t frecuencia_compactacion;
 	char* archivo_log;
 
 } t_comanda_conf;

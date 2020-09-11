@@ -20,6 +20,7 @@ void cargarConfigSindicato(char* path) {
 	if (config_has_property(config, "MAGIC_NUMBER"))
 		sindicato_conf.magic_number = config_get_string_value(config, "MAGIC_NUMBER");
 
+	free(path);
 }
 void mostrar_propiedades() {
 

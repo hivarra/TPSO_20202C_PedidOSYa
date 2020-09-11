@@ -21,6 +21,5 @@ t_log* configurar_logger_comanda(char* nombreLog, char* nombreProceso) {
 }
 
 void cargar_logger_comanda(){
-	char* path_log = getLogPath(comanda_conf.archivo_log);
-	logger=configurar_logger_comanda(path_log, "comanda");
+	logger=configurar_logger_comanda(comanda_conf.archivo_log, "comanda");
 }

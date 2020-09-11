@@ -41,7 +41,7 @@ void connection_handler(void* socket_emisor){
 	msg = recibirMensaje(cliente_socket, logger);
 	log_info(logger, "Conexion de proceso:%s a COMANDA",
 					get_nombre_proceso(msg->header.tipoProceso));
-	enviarMensaje(COMANDA, 0, HANDSHAKE, 0, NULL, cliente_socket,
+	enviarMensaje(COMANDA, HANDSHAKE, 0, NULL, cliente_socket,
 			msg->header.tipoProceso, logger);
 	msg = recibirMensaje(cliente_socket, logger);
 

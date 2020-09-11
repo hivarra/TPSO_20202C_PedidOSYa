@@ -55,6 +55,7 @@ void cargar_configuracion_restaurante(char * path_config) {
 	} else {
 		error_show("Error al cargar NOMBRE_RESTAURANTE de archivo de configuracion");
 	}
+	free(path_config);
 }
 void mostrar_propiedades() {
 
