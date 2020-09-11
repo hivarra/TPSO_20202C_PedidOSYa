@@ -60,7 +60,7 @@ void connection_handler(void* socket_emisor){
 //
 //		enviarMensaje(COMANDA, RESULTADO_GUARDAR, sizeof(int), &resultado, cliente_socket, msg->header.tipoProceso, logger);
 
-		free(msj_guardar_pedido);
+//		free(msj_guardar_pedido);
 
 		break;
 
@@ -87,6 +87,9 @@ void connection_handler(void* socket_emisor){
 	case FINALIZAR_PEDIDO:
 		;
 //		TODO:
+		break;
+	case CLIENTE_RECIBE_INFO:
+		;
 		break;
 
 	default:

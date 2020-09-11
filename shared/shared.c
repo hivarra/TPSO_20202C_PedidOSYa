@@ -28,6 +28,8 @@ char* mensajes_str[] = {
 		, "FINALIZAR_PEDIDO"
 		, "TERMINAR_PEDIDO"
 		, "OBTENER_RECETA"
+		, "RESPUESTA_OK_FAIL"
+		, "CLIENTE_RECIBE_INFO"
 		, "SALIR"};
 
 char* get_nombre_proceso(int enum_proceso) {
