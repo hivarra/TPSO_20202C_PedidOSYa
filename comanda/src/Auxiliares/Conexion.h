@@ -13,8 +13,9 @@
 #include "Configuracion.h"
 
 int socket_comanda;
+int socket_cliente;
 
 void *escuchar_conexiones();
-void connection_handler(void *socket_emisor);
+void connection_handler(int *socket_emisor);
 
 #endif /* AUXILIARES_CONEXION_H_ */
