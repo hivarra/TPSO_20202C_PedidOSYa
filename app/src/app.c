@@ -25,6 +25,7 @@ int main(int argc, char **argv)  {
 	/*TODO:Quedarse escuchando peticiones de cliente y repartidores*/
 
 	destruir_logger(logger);
+	destruir_config(config);
 	puts("Fin APP");
 	return EXIT_SUCCESS;
 }

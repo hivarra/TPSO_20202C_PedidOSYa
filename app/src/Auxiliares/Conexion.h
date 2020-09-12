@@ -8,6 +8,14 @@
 #ifndef AUXILIARES_CONEXION_H_
 #define AUXILIARES_CONEXION_H_
 
+#define IP_APP "127.0.0.1"
 
+#include <shared.h>
+#include "Configuracion.h"
+
+int socket_app;
+
+void *escucharConexiones();
+void* atenderConexion();
 
 #endif /* AUXILIARES_CONEXION_H_ */
