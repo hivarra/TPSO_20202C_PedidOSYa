@@ -10,21 +10,35 @@
 
 #include "comanda.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
 	puts("Inicio COMANDA");
-	/* 0. Setear config path */
-	char* path_config = getConfigPath(argv[1]);
+
 	/* 1. Configuración */
+	char* path_config = getConfigPath(argv[1]);
 	cargar_configuracion_comanda(path_config);
+	free(path_config);
+
 	/* 2. Log */
 	cargar_logger_comanda();
 	mostrar_propiedades();
+
 	/* 3. Inicializo memoria*/
 //	inicializar_MQ();
+
+	/*Extra. Liberar bien con ctrl+c*/
+	signal(SIGINT, &signalHandler);
+
 	/* 4. Escuchando conexiones*/
 	escuchar_conexiones();
-	destruir_logger(logger);
 
+	return EXIT_FAILURE;
+}
+
+void signalHandler(int sig){
 	puts("Fin COMANDA");
-	return EXIT_SUCCESS;
+
+	destruir_logger(logger);
+	destruir_config(config);
+
+	exit(EXIT_SUCCESS);
 }
