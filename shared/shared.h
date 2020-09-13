@@ -106,6 +106,11 @@ typedef struct {
 	uint32_t respuesta_ok_fail;
 }__attribute__((packed)) t_respuesta_ok_fail;
 
+typedef struct {
+	uint32_t posX;
+	uint32_t posY;
+}__attribute__((packed)) t_restaurante;
+
 char* get_nombre_proceso(int enum_proceso);
 char* get_nombre_mensaje(int enum_mensaje);
 

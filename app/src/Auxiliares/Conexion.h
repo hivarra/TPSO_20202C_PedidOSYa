@@ -15,7 +15,7 @@
 
 int socket_app;
 
-void *escucharConexiones();
+void *crearServidor();
 void* atenderConexion();
 
 #endif /* AUXILIARES_CONEXION_H_ */

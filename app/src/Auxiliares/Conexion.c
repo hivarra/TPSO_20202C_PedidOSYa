@@ -7,7 +7,7 @@
 
 #include "Conexion.h"
 
-void *escucharConexiones() {
+void *crearServidor() {
 
 	/*Abro socket*/
 	socket_app = definirSocket(logger);
