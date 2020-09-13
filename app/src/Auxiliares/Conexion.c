@@ -67,6 +67,7 @@ void procesar_mensaje_restaurante(t_mensaje* msg, int socket_cliente) {
 
 	case HANDSHAKE:
 		;
+		log_info(logger, "Proceso: %s | Mensaje: %s", get_nombre_proceso(msg->header.tipoProceso), get_nombre_mensaje( msg->header.tipoMensaje));
 		t_restaurante* restaurante = msg->content;
 
 		imprimir_restaurante(restaurante);
@@ -75,6 +76,8 @@ void procesar_mensaje_restaurante(t_mensaje* msg, int socket_cliente) {
 		break;
 
 	case CONSULTAR_RESTAURANTES:
+		;
+		log_info(logger, "Proceso: %s | Mensaje: %s", get_nombre_proceso(msg->header.tipoProceso), get_nombre_mensaje( msg->header.tipoMensaje));
 //		t_guardar_pedido* msj_guardar_pedido = malloc(msg->header.longitud);
 //		memcpy(msj_guardar_pedido, msg->content, msg->header.longitud);
 //
