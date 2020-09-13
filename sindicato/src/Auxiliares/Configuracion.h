@@ -19,4 +19,5 @@ t_config *config;
 void cargarConfigSindicato(char* path);
 void mostrar_propiedades();
 
+
 #endif /* CONFIGURACION_H_ */
