@@ -10,6 +10,10 @@
 
 void cargar_configuracion_comanda(char * path_config) {
 	config = config_create(path_config);
+	if (config == NULL){
+		puts("Archivo de configuracion no valido\n");
+		exit(-1);
+	}
 
 	if (config_has_property(config, "TAMANIO_MEMORIA")) {
 		comanda_conf.tamanio_memoria = config_get_int_value(config, "TAMANIO_MEMORIA");
