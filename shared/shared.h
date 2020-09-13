@@ -107,6 +107,7 @@ typedef struct {
 }__attribute__((packed)) t_respuesta_ok_fail;
 
 typedef struct {
+	char nombre[100];
 	uint32_t posX;
 	uint32_t posY;
 }__attribute__((packed)) t_restaurante;
