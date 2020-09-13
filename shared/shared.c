@@ -10,37 +10,34 @@
 
 pthread_mutex_t lock_logger;
 
-char* procesos_str[] = { "APP", "CLIENTE", "COMANDA", "RESTAURANTE", "SINDICATO", NULL };
+char* procesos_str[] = {
+		"APP",
+		"CLIENTE",
+		"COMANDA",
+		"RESTAURANTE",
+		"SINDICATO"};
+
 char* mensajes_str[] = {
-		"HANDSHAKE"
-		, "CONSULTAR_RESTAURANTES"
-		, "SELECCIONAR_RESTAURANTE"
-		, "OBTENER_RESTAURANTE"
-		, "CONSULTAR_PLATOS"
-		, "CREAR_PEDIDO"
-		, "GUARDAR_PEDIDO"
-		, "ANADIR_PLATO"
-		, "GUARDAR_PLATO"
-		, "CONFIRMAR_PEDIDO"
-		, "PLATO_LISTO"
-		, "CONSULTAR_PEDIDO"
-		, "OBTENER_PEDIDO"
-		, "FINALIZAR_PEDIDO"
-		, "TERMINAR_PEDIDO"
-		, "OBTENER_RECETA"
-		, "RESPUESTA_OK_FAIL"
-		, "CLIENTE_RECIBE_INFO"
-		, "SALIR"};
+		"HANDSHAKE",
+		"CONSULTAR_RESTAURANTES",
+		"SELECCIONAR_RESTAURANTE",
+		"OBTENER_RESTAURANTE",
+		"CONSULTAR_PLATOS",
+		"CREAR_PEDIDO",
+		"GUARDAR_PEDIDO",
+		"ANADIR_PLATO",
+		"GUARDAR_PLATO",
+		"CONFIRMAR_PEDIDO",
+		"PLATO_LISTO",
+		"CONSULTAR_PEDIDO",
+		"OBTENER_PEDIDO",
+		"FINALIZAR_PEDIDO",
+		"TERMINAR_PEDIDO",
+		"OBTENER_RECETA",
+		"RESPUESTA_OK_FAIL",
+		"CLIENTE_RECIBE_INFO",
+		"SALIR"};
 
-char* get_nombre_proceso(int enum_proceso) {
-
-	return procesos_str[enum_proceso];
-}
-
-char* get_nombre_mensaje(int enum_mensaje) {
-
-	return mensajes_str[enum_mensaje];
-}
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso) {
 	t_log* logger = log_create(nombreLog, nombreProceso, false, LOG_LEVEL_INFO);
@@ -48,77 +45,40 @@ t_log* configurar_logger(char* nombreLog, char* nombreProceso) {
 	return logger;
 }
 
-void loggear(t_log* logger, t_log_level level, const char* message_format, ...) {
-
-	va_list arguments;
-	va_start(arguments, message_format);
-
-	char *message;
-
-	message = string_from_vformat(message_format, arguments);
-
-	switch (level) {
-	case LOG_LEVEL_TRACE:
-		;
-		pthread_mutex_lock(&lock_logger);
-		log_trace(logger, message);
-		pthread_mutex_unlock(&lock_logger);
-		break;
-	case LOG_LEVEL_DEBUG:
-		;
-		pthread_mutex_lock(&lock_logger);
-		log_debug(logger, message);
-		pthread_mutex_unlock(&lock_logger);
-		break;
-	case LOG_LEVEL_INFO:
-		;
-		pthread_mutex_lock(&lock_logger);
-		log_info(logger, message);
-		pthread_mutex_unlock(&lock_logger);
-		break;
-	case LOG_LEVEL_WARNING:
-		;
-		pthread_mutex_lock(&lock_logger);
-		log_warning(logger, message);
-		pthread_mutex_unlock(&lock_logger);
-		break;
-	case LOG_LEVEL_ERROR:
-		;
-		pthread_mutex_lock(&lock_logger);
-		log_error(logger, message);
-		pthread_mutex_unlock(&lock_logger);
-		break;
-	default:
-		break;
-	}
-
-	free(message);
-	va_end(arguments);
-}
 void destruir_logger(t_log* logger) {
-
 	if(logger!=NULL)
 		log_destroy(logger);
 }
 
 /* ---------- Configuración ---------- */
-t_config* cargarConfiguracion(char *nombreArchivo, t_log* logger) {
-	t_config* config = config_create(nombreArchivo);
-	if (!config) {
-		log_error(logger, "No se pudo abrir el archivo de configuración.");
-		return NULL;
-	}
-	log_info(logger,"Archivo de configuración OK.");
-	return config;
-}
-
 void destruir_config(t_config* config) {
-
 	if(config!=NULL)
 		config_destroy(config);
 }
 
 /* ---------- Conexión ---------- */
+int crear_conexion(char *ip, char *puerto){
+	struct addrinfo hints;
+	struct addrinfo *server_info;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	getaddrinfo(ip, puerto, &hints, &server_info);
+
+	int socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
+
+	if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1){
+		socket_cliente = -1;
+	}
+
+	freeaddrinfo(server_info);
+
+	return socket_cliente;
+}
+
 int definirSocket(t_log* logger) {
 
 	int nuevoSocket = socket(PF_INET, SOCK_STREAM, 0);
@@ -292,7 +252,7 @@ void destruirMensaje(t_mensaje* msg) {
 		free(msg);
 }
 
-/* ---------- Errores ---------- */
+/* ---------- Exit ---------- */
 void _exit_with_error(char* error_msg, void * buffer, t_log* logger) {
 
 	if (buffer != NULL)
@@ -303,7 +263,6 @@ void _exit_with_error(char* error_msg, void * buffer, t_log* logger) {
 	exit_gracefully(EXIT_FAILURE, logger);
 }
 
-
 void exit_gracefully(int return_nr, t_log *logger) {
 
   loggear(logger, LOG_LEVEL_INFO, "********* FIN DEL PROCESO *********");
@@ -311,21 +270,140 @@ void exit_gracefully(int return_nr, t_log *logger) {
 
   exit(return_nr);
 }
+
+/* ---------- Tipos mensajes y procesos ---------- */
+char* get_nombre_proceso(int enum_proceso) {
+
+	return procesos_str[enum_proceso];
+}
+
+char* get_nombre_mensaje(int enum_mensaje) {
+
+	return mensajes_str[enum_mensaje];
+}
+
 t_tipoProceso tipo_proceso_string_to_enum(char *sval) {
-	t_tipoProceso result = APP;
-	int i = 0;
-	for (i = 0; procesos_str[i] != NULL; ++i, ++result)
+	t_tipoProceso result;
+	for (int i = 0; procesos_str[i] != NULL; ++i, ++result)
 		if (0 == strcmp(sval, procesos_str[i]))
 			return result;
 	return -1;
 }
+
 t_tipoMensaje tipo_mensaje_string_to_enum(char *sval) {
-	t_tipoMensaje result = HANDSHAKE;
-	int i = 0;
-	for (i = 0; mensajes_str[i] != NULL; ++i, ++result)
+	t_tipoMensaje result;
+	for (int i = 0; mensajes_str[i] != NULL; ++i, ++result)
 		if (0 == strcmp(sval, mensajes_str[i]))
 			return result;
 	return -1;
+}
+
+/* ---------- Paths ---------- */
+char* getCurrentPath() {
+	long size;
+	char *buf;
+	char *ptr;
+
+	size = pathconf(".", _PC_PATH_MAX);
+
+	if ((buf = (char *)malloc((size_t)size)) != NULL)
+	    ptr = getcwd(buf, (size_t)size);
+
+	return ptr;
+}
+
+char* getParentPath() {
+	return dirname(getCurrentPath());
+}
+
+char* getConfigPath(char* nombre_archivo) {
+	char* path = string_from_format("%s/config/%s", getParentPath(), nombre_archivo);
+	return path;
+}
+
+/* ---------- Extras ---------- */
+uint64_t timestamp() {
+	struct timeval valor;
+	gettimeofday(&valor, NULL);
+	unsigned long long result = (((unsigned long long )valor.tv_sec) * 1000 + ((unsigned long) valor.tv_usec));
+	uint64_t tiempo = result;
+	return tiempo;
+}
+
+void liberar_lista(char** lista){
+	int contador = 0;
+	while(lista[contador] != NULL){
+	        free(lista[contador]);
+	        contador++;
+	}
+	free(lista);
+}
+
+
+/* ---------- Posiblemente no usados ---------- */
+char* getLogPath(char* nombre_archivo) {
+	char* path = string_new();
+	string_append(&path, "/home");
+	string_append(&path, nombre_archivo);
+	return path;
+}
+
+void loggear(t_log* logger, t_log_level level, const char* message_format, ...) {
+
+	va_list arguments;
+	va_start(arguments, message_format);
+
+	char *message;
+
+	message = string_from_vformat(message_format, arguments);
+
+	switch (level) {
+	case LOG_LEVEL_TRACE:
+		;
+		pthread_mutex_lock(&lock_logger);
+		log_trace(logger, message);
+		pthread_mutex_unlock(&lock_logger);
+		break;
+	case LOG_LEVEL_DEBUG:
+		;
+		pthread_mutex_lock(&lock_logger);
+		log_debug(logger, message);
+		pthread_mutex_unlock(&lock_logger);
+		break;
+	case LOG_LEVEL_INFO:
+		;
+		pthread_mutex_lock(&lock_logger);
+		log_info(logger, message);
+		pthread_mutex_unlock(&lock_logger);
+		break;
+	case LOG_LEVEL_WARNING:
+		;
+		pthread_mutex_lock(&lock_logger);
+		log_warning(logger, message);
+		pthread_mutex_unlock(&lock_logger);
+		break;
+	case LOG_LEVEL_ERROR:
+		;
+		pthread_mutex_lock(&lock_logger);
+		log_error(logger, message);
+		pthread_mutex_unlock(&lock_logger);
+		break;
+	default:
+		break;
+	}
+
+	free(message);
+	va_end(arguments);
+}
+
+t_config* cargarConfiguracion(char *nombreArchivo, t_log* logger) {
+	t_config* config = config_create(nombreArchivo);
+	if (!config) {
+		log_error(logger, "No se pudo abrir el archivo de configuración.");
+		return NULL;
+	}
+	log_info(logger,"Archivo de configuración OK.");
+	return config;
 }
 
 void eliminar_blancos(char *str)
@@ -354,37 +432,4 @@ void imprimir_lista_strings(t_list* lista, char* nombre_lista) {
 	} else {
 		printf("%s VACIOS \n", nombre_lista);
 	}
-}
-
-char* getCurrentPath() {
-	long size;
-	char *buf;
-	char *ptr;
-
-	size = pathconf(".", _PC_PATH_MAX);
-
-	if ((buf = (char *)malloc((size_t)size)) != NULL)
-	    ptr = getcwd(buf, (size_t)size);
-
-	return ptr;
-}
-
-char* getParentPath() {
-	return dirname(getCurrentPath());
-}
-
-char* getConfigPath(char* nombre_archivo) {
-
-	char* path = string_from_format("%s", getParentPath());
-	string_append(&path, "/config/");
-	string_append(&path, nombre_archivo);
-	return path;
-}
-
-char* getLogPath(char* nombre_archivo) {
-
-	char* path = string_new();
-	string_append(&path, "/home");
-	string_append(&path, nombre_archivo);
-	return path;
 }
