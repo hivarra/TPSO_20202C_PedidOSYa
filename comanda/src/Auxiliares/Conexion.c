@@ -9,7 +9,6 @@
 
 void *escuchar_conexiones(){
 	/*Abro socket*/
-	int* new_sock;
 	socket_comanda = definirSocket(logger);
 	/*Bind & Listen*/
 	if (bindearSocketYEscuchar(socket_comanda, IP_COMANDA , comanda_conf.puerto_comanda,
@@ -19,31 +18,25 @@ void *escuchar_conexiones(){
 	/*Atiendo solicitudes creando un hilo para cada una*/
 	while(1){
 		pthread_t hilo_conexion;
-		new_sock = malloc(sizeof(int));
+		int* new_sock = malloc(sizeof(int));
 
 		*new_sock = aceptarConexiones(socket_comanda, logger);
 
 		if(new_sock < 0)
 			log_error(logger, "Error al realizar ACCEPT.\n");
 
-		int* p_client = malloc(sizeof(int));
-		*p_client = *new_sock;
-
-		pthread_create(&hilo_conexion,NULL,(void*)connection_handler,p_client);
+		pthread_create(&hilo_conexion,NULL,(void*)connection_handler,new_sock);
 		pthread_detach(hilo_conexion);
 	}
 }
-void connection_handler(void* socket_emisor){
-
-	int cliente_socket = (*(int*) socket_emisor);
-	free(socket_emisor);
+void connection_handler(int* socket_emisor){
 	t_mensaje* msg = malloc(sizeof(t_mensaje));
-	msg = recibirMensaje(cliente_socket, logger);
+	msg = recibirMensaje(*socket_emisor, logger);
 	log_info(logger, "Conexion de proceso:%s a COMANDA",
 					get_nombre_proceso(msg->header.tipoProceso));
-	enviarMensaje(COMANDA, HANDSHAKE, 0, NULL, cliente_socket,
+	enviarMensaje(COMANDA, HANDSHAKE, 0, NULL, *socket_emisor,
 			msg->header.tipoProceso, logger);
-	msg = recibirMensaje(cliente_socket, logger);
+	msg = recibirMensaje(*socket_emisor, logger);
 
 	switch (msg->header.tipoMensaje) {
 
@@ -60,7 +53,7 @@ void connection_handler(void* socket_emisor){
 //
 //		enviarMensaje(COMANDA, RESULTADO_GUARDAR, sizeof(int), &resultado, cliente_socket, msg->header.tipoProceso, logger);
 
-		free(msj_guardar_pedido);
+//		free(msj_guardar_pedido);
 
 		break;
 

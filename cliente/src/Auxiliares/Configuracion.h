@@ -23,6 +23,7 @@ typedef struct {
 	char* archivo_log;
 	int posicion_x;
 	int posicion_y;
+	char* proceso_server;
 } t_cliente_config;
 
 t_config* config;

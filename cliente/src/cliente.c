@@ -13,11 +13,11 @@
 
 int main(void) {
 
-	//	printf("Checking si linkea shared lib...\npor ej. ParentPath:%s\n", getParentPath());
-
 	configurarProceso();
 
-	crearConsola();
+	crear_hilo_recepcion_mensajes();
+
+	leer_consola();
 
 	return EXIT_SUCCESS;
 }

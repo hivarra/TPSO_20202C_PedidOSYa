@@ -44,4 +44,8 @@ void cargarConfigCliente() {
 	if (config_has_property(config, "POSICION_Y"))
 		cliente_config.posicion_y = config_get_int_value(config, "POSICION_Y");
 
+	if (config_has_property(config, "PROCESO_SERVER"))
+			cliente_config.proceso_server = config_get_string_value(config,"PROCESO_SERVER");
+
+
 }

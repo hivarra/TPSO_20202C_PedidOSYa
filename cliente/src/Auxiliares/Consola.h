@@ -16,12 +16,16 @@
 #include "Logueo.h"
 #include "Configuracion.h"
 
+int socket_envio;
+int socket_recepcion;
 
-int crearConsola();
+void leer_consola();
+void _leer_consola();
 int procesar_comando(char *line);
-void procesar_mensaje(char** parametros);
-int inicializar_conexion(char* proceso);
-void procesar_solicitud(int socket, char** parametros);
+void procesar_solicitud(char** parametros);
+int conectar_a_server_de_config();
+void crear_hilo_recepcion_mensajes();
+void inicializar_conexion_recepcion();
 
 // Auxiliares de consola
 char **character_name_completion(const char *, int, int);

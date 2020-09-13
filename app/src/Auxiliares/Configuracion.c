@@ -98,7 +98,7 @@ void mostrar_propiedades() {
 	int i=0;
 	while(app_conf.repartidores[i]){
 		log_info(logger, "REPARTIDOR %d", i+1);
-		log_info(logger, "Repartidore:%s", app_conf.repartidores[i]);
+		log_info(logger, "Posicion:%s", app_conf.repartidores[i]);
 		log_info(logger, "Frecuencia de descanso:%s", app_conf.frecuencias_descanso[i]);
 		log_info(logger, "Tiempo de descanso:%s", app_conf.tiempos_descanso[i]);
 		i++;

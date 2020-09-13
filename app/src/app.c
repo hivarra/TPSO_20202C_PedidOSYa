@@ -22,9 +22,61 @@ int main(int argc, char **argv)  {
 	mostrar_propiedades();
 	/* 3. Conexion*/
 	/*TODO:Conectarse a comanda*/
-	/*TODO:Quedarse escuchando peticiones de cliente y repartidores*/
 
+	/*TODO:Quedarse escuchando peticiones de cliente y repartidores*/
+	pthread_create(&hilo_servidor,NULL,(void*)crearServidor,NULL);
+
+	inicializar();
+
+	pthread_join(hilo_servidor, NULL);
 	destruir_logger(logger);
+	destruir_config(config);
 	puts("Fin APP");
 	return EXIT_SUCCESS;
+}
+
+void inicializar() {
+
+	iniciarListas();
+	iniciarRestauranteDefault();
+	iniciarRepartidores();
+}
+
+void iniciarListas() {
+
+	restaurantes = list_create();
+}
+
+void iniciarRestauranteDefault() {
+
+	restaurante_default = malloc(sizeof(t_restaurante));
+	strcpy(restaurante_default->nombre, "DEFAULT");
+	restaurante_default->posX = app_conf.pos_rest_default_x;
+	restaurante_default->posY = app_conf.pos_rest_default_y;
+}
+
+void iniciarRepartidores() {
+
+	int i = 0;
+	while(app_conf.repartidores[i] != NULL) {
+
+		char** coordenada = string_split(app_conf.repartidores[i], "|");
+
+		t_repartidor* repartidor = malloc(sizeof(t_repartidor));
+		repartidor->id = i + 1;
+		repartidor->posX = atoi(coordenada[0]);
+		repartidor->posY = atoi(coordenada[1]);
+		repartidor->frecuenciaDescanso = atoi(app_conf.frecuencias_descanso[i]);
+		repartidor->tiempoDescanso = atoi(app_conf.tiempos_descanso[i]);
+		i++;
+
+		imprimirRepartidor(repartidor);
+	}
+
+}
+
+void imprimirRepartidor(t_repartidor* repartidor) {
+
+	log_info(logger, "Repartidor N° %d | PosX: %d | PosY: %d | Descanso: %d | Duración: %d", repartidor->id, repartidor->posX, repartidor->posY, repartidor->frecuenciaDescanso, repartidor->tiempoDescanso);
+
 }
