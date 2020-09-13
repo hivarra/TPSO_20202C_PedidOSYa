@@ -54,6 +54,7 @@ typedef enum tipoMensaje {
 	TERMINAR_PEDIDO,
 	OBTENER_RECETA,
 	RESULTADO_GUARDAR,
+	RESPUESTA_OK_FAIL,
 	SALIR
 	// Agregar los que falten
 	// Para la consola
