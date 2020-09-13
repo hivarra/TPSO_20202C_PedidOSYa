@@ -27,6 +27,7 @@ t_restaurante* restaurante_default;
 
 void inicializar();
 void iniciarListas();
+void iniciarSemaforos();
 void iniciarRestauranteDefault();
 void iniciarRepartidores();
 void imprimirRepartidor(t_repartidor* repartidor);
