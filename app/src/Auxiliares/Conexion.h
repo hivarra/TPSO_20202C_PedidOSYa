@@ -14,8 +14,12 @@
 #include "Configuracion.h"
 
 int socket_app;
+t_list* restaurantes;
 
 void *crearServidor();
 void* atenderConexion();
+void procesar_mensaje_restaurante(t_mensaje* msg, int socket_cliente);
+void procesar_mensaje_cliente(t_mensaje* msg, int socket_cliente);
+void imprimir_restaurante(t_restaurante* restaurante);
 
 #endif /* AUXILIARES_CONEXION_H_ */

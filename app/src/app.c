@@ -28,6 +28,7 @@ int main(int argc, char **argv)  {
 
 	inicializar();
 
+	pthread_join(hilo_servidor, NULL);
 	destruir_logger(logger);
 	destruir_config(config);
 	puts("Fin APP");
@@ -36,13 +37,20 @@ int main(int argc, char **argv)  {
 
 void inicializar() {
 
+	iniciarListas();
 	iniciarRestauranteDefault();
 	iniciarRepartidores();
+}
+
+void iniciarListas() {
+
+	restaurantes = list_create();
 }
 
 void iniciarRestauranteDefault() {
 
 	restaurante_default = malloc(sizeof(t_restaurante));
+	strcpy(restaurante_default->nombre, "DEFAULT");
 	restaurante_default->posX = app_conf.pos_rest_default_x;
 	restaurante_default->posY = app_conf.pos_rest_default_y;
 }
@@ -64,7 +72,6 @@ void iniciarRepartidores() {
 
 		imprimirRepartidor(repartidor);
 	}
-
 
 }
 
