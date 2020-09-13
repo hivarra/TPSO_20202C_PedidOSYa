@@ -317,7 +317,9 @@ char* getParentPath() {
 }
 
 char* getConfigPath(char* nombre_archivo) {
-	char* path = string_from_format("%s/config/%s", getParentPath(), nombre_archivo);
+	char* parentPath = getParentPath();
+	char* path = string_from_format("%s/config/%s", parentPath, nombre_archivo);
+	free(parentPath);
 	return path;
 }
 
