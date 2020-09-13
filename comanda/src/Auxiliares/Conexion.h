@@ -15,7 +15,6 @@
 int socket_comanda;
 int socket_cliente;
 
-void *escuchar_conexiones();
-void connection_handler(int *socket_emisor);
+void escuchar_conexiones();
 
 #endif /* AUXILIARES_CONEXION_H_ */

@@ -14,12 +14,7 @@ void loguear_error_carga_propiedad(char* propiedad) {
 	log_error(logger, str);
 }
 
-t_log* configurar_logger_comanda(char* nombreLog, char* nombreProceso) {
-	t_log* logger = log_create(nombreLog, nombreProceso, false, LOG_LEVEL_TRACE);
-	log_info(logger, "*************** NUEVO LOG ***************");
-	return logger;
-}
-
 void cargar_logger_comanda(){
-	logger=configurar_logger_comanda(comanda_conf.archivo_log, "comanda");
+	logger = log_create(comanda_conf.archivo_log, "Comanda", 1, LOG_LEVEL_TRACE);
+	log_info(logger, "*************** NUEVO LOG ***************");
 }

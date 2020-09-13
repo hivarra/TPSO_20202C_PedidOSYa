@@ -16,7 +16,7 @@ typedef struct {
 	uint32_t tamanio_memoria;
 	uint32_t tamanio_swap;
 	char* algoritmo_reemplazo;
-	uint32_t puerto_comanda;
+	char* puerto_comanda;
 	char* archivo_log;
 
 } t_comanda_conf;

@@ -48,37 +48,46 @@ void inicializar_conexion_recepcion(){
 }
 int conectar_a_server_de_config(){
 	t_tipoProceso proceso_enum = tipo_proceso_string_to_enum(cliente_config.proceso_server);
+	int socket_aux;
 
 	switch(proceso_enum){
 	case APP :;
-		socket_envio = conectar_a_servidor(cliente_config.ip_app, cliente_config.puerto_app, CLIENTE, APP, logger);
-		printf("Se creo la conexión con APP. Socket: %d\n", socket_envio);
+		socket_aux = conectar_a_servidor(cliente_config.ip_app, cliente_config.puerto_app, CLIENTE, APP, logger);
+		log_info(logger, "Conectando con APP. Socket: %d\n", socket_aux);
 		break;
 	case COMANDA :;
-		socket_envio = conectar_a_servidor(cliente_config.ip_comanda, cliente_config.puerto_comanda, CLIENTE, COMANDA, logger);
-		printf("Se creo la conexión con COMANDA. Socket: %d\n", socket_envio);
+		socket_aux = conectar_a_servidor(cliente_config.ip_comanda, cliente_config.puerto_comanda, CLIENTE, COMANDA, logger);
+		log_info(logger, "Conectando con COMANDA. Socket: %d\n", socket_aux);
 		break;
 	case SINDICATO :;
-		socket_envio = conectar_a_servidor(cliente_config.ip_sindicato, cliente_config.puerto_sindicato, CLIENTE, SINDICATO, logger);
-		printf("Se creo la conexión con SINDICATO. Socket: %d\n", socket_envio);
+		socket_aux = conectar_a_servidor(cliente_config.ip_sindicato, cliente_config.puerto_sindicato, CLIENTE, SINDICATO, logger);
+		log_info(logger, "Conectando con SINDICATO. Socket: %d\n", socket_aux);
 		break;
 	default:;
 		log_info(logger, "El proceso al que se intenta conectar no existe capo...");
 		break;
 	}
-	if(socket_envio<0)
+	if(socket_aux<0)
 		log_error(logger,"Error al conectarse a %s", cliente_config.proceso_server);
 
-	return socket_envio;
+	return socket_aux;
 }
 void procesar_solicitud(char** parametros){
-	t_tipoMensaje mensaje_enum = tipo_mensaje_string_to_enum(parametros[1]);
+	t_tipoMensaje mensaje_enum = tipo_mensaje_string_to_enum(parametros[0]);
 	t_tipoProceso proceso_enum = tipo_proceso_string_to_enum(cliente_config.proceso_server);
 
-	log_info(logger, "Mensaje a enviar: %s\n", parametros[1]);
+	log_info(logger, "Mensaje a enviar: %s\n", parametros[0]);
 
 	switch(mensaje_enum) {
 		case CONSULTAR_RESTAURANTES:;
+
+			enviarMensaje(CLIENTE, mensaje_enum, 0, NULL, socket_envio, proceso_enum, logger);
+			log_info(logger, "Mensaje enviado: %s\n", parametros[0]);
+
+			t_mensaje* msg = recibirMensaje(socket_envio, logger);
+			int cantidad_restaurantes = *(int*) msg->content;
+
+			log_info(logger, "CONSULTAR_RESTAURANTES | Hay %d restaurantes", cantidad_restaurantes);
 			break;
 		case SELECCIONAR_RESTAURANTE:;
 			break;
@@ -120,7 +129,7 @@ void procesar_solicitud(char** parametros){
 			puts("Muchas gracias por utilizar PedidOS Ya!. Vuelva pronto!\n");
 			break;
 		default:;
-			printf("No se reconoce el mensaje %s .\n", parametros[1]);
+			printf("No se reconoce el mensaje %s .\n", parametros[0]);
 			break;
 	}
 }
@@ -133,7 +142,7 @@ int procesar_comando(char *line) {
 	/*TODO:liberar parametros*/
 	int i=0;
 	while(parametros[i]!=NULL){
-		printf("Parametro %d:%s\n", i, parametros[i]);
+		printf("Parametro %d: %s\n", i, parametros[i]);
 		i++;
 	}
 	if(validar(parametros[0])){
