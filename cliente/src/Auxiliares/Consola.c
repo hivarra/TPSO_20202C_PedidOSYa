@@ -31,6 +31,8 @@ void crear_hilo_recepcion_mensajes(){
 void inicializar_conexion_recepcion(){
 	socket_recepcion = conectar_a_server_de_config();
 
+	enviarMensaje(CLIENTE,CLIENTE_RECIBE_INFO, 0,NULL,socket_recepcion,COMANDA,logger);
+
 	while(1){
 		t_mensaje* msg = recibirMensaje(socket_recepcion,logger);
 
