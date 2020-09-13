@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 	mostrar_propiedades();
 	/* 3. Conexion*/
 	/*TODO:Conectarse a app ysindicato*/
-	conectar_a_servidor(restaurante_conf.ip_app, restaurante_conf.puerto_app, RESTAURANTE, APP, logger);
+	conectar_a_app();
 	/*TODO:Quedarse escuchando peticiones de cliente*/
 	destruir_logger(logger);
 	puts("Fin RESTAURANTE");
