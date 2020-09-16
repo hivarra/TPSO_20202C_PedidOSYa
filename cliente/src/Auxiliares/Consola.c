@@ -31,13 +31,16 @@ void crear_hilo_recepcion_mensajes(){
 void inicializar_conexion_recepcion(){
 	socket_recepcion = conectar_a_server_de_config();
 
-	enviarMensaje(CLIENTE,CLIENTE_RECIBE_INFO, 0,NULL,socket_recepcion,COMANDA,logger);
+	enviarMensaje(CLIENTE, cliente_config.id_cliente, CLIENTE_RECIBE_INFO, 0, NULL,socket_recepcion,COMANDA,logger);
 
 	while(1){
-		t_mensaje* msg = recibirMensaje(socket_recepcion,logger);
+		t_mensaje* msg = malloc(sizeof(t_mensaje));
+		msg = recibirMensaje(socket_recepcion,logger);
 
 		switch(msg->header.tipoMensaje){
 			case RESPUESTA_OK_FAIL:;
+				int resultado = *(int*)(msg->content);
+				log_info(logger, "Resultado:%s", resultado?"OK":"FAIL");
 				break;
 			default:;
 				log_info(logger, "No se reconoce el tipo de mensaje recibido");
@@ -52,15 +55,15 @@ int conectar_a_server_de_config(){
 
 	switch(proceso_enum){
 	case APP :;
-		socket_aux = conectar_a_servidor(cliente_config.ip_app, cliente_config.puerto_app, CLIENTE, APP, logger);
+		socket_aux = conectar_a_servidor(cliente_config.ip_app, cliente_config.puerto_app, cliente_config.id_cliente, CLIENTE, APP, logger);
 		log_info(logger, "Conectando con APP. Socket: %d\n", socket_aux);
 		break;
 	case COMANDA :;
-		socket_aux = conectar_a_servidor(cliente_config.ip_comanda, cliente_config.puerto_comanda, CLIENTE, COMANDA, logger);
+		socket_aux = conectar_a_servidor(cliente_config.ip_comanda, cliente_config.puerto_comanda, cliente_config.id_cliente, CLIENTE, COMANDA, logger);
 		log_info(logger, "Conectando con COMANDA. Socket: %d\n", socket_aux);
 		break;
 	case SINDICATO :;
-		socket_aux = conectar_a_servidor(cliente_config.ip_sindicato, cliente_config.puerto_sindicato, CLIENTE, SINDICATO, logger);
+		socket_aux = conectar_a_servidor(cliente_config.ip_sindicato, cliente_config.puerto_sindicato, cliente_config.id_cliente, CLIENTE, SINDICATO, logger);
 		log_info(logger, "Conectando con SINDICATO. Socket: %d\n", socket_aux);
 		break;
 	default:;
@@ -81,7 +84,7 @@ void procesar_solicitud(char** parametros){
 	switch(mensaje_enum) {
 		case CONSULTAR_RESTAURANTES:;
 
-			enviarMensaje(CLIENTE, mensaje_enum, 0, NULL, socket_envio, proceso_enum, logger);
+			enviarMensaje(CLIENTE, cliente_config.id_cliente , mensaje_enum, 0, NULL, socket_envio, proceso_enum, logger);
 			log_info(logger, "Mensaje enviado: %s\n", parametros[0]);
 
 			t_mensaje* msg = recibirMensaje(socket_envio, logger);
@@ -99,10 +102,10 @@ void procesar_solicitud(char** parametros){
 			break;
 		case GUARDAR_PEDIDO:;
 			t_guardar_pedido* guardar_pedido = malloc(sizeof(t_guardar_pedido));
-			strcpy(guardar_pedido->nombre_restaurante, parametros[0]);
-			guardar_pedido->id_pedido = atoi(parametros[1]);
+			strcpy(guardar_pedido->nombre_restaurante, parametros[1]);
+			guardar_pedido->id_pedido = atoi(parametros[2]);
 
-			enviarMensaje(CLIENTE, mensaje_enum, sizeof(t_guardar_pedido), guardar_pedido, socket_envio, proceso_enum, logger);
+			enviarMensaje(CLIENTE, cliente_config.id_cliente, mensaje_enum, sizeof(t_guardar_pedido), guardar_pedido, socket_envio, proceso_enum, logger);
 
 			free(guardar_pedido);
 

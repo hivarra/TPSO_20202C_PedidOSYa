@@ -26,7 +26,7 @@ int conectar_a_app() {
 	restaurante->posX = 0; // TODO: cambiar por info de Sindicato
 	restaurante->posY = 0; // TODO: cambiar por info de Sindicato
 
-	enviarMensaje(RESTAURANTE, HANDSHAKE, sizeof(t_restaurante), restaurante, socket_cliente, APP, logger);
+	enviarMensaje(RESTAURANTE, 0, HANDSHAKE, sizeof(t_restaurante), restaurante, socket_cliente, APP, logger);
 	t_mensaje* msg = recibirMensaje(socket_cliente, logger);
 	destruirMensaje(msg);
 //	loggear(logger,LOG_LEVEL_INFO, "FIN Handshake(%d)", tipoProcesoReceptor);

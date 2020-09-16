@@ -14,8 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//t_log *logger;
-
 void configurarProceso();
 
 #endif /* CLIENTE_H_ */

@@ -24,6 +24,7 @@ typedef struct {
 	int posicion_x;
 	int posicion_y;
 	char* proceso_server;
+	int id_cliente;
 } t_cliente_config;
 
 t_config* config;

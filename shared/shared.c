@@ -128,27 +128,27 @@ int aceptarConexiones(int socket, t_log* logger) {
 	return client_socket;
 }
 
-int conectar_a_servidor(char* ip, int puerto, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger) {
+int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger) {
 
 	int socket_cliente;
 
 	if((socket_cliente = definirSocket(logger))<= 0)
 	{
-//		log_error(logger, "CONEXION | No se pudo definir socket.");
+		log_error(logger, "CONEXION | No se pudo definir socket.");
 		return -1;
 	}
 
 	if(conectarseAServidor(socket_cliente, ip, puerto, logger)<=0)
 	{
-//		log_error(logger, "CONEXION | No se pudo conectar a servidor %s", get_nombre_proceso(tipoProcesoReceptor));
+		log_error(logger, "CONEXION | No se pudo conectar a servidor %s", get_nombre_proceso(tipoProcesoReceptor));
 		return -1;
 	}
 
-//	loggear(logger,LOG_LEVEL_INFO, "INICIO Handshake(%d)...", tipoProcesoReceptor);
-	enviarMensaje(tipoProcesoEmisor, HANDSHAKE, 0, NULL, socket_cliente, tipoProcesoReceptor, logger);
+	loggear(logger,LOG_LEVEL_INFO, "INICIO Handshake(%d)...", tipoProcesoReceptor);
+	enviarMensaje(tipoProcesoEmisor, id_proceso, HANDSHAKE, 0, NULL, socket_cliente, tipoProcesoReceptor, logger);
 	t_mensaje* msg = recibirMensaje(socket_cliente, logger);
 	destruirMensaje(msg);
-//	loggear(logger,LOG_LEVEL_INFO, "FIN Handshake(%d)", tipoProcesoReceptor);
+	loggear(logger,LOG_LEVEL_INFO, "FIN Handshake(%d)", tipoProcesoReceptor);
 	return socket_cliente;
 }
 
@@ -168,10 +168,10 @@ int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger) {
 	return 1;
 }
 
-int enviarMensaje(int tipoProcesoEmisor, int tipoMensaje, int len, void* content,
+int enviarMensaje(int tipoProcesoEmisor, int id_proceso, int tipoMensaje, int len, void* content,
 		int socketReceptor, int tipoProcesoReceptor, t_log* logger) {
 
-	void* buffer = serializar(tipoProcesoEmisor, tipoMensaje, len, content);
+	void* buffer = serializar(tipoProcesoEmisor, id_proceso, tipoMensaje, len, content);
 
 	if (len > 0 && content != NULL)
 		if (buffer == NULL) {
@@ -220,10 +220,11 @@ t_mensaje* recibirMensaje(int socketEmisor, t_log* logger) {
 	return msg;
 }
 
-void* serializar(int tipoProceso, int tipoMensaje, int len, void* content) {
+void* serializar(int tipoProceso,int id_proceso ,int tipoMensaje, int len, void* content) {
 
 	t_mensaje mensaje;
 	mensaje.header.tipoProceso = tipoProceso;
+	mensaje.header.idProceso = id_proceso;
 	mensaje.header.tipoMensaje = tipoMensaje;
 	mensaje.header.longitud = len;
 	mensaje.content = content;
@@ -283,7 +284,7 @@ char* get_nombre_mensaje(int enum_mensaje) {
 }
 
 t_tipoProceso tipo_proceso_string_to_enum(char *sval) {
-	t_tipoProceso result;
+	t_tipoProceso result = APP;
 	for (int i = 0; procesos_str[i] != NULL; ++i, ++result)
 		if (0 == strcmp(sval, procesos_str[i]))
 			return result;
@@ -291,7 +292,7 @@ t_tipoProceso tipo_proceso_string_to_enum(char *sval) {
 }
 
 t_tipoMensaje tipo_mensaje_string_to_enum(char *sval) {
-	t_tipoMensaje result;
+	t_tipoMensaje result = HANDSHAKE;
 	for (int i = 0; mensajes_str[i] != NULL; ++i, ++result)
 		if (0 == strcmp(sval, mensajes_str[i]))
 			return result;

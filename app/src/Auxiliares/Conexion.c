@@ -76,7 +76,7 @@ void procesar_mensaje_restaurante(t_mensaje* msg, int socket_cliente) {
 
 		imprimir_restaurante(restaurante);
 		agregarRestaurante(restaurante);
-		enviarMensaje(APP, HANDSHAKE, 0, NULL, socket_cliente, msg->header.tipoProceso, logger);
+		enviarMensaje(APP, 0,HANDSHAKE, 0, NULL, socket_cliente, msg->header.tipoProceso, logger);
 		break;
 
 	case SELECCIONAR_RESTAURANTE:
@@ -125,14 +125,14 @@ void procesar_mensaje_cliente(t_mensaje* msg, int socket_cliente) {
 	case HANDSHAKE:
 		;
 		log_info(logger, "Proceso: %s | Mensaje: %s", get_nombre_proceso(msg->header.tipoProceso), get_nombre_mensaje( msg->header.tipoMensaje));
-		enviarMensaje(APP, HANDSHAKE, 0, NULL, socket_cliente, msg->header.tipoProceso, logger);
+		enviarMensaje(APP, 0, HANDSHAKE, 0, NULL, socket_cliente, msg->header.tipoProceso, logger);
 		break;
 
 	case CONSULTAR_RESTAURANTES:
 
 		log_info(logger, "Proceso: %s | Mensaje: %s", get_nombre_proceso(msg->header.tipoProceso), get_nombre_mensaje( msg->header.tipoMensaje));
 		int cantidad_restaurantes = list_size(restaurantes);
-		enviarMensaje(APP, CONSULTAR_RESTAURANTES, sizeof(int), &cantidad_restaurantes, socket_cliente, msg->header.tipoProceso, logger);
+		enviarMensaje(APP, 0,CONSULTAR_RESTAURANTES, sizeof(int), &cantidad_restaurantes, socket_cliente, msg->header.tipoProceso, logger);
 //		t_guardar_pedido* msj_guardar_pedido = malloc(msg->header.longitud);
 //		memcpy(msj_guardar_pedido, msg->content, msg->header.longitud);
 //

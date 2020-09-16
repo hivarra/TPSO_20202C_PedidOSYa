@@ -55,6 +55,7 @@ typedef enum tipoMensaje {
 	OBTENER_RECETA,
 	RESULTADO_GUARDAR,
 	RESPUESTA_OK_FAIL,
+	CLIENTE_RECIBE_INFO,
 	SALIR
 	// Agregar los que falten
 	// Para la consola
@@ -131,11 +132,11 @@ int crear_conexion(char*, char*);//Recibe char* ip, char* puerto, y se conecta a
 int definirSocket(t_log* logger);
 int bindearSocketYEscuchar(int socket, char *ip, int puerto, t_log* logger);
 int aceptarConexiones(int socket, t_log* logger);
-int conectar_a_servidor(char* ip, int puerto, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
+int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
 int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
-int enviarMensaje(int tipoProcesoEmisor, int tipoMensaje, int len, void* content, int socketReceptor, int tipoProcesoReceptor, t_log* logger);
+int enviarMensaje(int tipoProcesoEmisor, int id_proceso, int tipoMensaje, int len, void* content, int socketReceptor, int tipoProcesoReceptor, t_log* logger);
 t_mensaje* recibirMensaje(int socketEmisor, t_log* logger);
-void* serializar(int tipoProceso, int tipoMensaje, int len, void* content);
+void* serializar(int tipoProceso, int id_proceso, int tipoMensaje, int len, void* content);
 t_mensaje* deserializar(void* buffer);
 void destruirMensaje(t_mensaje* msg);
 

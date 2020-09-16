@@ -47,5 +47,6 @@ void cargarConfigCliente() {
 	if (config_has_property(config, "PROCESO_SERVER"))
 			cliente_config.proceso_server = config_get_string_value(config,"PROCESO_SERVER");
 
-
+	if (config_has_property(config, "ID_CLIENTE"))
+			cliente_config.id_cliente = config_get_int_value(config, "ID_CLIENTE");
 }

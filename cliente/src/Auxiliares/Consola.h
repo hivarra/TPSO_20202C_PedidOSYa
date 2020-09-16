@@ -24,8 +24,8 @@ void _leer_consola();
 int procesar_comando(char *line);
 void procesar_solicitud(char** parametros);
 int conectar_a_server_de_config();
-void crear_hilo_recepcion_mensajes();
 void inicializar_conexion_recepcion();
+void crear_hilo_recepcion_mensajes();
 
 // Auxiliares de consola
 char **character_name_completion(const char *, int, int);
