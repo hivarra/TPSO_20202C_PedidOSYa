@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 	mostrar_propiedades();
 
 	/* 3. Inicializo memoria*/
-//	inicializar_MQ();
+	inicializar_memoria();
 
 	/*Extra. Liberar bien con ctrl+c*/
 	signal(SIGINT, &signalHandler);

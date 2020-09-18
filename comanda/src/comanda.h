@@ -14,6 +14,7 @@
 #include "Auxiliares/Configuracion.h"
 #include "Auxiliares/Conexion.h"
 #include "Auxiliares/Utils.h"
+#include "Auxiliares/MMU.h"
 
 void signalHandler(int);//Libera recursos al terminar con ctrl+c. Util para probar que recursos no se estan liberando.
 
