@@ -28,6 +28,7 @@ char* ruta_bloques;
 void montarFileSystem();
 void crearDirectorio(char *path);
 void crearMetadataDirectorio(char* ruta);
+int existeDirectorio(char *path);
 
 
 #endif /* AUXILIARES_FILESYSTEM_H_ */

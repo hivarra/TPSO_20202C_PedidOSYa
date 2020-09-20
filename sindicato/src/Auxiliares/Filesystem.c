@@ -5,7 +5,6 @@
  *      Author: utnso
  */
 
-
 #include "Filesystem.h"
 
 #define BLOCK_SIZE 64
@@ -14,9 +13,9 @@
 
 void montarFileSystem() {
 
-//	if(!existeDirectorio(sindicato_conf.punto_montaje_afip)) {
+	if (!existeDirectorio(sindicato_conf.punto_montaje)) {
 
-//		crearDirectorio(gamecard_conf.punto_montaje_tallgrass);
+		crearDirectorio(sindicato_conf.punto_montaje);
 //		crearMetadataGlobal();
 //		crearBitmap();
 //		crearDirectorioFiles();
@@ -25,11 +24,11 @@ void montarFileSystem() {
 
 		log_info(logger, "File System: Creación finalizada");
 
-//	} else {
+	} else {
 
-//		ruta_files = string_new();
-//		string_append(&ruta_files, gamecard_conf.punto_montaje_tallgrass);
-//		string_append(&ruta_files, "/Files/");
+		ruta_files = string_new();
+		string_append(&ruta_files, sindicato_conf.punto_montaje);
+		string_append(&ruta_files, "/Files/");
 //
 //		char* rutaBitmap = string_new();
 //		string_append(&rutaBitmap, gamecard_conf.punto_montaje_tallgrass);
@@ -46,14 +45,14 @@ void montarFileSystem() {
 		log_info(logger, "File System: Ya existe");
 	}
 
-//}
+}
 
 void crearDirectorio(char *path) {
 
-	struct stat st = {0};
+	struct stat st = { 0 };
 
-	if(stat(path, &st) == -1 ) {
-		if(mkdir(path, 0777) == -1) {
+	if (stat(path, &st) == -1) {
+		if (mkdir(path, 0777) == -1) {
 			perror("mkdir");
 			log_error(logger, "CREAR_DIR: ERROR. PERMISOS %s", path);
 		} else {
@@ -67,7 +66,7 @@ void crearDirectorio(char *path) {
 
 void crearMetadataDirectorio(char* ruta) {
 
-	char* ruta_archivo = string_from_format("%s/Metadata.bin", ruta );
+	char* ruta_archivo = string_from_format("%s/Metadata.bin", ruta);
 //	log_info(logger, "%s", ruta_archivo);
 	FILE* fp = fopen(ruta_archivo, "w");
 	char* contenido = string_new();
@@ -79,5 +78,17 @@ void crearMetadataDirectorio(char* ruta) {
 	free(contenido);
 	free(ruta_archivo);
 	fclose(fp);
+
+}
+int existeDirectorio(char *path) {
+
+	struct stat st = { 0 };
+
+	if (stat(path, &st) != -1) {
+		log_info(logger, "El directorio %s ya existe", path);
+		return 1;
+	} else {
+		return 0;
+	}
 
 }
