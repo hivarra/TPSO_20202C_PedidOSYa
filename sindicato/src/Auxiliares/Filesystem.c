@@ -49,85 +49,6 @@ void montarFileSystem() {
 
 }
 
-void crearDirectorio(char *path) {
-
-	struct stat st = { 0 };
-
-	if (stat(path, &st) == -1) {
-		if (mkdir(path, 0777) == -1) {
-			perror("mkdir");
-			log_error(logger, "CREAR_DIR: ERROR. PERMISOS %s", path);
-		} else {
-			crearMetadataDirectorio(path);
-		}
-	} else {
-//		log_info(logger, "CREAR_DIR: WARNING. YA EXISTE %s", path);
-	}
-
-}
-
-void crearMetadataDirectorio(char* ruta) {
-
-	char* ruta_archivo = string_from_format("%s/Metadata.bin", ruta);
-//	log_info(logger, "%s", ruta_archivo);
-	FILE* fp = fopen(ruta_archivo, "w");
-	char* contenido = string_new();
-	string_append(&contenido, "DIRECTORY=Y");
-
-//	log_info(logger, "Contenido Metadata: %s", contenido);
-
-	fputs(contenido, fp);
-	free(contenido);
-	free(ruta_archivo);
-	fclose(fp);
-
-}
-int existeDirectorio(char *path) {
-
-	struct stat st = { 0 };
-
-	if (stat(path, &st) != -1) {
-		log_info(logger, "El directorio %s ya existe", path);
-		return 1;
-	} else {
-		return 0;
-	}
-
-}
-
-void crearMetadataGlobal() {
-
-	char* rutaMetadata = string_new();
-	string_append(&rutaMetadata, sindicato_conf.punto_montaje);
-	string_append(&rutaMetadata, "/Metadata/");
-
-	crearDirectorio(rutaMetadata);
-	string_append(&rutaMetadata, "Metadata.bin");
-
-	FILE *file = fopen(rutaMetadata, "w");
-	char* buffer = string_new();
-	string_append(&buffer, "BLOCK_SIZE=");
-	string_append(&buffer, string_itoa(sindicato_conf.block_size));
-	tamanio_bloques = sindicato_conf.block_size;
-	string_append(&buffer, "\n");
-
-	string_append(&buffer, "BLOCKS=");
-	string_append(&buffer, string_itoa(sindicato_conf.blocks));
-	cantidad_bloques = sindicato_conf.blocks;
-	string_append(&buffer, "\n");
-
-	string_append(&buffer, "MAGIC_NUMBER=");
-	string_append(&buffer, sindicato_conf.magic_number);
-	string_append(&buffer, "\n");
-
-	fputs(buffer, file);
-	log_info(logger, "Metadata global cargada");
-
-	fclose(file);
-	free(rutaMetadata);
-
-}
-
 void crearBitmap() {
 
 	char* rutaBitmap = string_new();
@@ -139,7 +60,8 @@ void crearBitmap() {
 	fclose(file);
 	int fd = open(rutaBitmap, O_RDWR);
 	ftruncate(fd, (cantidad_bloques / 8) + 1);
-	bmap = mmap(NULL, cantidad_bloques/8, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
+	bmap = mmap(NULL, cantidad_bloques / 8, PROT_WRITE | PROT_READ, MAP_SHARED,
+			fd, 0);
 	bitmap = bitarray_create_with_mode(bmap, cantidad_bloques / 8, MSB_FIRST);
 	msync(bmap, fd, MS_SYNC); // Para sincronizar el bitmap con el archivo físico.
 
@@ -164,7 +86,7 @@ void crearDirectorioFiles() {
 	log_info(logger, "Ruta Files creada.");
 }
 
-void crearDirectorioRestaurantes(){
+void crearDirectorioRestaurantes() {
 
 	char* ruta_restaurante = string_new();
 	string_append(&ruta_restaurante, ruta_files);
@@ -172,7 +94,7 @@ void crearDirectorioRestaurantes(){
 	crearDirectorio(ruta_restaurante);
 }
 
-void crearDirectorioRecetas(){
+void crearDirectorioRecetas() {
 
 	char* ruta_recetas = string_new();
 	string_append(&ruta_recetas, ruta_files);
@@ -188,9 +110,69 @@ void crearDirectorioBloques() {
 	log_info(logger, "Ruta Blocks creada.");
 }
 
+void crearDirectorio(char *path) {
+
+	struct stat st = { 0 };
+
+	if (stat(path, &st) == -1) {
+		if (mkdir(path, 0777) == -1) {
+			perror("mkdir");
+			log_error(logger, "CREAR_DIR: ERROR. PERMISOS %s", path);
+		} else {
+			crearMetadataDirectorio(path);
+		}
+	} else {
+//		log_info(logger, "CREAR_DIR: WARNING. YA EXISTE %s", path);
+	}
+
+}
+
+void crearMetadataDirectorio(char* ruta) {
+
+	char* ruta_archivo = string_from_format("%s/Metadata.AFIP", ruta);
+	FILE* fp = fopen(ruta_archivo, "w");
+	char* contenido = string_new();
+	string_append(&contenido, "DIRECTORY=Y");
+
+	fputs(contenido, fp);
+	free(contenido);
+	free(ruta_archivo);
+	fclose(fp);
+
+}
+
+void crearMetadataGlobal() {
+
+	char* rutaMetadata = string_new();
+	string_append(&rutaMetadata, sindicato_conf.punto_montaje);
+	string_append(&rutaMetadata, "/Metadata/");
+
+	crearDirectorio(rutaMetadata);
+	string_append(&rutaMetadata, "Metadata.AFIP");
+
+	FILE *file = fopen(rutaMetadata, "w");
+	char* buffer = string_new();
+	string_append(&buffer, "BLOCK_SIZE=");
+	string_append(&buffer, string_itoa(sindicato_conf.block_size));
+	tamanio_bloques = sindicato_conf.block_size;
+	string_append(&buffer, "\n");
+
+	string_append(&buffer, "BLOCKS=");
+	string_append(&buffer, string_itoa(sindicato_conf.blocks));
+	cantidad_bloques = sindicato_conf.blocks;
+	string_append(&buffer, "\n");
+
+	fputs(buffer, file);
+	log_info(logger, "Metadata global cargada");
+
+	fclose(file);
+	free(rutaMetadata);
+
+}
+
 void generarBloques() {
 
-	for(int i=0; i <= cantidad_bloques; i++) {
+	for (int i = 0; i <= cantidad_bloques; i++) {
 
 		char* nombre_bloque = string_new();
 		string_append(&nombre_bloque, ruta_bloques);
@@ -203,4 +185,17 @@ void generarBloques() {
 		free(nombre_bloque);
 	}
 	log_info(logger, "Bloques generados.");
+}
+
+int existeDirectorio(char *path) {
+
+	struct stat st = { 0 };
+
+	if (stat(path, &st) != -1) {
+		log_info(logger, "El directorio %s ya existe", path);
+		return 1;
+	} else {
+		return 0;
+	}
+
 }

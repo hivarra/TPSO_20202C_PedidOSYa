@@ -26,15 +26,15 @@ char* ruta_files;
 char* ruta_bloques;
 
 void montarFileSystem();
-void crearDirectorio(char *path);
-void crearMetadataDirectorio(char* ruta);
-int existeDirectorio(char *path);
-void crearMetadataGlobal();
 void crearBitmap();
+void crearDirectorio(char *path);
 void crearDirectorioFiles();
 void crearDirectorioRestaurantes();
 void crearDirectorioRecetas();
 void crearDirectorioBloques();
+void crearMetadataDirectorio(char* ruta);
+void crearMetadataGlobal();
 void generarBloques();
+int existeDirectorio(char *path);
 
 #endif /* AUXILIARES_FILESYSTEM_H_ */
