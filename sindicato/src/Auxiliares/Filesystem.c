@@ -18,7 +18,9 @@ void montarFileSystem() {
 		crearDirectorio(sindicato_conf.punto_montaje);
 		crearMetadataGlobal();
 		crearBitmap();
-//		crearDirectorioFiles();
+		crearDirectorioFiles();
+		crearDirectorioRestaurantes();
+		crearDirectorioRecetas();
 //		crearDirectorioBloques();
 //		generarBloques();
 
@@ -29,18 +31,18 @@ void montarFileSystem() {
 		ruta_files = string_new();
 		string_append(&ruta_files, sindicato_conf.punto_montaje);
 		string_append(&ruta_files, "/Files/");
-//
-//		char* rutaBitmap = string_new();
-//		string_append(&rutaBitmap, gamecard_conf.punto_montaje_tallgrass);
-//		string_append(&rutaBitmap, "/Metadata");
-//		string_append(&rutaBitmap, "/Bitmap.bin");
-//
-//		ruta_bloques = string_new();
-//		string_append(&ruta_bloques, gamecard_conf.punto_montaje_tallgrass);
-//		string_append(&ruta_bloques, "/Blocks/");
-//
-//		tamanio_bloques = gamecard_conf.block_size;
-//		cantidad_bloques = gamecard_conf.blocks;
+
+		char* rutaBitmap = string_new();
+		string_append(&rutaBitmap, sindicato_conf.punto_montaje);
+		string_append(&rutaBitmap, "/Metadata");
+		string_append(&rutaBitmap, "/Bitmap.bin");
+
+		ruta_bloques = string_new();
+		string_append(&ruta_bloques, sindicato_conf.punto_montaje);
+		string_append(&ruta_bloques, "/Blocks/");
+
+		tamanio_bloques = sindicato_conf.block_size;
+		cantidad_bloques = sindicato_conf.blocks;
 
 		log_info(logger, "File System: Ya existe");
 	}
@@ -151,4 +153,29 @@ void crearBitmap() {
 	close(fd);
 	free(rutaBitmap);
 
+}
+
+void crearDirectorioFiles() {
+
+	ruta_files = string_new();
+	string_append(&ruta_files, sindicato_conf.punto_montaje);
+	string_append(&ruta_files, "/Files/");
+	crearDirectorio(ruta_files);
+	log_info(logger, "Ruta Files creada.");
+}
+
+void crearDirectorioRestaurantes(){
+
+	char* ruta_restaurante = string_new();
+	string_append(&ruta_restaurante, ruta_files);
+	string_append(&ruta_restaurante, "/Restaurantes/");
+	crearDirectorio(ruta_restaurante);
+}
+
+void crearDirectorioRecetas(){
+
+	char* ruta_recetas = string_new();
+	string_append(&ruta_recetas, ruta_files);
+	string_append(&ruta_recetas, "/Recetas/");
+	crearDirectorio(ruta_recetas);
 }

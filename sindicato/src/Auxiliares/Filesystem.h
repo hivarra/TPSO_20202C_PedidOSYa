@@ -31,5 +31,7 @@ void crearMetadataDirectorio(char* ruta);
 int existeDirectorio(char *path);
 void crearMetadataGlobal();
 void crearBitmap();
-
+void crearDirectorioFiles();
+void crearDirectorioRestaurantes();
+void crearDirectorioRecetas();
 #endif /* AUXILIARES_FILESYSTEM_H_ */
