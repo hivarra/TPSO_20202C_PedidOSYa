@@ -21,8 +21,8 @@ void montarFileSystem() {
 		crearDirectorioFiles();
 		crearDirectorioRestaurantes();
 		crearDirectorioRecetas();
-//		crearDirectorioBloques();
-//		generarBloques();
+		crearDirectorioBloques();
+		generarBloques();
 
 		log_info(logger, "File System: Creación finalizada");
 
@@ -178,4 +178,29 @@ void crearDirectorioRecetas(){
 	string_append(&ruta_recetas, ruta_files);
 	string_append(&ruta_recetas, "/Recetas/");
 	crearDirectorio(ruta_recetas);
+}
+
+void crearDirectorioBloques() {
+	ruta_bloques = string_new();
+	string_append(&ruta_bloques, sindicato_conf.punto_montaje);
+	string_append(&ruta_bloques, "/Blocks/");
+	crearDirectorio(ruta_bloques);
+	log_info(logger, "Ruta Blocks creada.");
+}
+
+void generarBloques() {
+
+	for(int i=0; i <= cantidad_bloques; i++) {
+
+		char* nombre_bloque = string_new();
+		string_append(&nombre_bloque, ruta_bloques);
+		string_append(&nombre_bloque, string_itoa(i));
+		string_append(&nombre_bloque, ".afip");
+
+		FILE *fp = fopen(nombre_bloque, "w");
+		fclose(fp);
+
+		free(nombre_bloque);
+	}
+	log_info(logger, "Bloques generados.");
 }

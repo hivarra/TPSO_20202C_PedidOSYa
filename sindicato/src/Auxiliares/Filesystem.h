@@ -34,4 +34,7 @@ void crearBitmap();
 void crearDirectorioFiles();
 void crearDirectorioRestaurantes();
 void crearDirectorioRecetas();
+void crearDirectorioBloques();
+void generarBloques();
+
 #endif /* AUXILIARES_FILESYSTEM_H_ */
