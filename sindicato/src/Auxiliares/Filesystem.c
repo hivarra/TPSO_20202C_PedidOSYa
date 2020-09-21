@@ -16,8 +16,8 @@ void montarFileSystem() {
 	if (!existeDirectorio(sindicato_conf.punto_montaje)) {
 
 		crearDirectorio(sindicato_conf.punto_montaje);
-//		crearMetadataGlobal();
-//		crearBitmap();
+		crearMetadataGlobal();
+		crearBitmap();
 //		crearDirectorioFiles();
 //		crearDirectorioBloques();
 //		generarBloques();
@@ -90,5 +90,65 @@ int existeDirectorio(char *path) {
 	} else {
 		return 0;
 	}
+
+}
+
+void crearMetadataGlobal() {
+
+	char* rutaMetadata = string_new();
+	string_append(&rutaMetadata, sindicato_conf.punto_montaje);
+	string_append(&rutaMetadata, "/Metadata/");
+
+	crearDirectorio(rutaMetadata);
+	string_append(&rutaMetadata, "Metadata.bin");
+
+	FILE *file = fopen(rutaMetadata, "w");
+	char* buffer = string_new();
+	string_append(&buffer, "BLOCK_SIZE=");
+	string_append(&buffer, string_itoa(sindicato_conf.block_size));
+	tamanio_bloques = sindicato_conf.block_size;
+	string_append(&buffer, "\n");
+
+	string_append(&buffer, "BLOCKS=");
+	string_append(&buffer, string_itoa(sindicato_conf.blocks));
+	cantidad_bloques = sindicato_conf.blocks;
+	string_append(&buffer, "\n");
+
+	string_append(&buffer, "MAGIC_NUMBER=");
+	string_append(&buffer, sindicato_conf.magic_number);
+	string_append(&buffer, "\n");
+
+	fputs(buffer, file);
+	log_info(logger, "Metadata global cargada");
+
+	fclose(file);
+	free(rutaMetadata);
+
+}
+
+void crearBitmap() {
+
+	char* rutaBitmap = string_new();
+	string_append(&rutaBitmap, sindicato_conf.punto_montaje);
+	string_append(&rutaBitmap, "/Metadata");
+	string_append(&rutaBitmap, "/Bitmap.bin");
+
+	FILE *file = fopen(rutaBitmap, "w");
+	fclose(file);
+	int fd = open(rutaBitmap, O_RDWR);
+	ftruncate(fd, (cantidad_bloques / 8) + 1);
+	bmap = mmap(NULL, cantidad_bloques/8, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
+	bitmap = bitarray_create_with_mode(bmap, cantidad_bloques / 8, MSB_FIRST);
+	msync(bmap, fd, MS_SYNC); // Para sincronizar el bitmap con el archivo físico.
+
+	struct stat mystat;
+	if (fstat(fd, &mystat) < 0) {
+		log_error(logger, "Error al establecer fstat");
+	}
+	fstat(fd, &mystat);
+
+	log_info(logger, "Bitmap generado");
+	close(fd);
+	free(rutaBitmap);
 
 }
