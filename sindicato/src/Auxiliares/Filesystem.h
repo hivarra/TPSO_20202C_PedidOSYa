@@ -21,13 +21,20 @@ typedef struct {
 int tamanio_bloques;
 int cantidad_bloques;
 char* bmap;
-//t_bitarray *bitmap;
+t_bitarray *bitmap;
 char* ruta_files;
 char* ruta_bloques;
 
 void montarFileSystem();
+void crearBitmap();
 void crearDirectorio(char *path);
+void crearDirectorioFiles();
+void crearDirectorioRestaurantes();
+void crearDirectorioRecetas();
+void crearDirectorioBloques();
 void crearMetadataDirectorio(char* ruta);
-
+void crearMetadataGlobal();
+void generarBloques();
+int existeDirectorio(char *path);
 
 #endif /* AUXILIARES_FILESYSTEM_H_ */
