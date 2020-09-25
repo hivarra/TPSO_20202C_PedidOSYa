@@ -8,40 +8,39 @@
 #include "Conexion.h"
 
 void connection_handler(int* socket_emisor){
-	t_mensaje* msg = malloc(sizeof(t_mensaje));
-	msg = recibirMensaje(*socket_emisor, logger);
-	log_info(logger, "Conexion de proceso:%s a COMANDA",
-					get_nombre_proceso(msg->header.tipoProceso));
-	enviarMensaje(COMANDA, 0 ,HANDSHAKE, 0, NULL, *socket_emisor,
-			msg->header.tipoProceso, logger);
-	msg = recibirMensaje(*socket_emisor, logger);
+	u_int32_t tipo_mensaje;
+	recv(*socket_emisor, &tipo_mensaje, sizeof(u_int32_t), MSG_WAITALL);
+	t_tipoMensaje tipo_mensaje_enum = tipo_mensaje;
 
-	switch (msg->header.tipoMensaje) {
+	switch (tipo_mensaje_enum) {
 
-	case CLIENTE_RECIBE_INFO:;
-		agregar_cliente(msg, *socket_emisor);
-		log_info(logger, "Se agregó a cliente con ID_CLIENTE:%d Y SOCKET:%d", msg->header.idProceso, *socket_emisor);
+	case SOCKET_ESCUCHA:;
+		void* recibido = recibirMensaje(*socket_emisor, logger);
+		u_int32_t* id = recibido;
+//		agregar_cliente(msg, *socket_emisor);
+		log_info(logger, "Se agregó a cliente con ID_CLIENTE:%d Y SOCKET:%d", id, *socket_emisor);
+		free(id);
 		break;
 
 	case GUARDAR_PEDIDO:;
-		t_guardar_pedido* msj_guardar_pedido = malloc(msg->header.longitud);
-		memcpy(msj_guardar_pedido, msg->content, msg->header.longitud);
+//		t_guardar_pedido* msj_guardar_pedido = malloc(msg->header.longitud);
+//		memcpy(msj_guardar_pedido, msg->content, msg->header.longitud);
 
-		log_trace(logger, "MENSAJE GUARDAR_PEDIDO\n");
-		log_trace(logger, "NOMBRE_RESTAURANTE: %s\n",
-				msj_guardar_pedido->nombre_restaurante);
-		log_trace(logger, "ID_PEDIDO: %d\n", msj_guardar_pedido->id_pedido);
+//		log_trace(logger, "MENSAJE GUARDAR_PEDIDO\n");
+//		log_trace(logger, "NOMBRE_RESTAURANTE: %s\n",
+//				msj_guardar_pedido->nombre_restaurante);
+//		log_trace(logger, "ID_PEDIDO: %d\n", msj_guardar_pedido->id_pedido);
 		/*TODO:*/
 //		int resultado = guardar_pedido();
-		u_int32_t resultado = 1;
-		t_cliente_info* cliente_info = buscar_cliente(msg->header.idProceso);
+//		u_int32_t resultado = 1;
+//		t_cliente_info* cliente_info = buscar_cliente(msg->header.idProceso);
 
-		if(existe_cliente(cliente_info))
-			enviarMensaje(COMANDA, 0 ,RESPUESTA_OK_FAIL, sizeof(u_int32_t), &resultado, cliente_info->socket, msg->header.tipoProceso, logger);
-		else
-			enviarMensaje(COMANDA, 0 ,RESPUESTA_OK_FAIL, sizeof(u_int32_t), &resultado, *socket_emisor, msg->header.tipoProceso, logger);
-
-		free(msj_guardar_pedido);
+//		if(existe_cliente(cliente_info))
+//			enviarMensaje(COMANDA, 0 ,RESPUESTA_OK_FAIL, sizeof(u_int32_t), &resultado, cliente_info->socket, msg->header.tipoProceso, logger);
+//		else
+//			enviarMensaje(COMANDA, 0 ,RESPUESTA_OK_FAIL, sizeof(u_int32_t), &resultado, *socket_emisor, msg->header.tipoProceso, logger);
+//
+//		free(msj_guardar_pedido);
 
 		break;
 
@@ -71,10 +70,11 @@ void connection_handler(int* socket_emisor){
 		break;
 
 	default:
-		log_error(logger, "Mensaje no reconocido: %s",
-					get_nombre_mensaje( msg->header.tipoMensaje));
+		break;
+//		log_error(logger, "Mensaje no reconocido: %s",
+//					get_nombre_mensaje( msg->header.tipoMensaje));
 	}
-	free(msg);
+//	free(msg);
 }
 
 void esperar_cliente(int socket_servidor){
@@ -151,14 +151,14 @@ void *escuchar_conexiones(){
 		pthread_detach(hilo_conexion);
 	}
 }
-void agregar_cliente(t_mensaje* msg,int socket){
-	t_cliente_info* cliente_info = guardar_info_cliente(msg, socket);
-	agregar_a_lista_clientes(cliente_info);
-}
-t_cliente_info* guardar_info_cliente(t_mensaje* msg,int socket){
-	u_int32_t id_cliente = msg->header.idProceso;
-	return crear_cliente_info(id_cliente, socket);
-}
+//void agregar_cliente(t_mensaje* msg,int socket){
+//	t_cliente_info* cliente_info = guardar_info_cliente(msg, socket);
+//	agregar_a_lista_clientes(cliente_info);
+//}
+//t_cliente_info* guardar_info_cliente(t_mensaje* msg,int socket){
+//	u_int32_t id_cliente = msg->header.idProceso;
+//	return crear_cliente_info(id_cliente, socket);
+//}
 t_cliente_info* crear_cliente_info(int id_cliente, int socket){
 	t_cliente_info* cliente = malloc(sizeof(t_cliente_info));
 	cliente->id_cliente = id_cliente;

@@ -9,6 +9,7 @@
 #define AUXILIARES_CONSOLA_H_
 
 #include <shared.h>
+#include <protocolo.h>
 #include <stdlib.h>
 #include <readline/readline.h>
 #include <readline/history.h>
