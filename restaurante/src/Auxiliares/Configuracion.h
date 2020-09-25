@@ -19,9 +19,19 @@ typedef struct {
 	char* ip_app;
 	uint32_t puerto_app;
 	uint32_t quantum;
+	char** afinidad_cocineros;
+	uint32_t cantidad_cocineros;
+	uint32_t cantidad_hornos;
+	char* receta_nombre;
+	char** receta_pasos;
+	char** platos;
+	uint32_t precio_plato;
 	char* archivo_log;
 	char* algoritmo_planificacion;
 	char* nombre_restaurante;
+	uint32_t posX;
+	uint32_t posY;
+
 } t_restaurante_conf;
 
 // Variables globales
