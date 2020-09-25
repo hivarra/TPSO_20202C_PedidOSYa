@@ -10,45 +10,54 @@
 
 #define L_STRING 32
 
-//#include "shared.h"
+#include "shared.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
-typedef enum{
-	HANDSHAKE,
-	CONSULTAR_RESTAURANTES,
-	SELECCIONAR_RESTAURANTE,
-	OBTENER_RESTAURANTE,
-	CONSULTAR_PLATOS,
-	CREAR_PEDIDO,
-	GUARDAR_PEDIDO,
-	ANADIR_PLATO,
-	GUARDAR_PLATO,
-	CONFIRMAR_PEDIDO,
-	PLATO_LISTO,
-	CONSULTAR_PEDIDO,
-	OBTENER_PEDIDO,
-	FINALIZAR_PEDIDO,
-	TERMINAR_PEDIDO,
-	OBTENER_RECETA,
-	SOCKET_ESCUCHA//FALTA IMPLEMENTAR
-}t_tipoMensaje;
+#include <commons/collections/list.h>
+#include <commons/log.h>
 
-typedef enum{
-	RTA_CONSULTAR_RESTAURANTES,
-	RTA_SELECCIONAR_RESTAURANTE,
-	RTA_OBTENER_RESTAURANTE,
-	RTA_CONSULTAR_PLATOS,
-	RTA_CREAR_PEDIDO,
-	RTA_GUARDAR_PEDIDO,
-	RTA_ANADIR_PLATO,
-	RTA_GUARDAR_PLATO,
-	RTA_CONFIRMAR_PEDIDO,
-	RTA_PLATO_LISTO,
-	RTA_CONSULTAR_PEDIDO,
-	RTA_OBTENER_PEDIDO,
-	RTA_FINALIZAR_PEDIDO,
-	RTA_TERMINAR_PEDIDO,
-	RTA_OBTENER_RECETA
-}t_tipoRespuesta;
+//typedef enum{
+//	HANDSHAKE,
+//	CONSULTAR_RESTAURANTES,
+//	SELECCIONAR_RESTAURANTE,
+//	OBTENER_RESTAURANTE,
+//	CONSULTAR_PLATOS,
+//	CREAR_PEDIDO,
+//	GUARDAR_PEDIDO,
+//	ANADIR_PLATO,
+//	GUARDAR_PLATO,
+//	CONFIRMAR_PEDIDO,
+//	PLATO_LISTO,
+//	CONSULTAR_PEDIDO,
+//	OBTENER_PEDIDO,
+//	FINALIZAR_PEDIDO,
+//	TERMINAR_PEDIDO,
+//	OBTENER_RECETA,
+//	SOCKET_ESCUCHA//FALTA IMPLEMENTAR
+//}t_tipoMensaje;
+//
+//typedef enum{
+//	RTA_CONSULTAR_RESTAURANTES,
+//	RTA_SELECCIONAR_RESTAURANTE,
+//	RTA_OBTENER_RESTAURANTE,
+//	RTA_CONSULTAR_PLATOS,
+//	RTA_CREAR_PEDIDO,
+//	RTA_GUARDAR_PEDIDO,
+//	RTA_ANADIR_PLATO,
+//	RTA_GUARDAR_PLATO,
+//	RTA_CONFIRMAR_PEDIDO,
+//	RTA_PLATO_LISTO,
+//	RTA_CONSULTAR_PEDIDO,
+//	RTA_OBTENER_PEDIDO,
+//	RTA_FINALIZAR_PEDIDO,
+//	RTA_TERMINAR_PEDIDO,
+//	RTA_OBTENER_RECETA
+//}t_tipoRespuesta;
 
 typedef enum{
 	PENDIENTE,
@@ -260,6 +269,9 @@ int enviarRespuesta(t_tipoRespuesta, void* puntero_content, int fd_socketRecepto
 
 void* recibirMensaje(int fd_socket_emisor, t_log*);//Recibe el socket emisor y un logger y retorna un void* que hay que castear de acuerdo al tipoMensaje recibido en el primer recv
 
-void* recibirRespuesta(int fd_socket_emisor, int num_tipoRespuesta,  t_log*);//Recibe el socket emisor, el tipo de respuesta recibido en el primer rcv  y un logger y retorna un void* que hay que castear de acuerdo al tipoMensaje recibido en el primer recv
+//void* recibirRespuesta(int fd_socket_emisor, int num_tipoRespuesta,  t_log*);//Recibe el socket emisor, el tipo de respuesta recibido en el primer rcv  y un logger y retorna un void* que hay que castear de acuerdo al tipoMensaje recibido en el primer recv
+void* recibirRespuesta(int socketEmisor, t_tipoRespuesta tipoRespuesta, t_log* logger);/*DESPUES SACAR Y DEJAR EL DE ARRIBA*/
+
+void* empaquetar(t_tipoMensaje tipo_mensaje, t_buffer* buffer, int* bytes);
 
 #endif /* PROTOCOLO_H_ */

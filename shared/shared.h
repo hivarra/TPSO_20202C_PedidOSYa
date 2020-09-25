@@ -36,7 +36,7 @@ typedef enum tipoProceso {
 	SINDICATO
 } t_tipoProceso;
 
-typedef enum tipoMensaje {
+typedef enum{
 	HANDSHAKE,
 	CONSULTAR_RESTAURANTES,
 	SELECCIONAR_RESTAURANTE,
@@ -53,70 +53,109 @@ typedef enum tipoMensaje {
 	FINALIZAR_PEDIDO,
 	TERMINAR_PEDIDO,
 	OBTENER_RECETA,
-	RESULTADO_GUARDAR,
-	RESPUESTA_OK_FAIL,
-	CLIENTE_RECIBE_INFO,
-	SALIR
-	// Agregar los que falten
-	// Para la consola
+	SOCKET_ESCUCHA//FALTA IMPLEMENTAR
 }t_tipoMensaje;
 
-typedef struct {
-	t_tipoProceso 	tipoProceso;
-	uint32_t			idProceso;
-	t_tipoMensaje 	tipoMensaje;
-	uint32_t 		longitud;
-}__attribute__((packed)) t_header;
+typedef enum{
+	RTA_CONSULTAR_RESTAURANTES,
+	RTA_SELECCIONAR_RESTAURANTE,
+	RTA_OBTENER_RESTAURANTE,
+	RTA_CONSULTAR_PLATOS,
+	RTA_CREAR_PEDIDO,
+	RTA_GUARDAR_PEDIDO,
+	RTA_ANADIR_PLATO,
+	RTA_GUARDAR_PLATO,
+	RTA_CONFIRMAR_PEDIDO,
+	RTA_PLATO_LISTO,
+	RTA_CONSULTAR_PEDIDO,
+	RTA_OBTENER_PEDIDO,
+	RTA_FINALIZAR_PEDIDO,
+	RTA_TERMINAR_PEDIDO,
+	RTA_OBTENER_RECETA
+}t_tipoRespuesta;
 
 
-typedef struct {
-	t_header 		header;
-	void* 			content;
-}__attribute__((packed)) t_mensaje;
+//typedef enum tipoMensaje {
+//	HANDSHAKE,
+//	CONSULTAR_RESTAURANTES,
+//	SELECCIONAR_RESTAURANTE,
+//	OBTENER_RESTAURANTE,
+//	CONSULTAR_PLATOS,
+//	CREAR_PEDIDO,
+//	GUARDAR_PEDIDO,
+//	ANADIR_PLATO,
+//	GUARDAR_PLATO,
+//	CONFIRMAR_PEDIDO,
+//	PLATO_LISTO,
+//	CONSULTAR_PEDIDO,
+//	OBTENER_PEDIDO,
+//	FINALIZAR_PEDIDO,
+//	TERMINAR_PEDIDO,
+//	OBTENER_RECETA,
+//	RESULTADO_GUARDAR,
+//	RESPUESTA_OK_FAIL,
+//	CLIENTE_RECIBE_INFO,
+//	SALIR
+//	// Agregar los que falten
+//	// Para la consola
+//}t_tipoMensaje;
+
+//typedef struct {
+//	t_tipoProceso 	tipoProceso;
+//	uint32_t			idProceso;
+//	t_tipoMensaje 	tipoMensaje;
+//	uint32_t 		longitud;
+//}__attribute__((packed)) t_header;
+//
+//
+//typedef struct {
+//	t_header 		header;
+//	void* 			content;
+//}__attribute__((packed)) t_mensaje;
 
 /*Protocolos*/
 
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-}__attribute__((packed)) t_guardar_pedido;
-
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-	char comida[32];
-	uint32_t cantidad_comida;
-}__attribute__((packed)) t_guardar_plato;
-
-typedef struct {
-	uint32_t id_pedido;
-}__attribute__((packed)) t_confirmar_pedido;
-
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-	char* comida[32];
-}__attribute__((packed)) t_plato_listo;
-
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-}__attribute__((packed)) t_finalizar_pedido;
-
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-}__attribute__((packed)) t_obtener_pedido;
-
-typedef struct {
-	uint32_t respuesta_ok_fail;
-}__attribute__((packed)) t_respuesta_ok_fail;
-
-typedef struct {
-	char nombre[100];
-	uint32_t posX;
-	uint32_t posY;
-}__attribute__((packed)) t_restaurante;
+//typedef struct {
+//	char nombre_restaurante[32];
+//	uint32_t id_pedido;
+//}__attribute__((packed)) t_guardar_pedido;
+//
+//typedef struct {
+//	char nombre_restaurante[32];
+//	uint32_t id_pedido;
+//	char comida[32];
+//	uint32_t cantidad_comida;
+//}__attribute__((packed)) t_guardar_plato;
+//
+//typedef struct {
+//	uint32_t id_pedido;
+//}__attribute__((packed)) t_confirmar_pedido;
+//
+//typedef struct {
+//	char nombre_restaurante[32];
+//	uint32_t id_pedido;
+//	char* comida[32];
+//}__attribute__((packed)) t_plato_listo;
+//
+//typedef struct {
+//	char nombre_restaurante[32];
+//	uint32_t id_pedido;
+//}__attribute__((packed)) t_finalizar_pedido;
+//
+//typedef struct {
+//	char nombre_restaurante[32];
+//	uint32_t id_pedido;
+//}__attribute__((packed)) t_obtener_pedido;
+//
+//typedef struct {
+//	uint32_t respuesta_ok_fail;
+//}__attribute__((packed)) t_respuesta_ok_fail;
+//
+//typedef struct {
+//	char nombre[100];
+//	uint32_t posX;
+//	uint32_t posY;
+//}__attribute__((packed)) t_restaurante;
 
 
 /* ---------- Logger ---------- */
@@ -132,13 +171,13 @@ int crear_conexion(char*, char*);//Recibe char* ip, char* puerto, y se conecta a
 int definirSocket(t_log* logger);
 int bindearSocketYEscuchar(int socket, char *ip, int puerto, t_log* logger);
 int aceptarConexiones(int socket, t_log* logger);
-int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
-int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
-int enviarMensaje(int tipoProcesoEmisor, int id_proceso, int tipoMensaje, int len, void* content, int socketReceptor, int tipoProcesoReceptor, t_log* logger);
-t_mensaje* recibirMensaje(int socketEmisor, t_log* logger);
-void* serializar(int tipoProceso, int id_proceso, int tipoMensaje, int len, void* content);
-t_mensaje* deserializar(void* buffer);
-void destruirMensaje(t_mensaje* msg);
+//int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
+//int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
+//int enviarMensaje(int tipoProcesoEmisor, int id_proceso, int tipoMensaje, int len, void* content, int socketReceptor, int tipoProcesoReceptor, t_log* logger);
+//t_mensaje* recibirMensaje(int socketEmisor, t_log* logger);
+//void* serializar(int tipoProceso, int id_proceso, int tipoMensaje, int len, void* content);
+//t_mensaje* deserializar(void* buffer);
+//void destruirMensaje(t_mensaje* msg);
 
 /* ---------- Exit ---------- */
 void exit_gracefully(int return_nr, t_log* logger);

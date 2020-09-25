@@ -128,130 +128,130 @@ int aceptarConexiones(int socket, t_log* logger) {
 	return client_socket;
 }
 
-int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger) {
+//int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger) {
+//
+//	int socket_cliente;
+//
+//	if((socket_cliente = definirSocket(logger))<= 0)
+//	{
+//		log_error(logger, "CONEXION | No se pudo definir socket.");
+//		return -1;
+//	}
+//
+//	if(conectarseAServidor(socket_cliente, ip, puerto, logger)<=0)
+//	{
+//		log_error(logger, "CONEXION | No se pudo conectar a servidor %s", get_nombre_proceso(tipoProcesoReceptor));
+//		return -1;
+//	}
+//
+//	loggear(logger,LOG_LEVEL_INFO, "INICIO Handshake(%d)...", tipoProcesoReceptor);
+//	enviarMensaje(tipoProcesoEmisor, id_proceso, HANDSHAKE, 0, NULL, socket_cliente, tipoProcesoReceptor, logger);
+//	t_mensaje* msg = recibirMensaje(socket_cliente, logger);
+//	destruirMensaje(msg);
+//	loggear(logger,LOG_LEVEL_INFO, "FIN Handshake(%d)", tipoProcesoReceptor);
+//	return socket_cliente;
+//}
 
-	int socket_cliente;
+//int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger) {
+//
+//	struct sockaddr_in direccionServidor;
+//	direccionServidor.sin_family = AF_INET;
+//	direccionServidor.sin_port = htons(puerto);
+//	direccionServidor.sin_addr.s_addr = inet_addr(ip);
+//
+//	if (connect(socket, (void *) &direccionServidor, sizeof(direccionServidor))
+//			!= 0) {
+////		log_error(logger, "No se pudo conectar al Servidor.");
+//		return 0;
+//	}
+////	log_info(logger, "Conectado al Servidor correctamente.");
+//	return 1;
+//}
 
-	if((socket_cliente = definirSocket(logger))<= 0)
-	{
-		log_error(logger, "CONEXION | No se pudo definir socket.");
-		return -1;
-	}
+//int enviarMensaje(int tipoProcesoEmisor, int id_proceso, int tipoMensaje, int len, void* content,
+//		int socketReceptor, int tipoProcesoReceptor, t_log* logger) {
+//
+//	void* buffer = serializar(tipoProcesoEmisor, id_proceso, tipoMensaje, len, content);
+//
+//	if (len > 0 && content != NULL)
+//		if (buffer == NULL) {
+//			log_error(logger, "No se pudo serializar mensaje (proceso emisor %s).", get_nombre_proceso(tipoProcesoEmisor));
+//			return -1;
+//		}
+//
+//	if (send(socketReceptor, buffer, sizeof(t_header) + len, 0) <= 0) {
+//		free(buffer);
+//		log_info(logger, "No se pudo enviar mensaje (proceso emisor %s - proceso receptor %s).",
+//				get_nombre_proceso(tipoProcesoEmisor), get_nombre_proceso(tipoProcesoReceptor));
+//		return 0;
+//	}
+//	/* Cambiar esto porque no está bien */
+////	log_info(logger, "Se envió mensaje (proceso emisor %s - proceso receptor %s).",
+////			get_nombre_proceso(tipoProcesoEmisor), get_nombre_proceso(tipoProcesoReceptor));
+//
+//	free(buffer); // Sirver para t_mensaje
+//	return 1;
+//}
 
-	if(conectarseAServidor(socket_cliente, ip, puerto, logger)<=0)
-	{
-		log_error(logger, "CONEXION | No se pudo conectar a servidor %s", get_nombre_proceso(tipoProcesoReceptor));
-		return -1;
-	}
+//t_mensaje* recibirMensaje(int socketEmisor, t_log* logger) {
+//
+//	void* buffer = malloc(sizeof(t_header));
+//
+//	if (recv(socketEmisor, buffer, sizeof(t_header), 0) <= 0) {
+//		free(buffer);
+//		log_error(logger, "Se desconecto o ocurrio un error con el socket (sock_id: %d).", socketEmisor);
+//		return NULL;
+//	}
+//
+//	t_mensaje* msg = deserializar(buffer);
+//
+//	msg->content = NULL;
+//
+//	if (msg->header.longitud > 0) {
+//		//buffer = calloc(sizeof(char), msg->header.longitud + 1);
+//		void* c_buffer = malloc(msg->header.longitud + 1);
+//		if (recv(socketEmisor, c_buffer, msg->header.longitud, MSG_WAITALL) <= 0) {
+//			free(c_buffer);
+//			log_error(logger, "Se desconecto o ocurrio un error con el socket (sock_id: %d).", socketEmisor);
+//			return NULL;
+//		}
+//		msg->content = c_buffer;
+//	}
+//	return msg;
+//}
 
-	loggear(logger,LOG_LEVEL_INFO, "INICIO Handshake(%d)...", tipoProcesoReceptor);
-	enviarMensaje(tipoProcesoEmisor, id_proceso, HANDSHAKE, 0, NULL, socket_cliente, tipoProcesoReceptor, logger);
-	t_mensaje* msg = recibirMensaje(socket_cliente, logger);
-	destruirMensaje(msg);
-	loggear(logger,LOG_LEVEL_INFO, "FIN Handshake(%d)", tipoProcesoReceptor);
-	return socket_cliente;
-}
-
-int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger) {
-
-	struct sockaddr_in direccionServidor;
-	direccionServidor.sin_family = AF_INET;
-	direccionServidor.sin_port = htons(puerto);
-	direccionServidor.sin_addr.s_addr = inet_addr(ip);
-
-	if (connect(socket, (void *) &direccionServidor, sizeof(direccionServidor))
-			!= 0) {
-//		log_error(logger, "No se pudo conectar al Servidor.");
-		return 0;
-	}
-//	log_info(logger, "Conectado al Servidor correctamente.");
-	return 1;
-}
-
-int enviarMensaje(int tipoProcesoEmisor, int id_proceso, int tipoMensaje, int len, void* content,
-		int socketReceptor, int tipoProcesoReceptor, t_log* logger) {
-
-	void* buffer = serializar(tipoProcesoEmisor, id_proceso, tipoMensaje, len, content);
-
-	if (len > 0 && content != NULL)
-		if (buffer == NULL) {
-			log_error(logger, "No se pudo serializar mensaje (proceso emisor %s).", get_nombre_proceso(tipoProcesoEmisor));
-			return -1;
-		}
-
-	if (send(socketReceptor, buffer, sizeof(t_header) + len, 0) <= 0) {
-		free(buffer);
-		log_info(logger, "No se pudo enviar mensaje (proceso emisor %s - proceso receptor %s).",
-				get_nombre_proceso(tipoProcesoEmisor), get_nombre_proceso(tipoProcesoReceptor));
-		return 0;
-	}
-	/* Cambiar esto porque no está bien */
-//	log_info(logger, "Se envió mensaje (proceso emisor %s - proceso receptor %s).",
-//			get_nombre_proceso(tipoProcesoEmisor), get_nombre_proceso(tipoProcesoReceptor));
-
-	free(buffer); // Sirver para t_mensaje
-	return 1;
-}
-
-t_mensaje* recibirMensaje(int socketEmisor, t_log* logger) {
-
-	void* buffer = malloc(sizeof(t_header));
-
-	if (recv(socketEmisor, buffer, sizeof(t_header), 0) <= 0) {
-		free(buffer);
-		log_error(logger, "Se desconecto o ocurrio un error con el socket (sock_id: %d).", socketEmisor);
-		return NULL;
-	}
-
-	t_mensaje* msg = deserializar(buffer);
-
-	msg->content = NULL;
-
-	if (msg->header.longitud > 0) {
-		//buffer = calloc(sizeof(char), msg->header.longitud + 1);
-		void* c_buffer = malloc(msg->header.longitud + 1);
-		if (recv(socketEmisor, c_buffer, msg->header.longitud, MSG_WAITALL) <= 0) {
-			free(c_buffer);
-			log_error(logger, "Se desconecto o ocurrio un error con el socket (sock_id: %d).", socketEmisor);
-			return NULL;
-		}
-		msg->content = c_buffer;
-	}
-	return msg;
-}
-
-void* serializar(int tipoProceso,int id_proceso ,int tipoMensaje, int len, void* content) {
-
-	t_mensaje mensaje;
-	mensaje.header.tipoProceso = tipoProceso;
-	mensaje.header.idProceso = id_proceso;
-	mensaje.header.tipoMensaje = tipoMensaje;
-	mensaje.header.longitud = len;
-	mensaje.content = content;
-
-	void* buffer = malloc(sizeof(t_header) + len);
-	memcpy(buffer, &(mensaje.header), sizeof(t_header));
-	memcpy(buffer + sizeof(t_header), mensaje.content, len);
-
-	return buffer;
-}
-
-t_mensaje* deserializar(void* buffer) {
-	t_mensaje* mensaje = malloc(sizeof(t_mensaje));
-	memcpy(&(mensaje->header), buffer, sizeof(t_header));
-	free(buffer);
-	return mensaje;
-}
-
-void destruirMensaje(t_mensaje* msg) {
-
-	if(msg == NULL)
-		return;
-	if (msg != NULL && msg->header.longitud > 0 && msg->content != NULL)
-		free(msg->content);
-	if(msg != NULL)
-		free(msg);
-}
+//void* serializar(int tipoProceso,int id_proceso ,int tipoMensaje, int len, void* content) {
+//
+//	t_mensaje mensaje;
+//	mensaje.header.tipoProceso = tipoProceso;
+//	mensaje.header.idProceso = id_proceso;
+//	mensaje.header.tipoMensaje = tipoMensaje;
+//	mensaje.header.longitud = len;
+//	mensaje.content = content;
+//
+//	void* buffer = malloc(sizeof(t_header) + len);
+//	memcpy(buffer, &(mensaje.header), sizeof(t_header));
+//	memcpy(buffer + sizeof(t_header), mensaje.content, len);
+//
+//	return buffer;
+//}
+//
+//t_mensaje* deserializar(void* buffer) {
+//	t_mensaje* mensaje = malloc(sizeof(t_mensaje));
+//	memcpy(&(mensaje->header), buffer, sizeof(t_header));
+//	free(buffer);
+//	return mensaje;
+//}
+//
+//void destruirMensaje(t_mensaje* msg) {
+//
+//	if(msg == NULL)
+//		return;
+//	if (msg != NULL && msg->header.longitud > 0 && msg->content != NULL)
+//		free(msg->content);
+//	if(msg != NULL)
+//		free(msg);
+//}
 
 /* ---------- Exit ---------- */
 void _exit_with_error(char* error_msg, void * buffer, t_log* logger) {

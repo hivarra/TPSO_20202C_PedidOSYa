@@ -82,6 +82,62 @@ void* deserializar_rta_consultar_restaurantes(t_buffer* buffer){
 	return rta;
 }
 
+void* serializar_rta_obtener_receta(uint32_t* largo, void* content){
+
+	t_receta* rta = content;
+
+	*largo += L_STRING
+			+sizeof(rta->precio)
+			+sizeof(rta->cantPasos)
+			+rta->cantPasos*sizeof(t_paso_receta);
+
+	void* serializado = malloc(*largo);
+	int offset = 0;
+
+	memcpy(serializado+offset, rta->nombre, L_STRING);
+	offset += L_STRING;
+	memcpy(serializado+offset, &rta->precio, sizeof(rta->precio));
+	offset += sizeof(rta->precio);
+	memcpy(serializado+offset, &rta->cantPasos, sizeof(rta->cantPasos));
+	offset += sizeof(rta->cantPasos);
+
+	for (int i = 0; i < rta->cantPasos; i++){
+		memcpy(serializado+offset, list_get(rta->pasos, i), sizeof(t_paso_receta));
+		offset += sizeof(t_paso_receta);
+	}
+	return serializado;
+}
+
+void* deserializar_rta_obtener_receta(t_buffer* buffer){
+
+	t_receta* rta = malloc(sizeof(t_receta));
+
+	int offset = 0;
+
+	memcpy(rta->nombre, buffer->stream+offset, L_STRING);
+	offset =+ L_STRING;
+	memcpy(&rta->precio, buffer->stream+offset, sizeof(rta->precio));
+	offset =+ sizeof(rta->precio);
+	memcpy(&rta->cantPasos, buffer->stream+offset, sizeof(rta->cantPasos));
+	offset =+ sizeof(rta->cantPasos);
+
+	rta->pasos = list_create();
+
+	for (int i = 0; i < rta->cantPasos; i++){
+
+		t_paso_receta* paso_i = malloc(sizeof(t_paso_receta));
+
+		memcpy(paso_i, buffer->stream+offset, sizeof(t_paso_receta));
+		offset =+ sizeof(t_paso_receta);
+
+		list_add(rta->pasos, paso_i);
+	}
+
+	free(buffer->stream);
+
+	return rta;
+}
+
 void* serializar_rta_obtener_restaurante(uint32_t* largo, void* content){
 	/*****Inner Function*****/
 	int tamanio_total_recetas(uint32_t cant_recetas, t_list* recetas){
@@ -131,7 +187,7 @@ void* serializar_rta_obtener_restaurante(uint32_t* largo, void* content){
 	offset += sizeof(rta->cantRecetas);
 
 	for (int i = 0; i < rta->cantRecetas; i++){
-		int largo_receta = 0;
+		uint32_t largo_receta = 0;
 		void* receta_serializada = serializar_obtener_receta(&largo_receta, list_get(rta->recetas, i));
 		memcpy(serializado+offset, receta_serializada, largo_receta);
 		free(receta_serializada);
@@ -290,62 +346,6 @@ void* deserializar_rta_obtener_pedido(t_buffer* buffer){
 	return rta;
 }
 
-void* serializar_rta_obtener_receta(uint32_t* largo, void* content){
-
-	t_receta* rta = content;
-
-	*largo += L_STRING
-			+sizeof(rta->precio)
-			+sizeof(rta->cantPasos)
-			+rta->cantPasos*sizeof(t_paso_receta);
-
-	void* serializado = malloc(*largo);
-	int offset = 0;
-
-	memcpy(serializado+offset, rta->nombre, L_STRING);
-	offset += L_STRING;
-	memcpy(serializado+offset, &rta->precio, sizeof(rta->precio));
-	offset += sizeof(rta->precio);
-	memcpy(serializado+offset, &rta->cantPasos, sizeof(rta->cantPasos));
-	offset += sizeof(rta->cantPasos);
-
-	for (int i = 0; i < rta->cantPasos; i++){
-		memcpy(serializado+offset, list_get(rta->pasos, i), sizeof(t_paso_receta));
-		offset += sizeof(t_paso_receta);
-	}
-	return serializado;
-}
-
-void* deserializar_rta_obtener_receta(t_buffer* buffer){
-
-	t_receta* rta = malloc(sizeof(t_receta));
-
-	int offset = 0;
-
-	memcpy(rta->nombre, buffer->stream+offset, L_STRING);
-	offset =+ L_STRING;
-	memcpy(&rta->precio, buffer->stream+offset, sizeof(rta->precio));
-	offset =+ sizeof(rta->precio);
-	memcpy(&rta->cantPasos, buffer->stream+offset, sizeof(rta->cantPasos));
-	offset =+ sizeof(rta->cantPasos);
-
-	rta->pasos = list_create();
-
-	for (int i = 0; i < rta->cantPasos; i++){
-
-		t_paso_receta* paso_i = malloc(sizeof(t_paso_receta));
-
-		memcpy(paso_i, buffer->stream+offset, sizeof(t_paso_receta));
-		offset =+ sizeof(t_paso_receta);
-
-		list_add(rta->pasos, paso_i);
-	}
-
-	free(buffer->stream);
-
-	return rta;
-}
-
 
 /************PUBLIC************/
 
@@ -448,6 +448,9 @@ int enviarMensaje(t_tipoMensaje tipoMensaje, void* content, int socketReceptor, 
 		buffer->size = L_STRING;
 		buffer->stream = malloc(buffer->size);
 		memcpy(buffer->stream, content, buffer->size);
+
+		break;
+	default:;
 
 		break;
 	}//LOS MENSAJES QUE NO ESTEN EN ESA LISTA SE ENVIARAN SIN PARAMETROS (CONSULTAR_RESTAURANTES, CREAR_PEDIDO)
@@ -657,7 +660,7 @@ void* recibirRespuesta(int socketEmisor, t_tipoRespuesta tipoRespuesta, t_log* l
 
 	case RTA_OBTENER_RESTAURANTE:
 
-		stream = deserializar_rta_obtener_restaurante(buffer);
+//		stream = deserializar_rta_obtener_restaurante(buffer);
 		break;
 
 	case RTA_CONSULTAR_PLATOS:
