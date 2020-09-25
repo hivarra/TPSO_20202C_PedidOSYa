@@ -188,7 +188,7 @@ void* serializar_rta_obtener_restaurante(uint32_t* largo, void* content){
 
 	for (int i = 0; i < rta->cantRecetas; i++){
 		uint32_t largo_receta = 0;
-		void* receta_serializada = serializar_obtener_receta(&largo_receta, list_get(rta->recetas, i));
+		void* receta_serializada = serializar_rta_obtener_receta(&largo_receta, list_get(rta->recetas, i));
 		memcpy(serializado+offset, receta_serializada, largo_receta);
 		free(receta_serializada);
 		offset += largo_receta;
@@ -357,102 +357,115 @@ int enviarMensaje(t_tipoMensaje tipoMensaje, void* content, int socketReceptor, 
 	buffer->stream = NULL;
 
 	switch(tipoMensaje){
+		case SOCKET_ESCUCHA:
+			buffer->size = sizeof(uint32_t);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-	case SELECCIONAR_RESTAURANTE:
+			break;
 
-		buffer->size = sizeof(t_seleccionar_restaurante);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+		case SOCKET_ENVIO:
+			buffer->size = sizeof(uint32_t);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		break;
+			break;
 
-	case OBTENER_RESTAURANTE:
+		case SELECCIONAR_RESTAURANTE:
 
-		buffer->size = L_STRING;
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			buffer->size = sizeof(t_seleccionar_restaurante);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		break;
-	case CONSULTAR_PLATOS:
+			break;
 
-		buffer->size = L_STRING;
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+		case OBTENER_RESTAURANTE:
 
-		break;
-	case GUARDAR_PEDIDO:
+			buffer->size = L_STRING;
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = sizeof(t_guardar_pedido);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case CONSULTAR_PLATOS:
 
-		break;
-	case ANADIR_PLATO:
+			buffer->size = L_STRING;
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = sizeof(t_anadir_plato);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case GUARDAR_PEDIDO:
 
-		break;
-	case GUARDAR_PLATO:
+			buffer->size = sizeof(t_guardar_pedido);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = sizeof(t_guardar_plato);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case ANADIR_PLATO:
 
-		break;
-	case CONFIRMAR_PEDIDO:
+			buffer->size = sizeof(t_anadir_plato);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case GUARDAR_PLATO:
 
-		break;
-	case PLATO_LISTO:
+			buffer->size = sizeof(t_guardar_plato);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = sizeof(t_plato_listo);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case CONFIRMAR_PEDIDO:
 
-		break;
-	case CONSULTAR_PEDIDO:
+			buffer->size = sizeof(uint32_t);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case PLATO_LISTO:
 
-		break;
-	case OBTENER_PEDIDO:
+			buffer->size = sizeof(t_plato_listo);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = sizeof(t_obtener_pedido);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case CONSULTAR_PEDIDO:
 
-		break;
-	case FINALIZAR_PEDIDO:
+			buffer->size = sizeof(uint32_t);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = sizeof(t_finalizar_pedido);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case OBTENER_PEDIDO:
 
-		break;
-	case TERMINAR_PEDIDO:
+			buffer->size = sizeof(t_obtener_pedido);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = sizeof(t_terminar_pedido);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case FINALIZAR_PEDIDO:
 
-		break;
-	case OBTENER_RECETA:
+			buffer->size = sizeof(t_finalizar_pedido);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		buffer->size = L_STRING;
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, buffer->size);
+			break;
+		case TERMINAR_PEDIDO:
 
-		break;
-	default:;
+			buffer->size = sizeof(t_terminar_pedido);
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
 
-		break;
+			break;
+		case OBTENER_RECETA:
+
+			buffer->size = L_STRING;
+			buffer->stream = malloc(buffer->size);
+			memcpy(buffer->stream, content, buffer->size);
+
+			break;
+		default:;
+
+			break;
 	}//LOS MENSAJES QUE NO ESTEN EN ESA LISTA SE ENVIARAN SIN PARAMETROS (CONSULTAR_RESTAURANTES, CREAR_PEDIDO)
 
 	int cant_bytes;

@@ -53,7 +53,8 @@ typedef enum{
 	FINALIZAR_PEDIDO,
 	TERMINAR_PEDIDO,
 	OBTENER_RECETA,
-	SOCKET_ESCUCHA//FALTA IMPLEMENTAR
+	SOCKET_ESCUCHA,//FALTA IMPLEMENTAR
+	SOCKET_ENVIO//FALTA IMPLEMENTAR
 }t_tipoMensaje;
 
 typedef enum{
@@ -171,13 +172,8 @@ int crear_conexion(char*, char*);//Recibe char* ip, char* puerto, y se conecta a
 int definirSocket(t_log* logger);
 int bindearSocketYEscuchar(int socket, char *ip, int puerto, t_log* logger);
 int aceptarConexiones(int socket, t_log* logger);
-//int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
-//int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
-//int enviarMensaje(int tipoProcesoEmisor, int id_proceso, int tipoMensaje, int len, void* content, int socketReceptor, int tipoProcesoReceptor, t_log* logger);
-//t_mensaje* recibirMensaje(int socketEmisor, t_log* logger);
-//void* serializar(int tipoProceso, int id_proceso, int tipoMensaje, int len, void* content);
-//t_mensaje* deserializar(void* buffer);
-//void destruirMensaje(t_mensaje* msg);
+int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
+int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
 
 /* ---------- Exit ---------- */
 void exit_gracefully(int return_nr, t_log* logger);

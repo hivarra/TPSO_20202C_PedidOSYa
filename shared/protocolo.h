@@ -21,44 +21,6 @@
 #include <commons/collections/list.h>
 #include <commons/log.h>
 
-//typedef enum{
-//	HANDSHAKE,
-//	CONSULTAR_RESTAURANTES,
-//	SELECCIONAR_RESTAURANTE,
-//	OBTENER_RESTAURANTE,
-//	CONSULTAR_PLATOS,
-//	CREAR_PEDIDO,
-//	GUARDAR_PEDIDO,
-//	ANADIR_PLATO,
-//	GUARDAR_PLATO,
-//	CONFIRMAR_PEDIDO,
-//	PLATO_LISTO,
-//	CONSULTAR_PEDIDO,
-//	OBTENER_PEDIDO,
-//	FINALIZAR_PEDIDO,
-//	TERMINAR_PEDIDO,
-//	OBTENER_RECETA,
-//	SOCKET_ESCUCHA//FALTA IMPLEMENTAR
-//}t_tipoMensaje;
-//
-//typedef enum{
-//	RTA_CONSULTAR_RESTAURANTES,
-//	RTA_SELECCIONAR_RESTAURANTE,
-//	RTA_OBTENER_RESTAURANTE,
-//	RTA_CONSULTAR_PLATOS,
-//	RTA_CREAR_PEDIDO,
-//	RTA_GUARDAR_PEDIDO,
-//	RTA_ANADIR_PLATO,
-//	RTA_GUARDAR_PLATO,
-//	RTA_CONFIRMAR_PEDIDO,
-//	RTA_PLATO_LISTO,
-//	RTA_CONSULTAR_PEDIDO,
-//	RTA_OBTENER_PEDIDO,
-//	RTA_FINALIZAR_PEDIDO,
-//	RTA_TERMINAR_PEDIDO,
-//	RTA_OBTENER_RECETA
-//}t_tipoRespuesta;
-
 typedef enum{
 	PENDIENTE,
 	CONFIRMADO,
@@ -99,8 +61,6 @@ typedef struct {
 	uint32_t cantTotal;
 	uint32_t cantLista;
 }__attribute__((packed)) t_comida;
-
-
 
 /****************Protocolos****************/
 

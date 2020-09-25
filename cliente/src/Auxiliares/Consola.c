@@ -28,25 +28,29 @@ void crear_hilo_recepcion_mensajes(){
 	pthread_create(&hilo_recepcion,NULL,(void*)inicializar_conexion_recepcion,NULL);
 	pthread_detach(hilo_recepcion);
 }
+void crear_conexion_envio(){
+	socket_envio = conectar_a_server_de_config();
+	enviarMensaje(SOCKET_ENVIO,&cliente_config.id_cliente,socket_envio,logger);
+}
+
 void inicializar_conexion_recepcion(){
 	socket_recepcion = conectar_a_server_de_config();
-
-	enviarMensaje(CLIENTE, cliente_config.id_cliente, CLIENTE_RECIBE_INFO, 0, NULL,socket_recepcion,COMANDA,logger);
+	enviarMensaje(SOCKET_ESCUCHA, &cliente_config.id_cliente,socket_recepcion, logger);
 
 	while(1){
-		t_mensaje* msg = malloc(sizeof(t_mensaje));
-		msg = recibirMensaje(socket_recepcion,logger);
-
-		switch(msg->header.tipoMensaje){
-			case RESPUESTA_OK_FAIL:;
-				int resultado = *(int*)(msg->content);
-				log_info(logger, "Resultado:%s", resultado?"OK":"FAIL");
-				break;
-			default:;
-				log_info(logger, "No se reconoce el tipo de mensaje recibido");
-				break;
-		}
-		destruirMensaje(msg);
+//		t_mensaje* msg = malloc(sizeof(t_mensaje));
+//		msg = recibirMensaje(socket_recepcion,logger);
+//
+//		switch(msg->header.tipoMensaje){
+//			case RESPUESTA_OK_FAIL:;
+//				int resultado = *(int*)(msg->content);
+//				log_info(logger, "Resultado:%s", resultado?"OK":"FAIL");
+//				break;
+//			default:;
+//				log_info(logger, "No se reconoce el tipo de mensaje recibido");
+//				break;
+//		}
+//		destruirMensaje(msg);
 	}
 }
 int conectar_a_server_de_config(){
@@ -84,13 +88,14 @@ void procesar_solicitud(char** parametros){
 	switch(mensaje_enum) {
 		case CONSULTAR_RESTAURANTES:;
 
-			enviarMensaje(CLIENTE, cliente_config.id_cliente , mensaje_enum, 0, NULL, socket_envio, proceso_enum, logger);
-			log_info(logger, "Mensaje enviado: %s\n", parametros[0]);
+//			enviarMensaje(CLIENTE, cliente_config.id_cliente , mensaje_enum, 0, NULL, socket_envio, proceso_enum, logger);
 
-			t_mensaje* msg = recibirMensaje(socket_envio, logger);
-			int cantidad_restaurantes = *(int*) msg->content;
+//			log_info(logger, "Mensaje enviado: %s\n", parametros[0]);
+//
+//			t_mensaje* msg = recibirMensaje(socket_envio, logger);
+//			int cantidad_restaurantes = *(int*) msg->content;
 
-			log_info(logger, "CONSULTAR_RESTAURANTES | Hay %d restaurantes", cantidad_restaurantes);
+//			log_info(logger, "CONSULTAR_RESTAURANTES | Hay %d restaurantes", cantidad_restaurantes);
 			break;
 		case SELECCIONAR_RESTAURANTE:;
 			break;
@@ -101,13 +106,13 @@ void procesar_solicitud(char** parametros){
 		case CREAR_PEDIDO:;
 			break;
 		case GUARDAR_PEDIDO:;
-			t_guardar_pedido* guardar_pedido = malloc(sizeof(t_guardar_pedido));
-			strcpy(guardar_pedido->nombre_restaurante, parametros[1]);
-			guardar_pedido->id_pedido = atoi(parametros[2]);
-
-			enviarMensaje(CLIENTE, cliente_config.id_cliente, mensaje_enum, sizeof(t_guardar_pedido), guardar_pedido, socket_envio, proceso_enum, logger);
-
-			free(guardar_pedido);
+//			t_guardar_pedido* guardar_pedido = malloc(sizeof(t_guardar_pedido));
+//			strcpy(guardar_pedido->nombre_restaurante, parametros[1]);
+//			guardar_pedido->id_pedido = atoi(parametros[2]);
+//
+//			enviarMensaje(CLIENTE, cliente_config.id_cliente, mensaje_enum, sizeof(t_guardar_pedido), guardar_pedido, socket_envio, proceso_enum, logger);
+//
+//			free(guardar_pedido);
 
 			break;
 		case ANADIR_PLATO:;
@@ -127,9 +132,6 @@ void procesar_solicitud(char** parametros){
 			close(socket_recepcion);
 			break;
 		case TERMINAR_PEDIDO:;
-			break;
-		case SALIR:;
-			puts("Muchas gracias por utilizar PedidOS Ya!. Vuelva pronto!\n");
 			break;
 		default:;
 			printf("No se reconoce el mensaje %s .\n", parametros[0]);
