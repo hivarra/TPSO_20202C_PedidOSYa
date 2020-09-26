@@ -6,7 +6,7 @@
  */
 #include "Conexion.h"
 
-int conectar_a_app() {
+int *conectar_a_app() {
 
 	int socket_cliente;
 
