@@ -39,6 +39,27 @@ char* mensajes_str[] = {
 		"SOCKET_ENVIO"
 };
 
+char* respuestas_str[] = {
+		"RTA_CONSULTAR_RESTAURANTES",
+		"RTA_SELECCIONAR_RESTAURANTE",
+		"RTA_OBTENER_RESTAURANTE",
+		"RTA_OBTENER_RESTAURANTE",
+		"RTA_CONSULTAR_PLATOS",
+		"RTA_CREAR_PEDIDO",
+		"RTA_GUARDAR_PEDIDO",
+		"RTA_ANADIR_PLATO",
+		"RTA_GUARDAR_PLATO",
+		"RTA_CONFIRMAR_PEDIDO",
+		"RTA_PLATO_LISTO",
+		"RTA_CONSULTAR_PEDIDO",
+		"RTA_OBTENER_PEDIDO",
+		"RTA_FINALIZAR_PEDIDO",
+		"RTA_TERMINAR_PEDIDO",
+		"RTA_OBTENER_RECETA",
+		"SOCKET_ESCUCHA",
+		"SOCKET_ENVIO"};
+
+
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso) {
 	t_log* logger = log_create(nombreLog, nombreProceso, false, LOG_LEVEL_INFO);
