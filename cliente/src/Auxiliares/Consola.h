@@ -27,7 +27,7 @@ void procesar_solicitud(char** parametros);
 int conectar_a_server_de_config();
 void inicializar_conexion_recepcion();
 void crear_hilo_recepcion_mensajes();
-
+void crear_conexion_envio();
 // Auxiliares de consola
 char **character_name_completion(const char *, int, int);
 char *character_name_generator(const char *, int);

@@ -35,8 +35,9 @@ char* mensajes_str[] = {
 		"TERMINAR_PEDIDO",
 		"OBTENER_RECETA",
 		"RESPUESTA_OK_FAIL",
-		"CLIENTE_RECIBE_INFO",
-		"SALIR"};
+		"SOCKET_ESCUCHA",
+		"SOCKET_ENVIO"
+};
 
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso) {

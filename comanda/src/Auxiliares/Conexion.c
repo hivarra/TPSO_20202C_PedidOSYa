@@ -7,74 +7,134 @@
 
 #include "Conexion.h"
 
+t_tipoMensaje recibir_tipo_mensaje(int socket_cliente) {
+	t_tipoMensaje tipo_mensaje;
+
+	if (recv(socket_cliente, &tipo_mensaje, sizeof(t_tipoMensaje), MSG_WAITALL) < 0) {
+		log_error(logger, "Error al recibir tipo de mensaje de socket:%d", socket_cliente);
+	}
+	return tipo_mensaje;
+}
+u_int32_t recibir_int(int socket_cliente) {
+	u_int32_t integer;
+
+	if (recv(socket_cliente, &integer, sizeof(u_int32_t), MSG_WAITALL) < 0) {
+		log_error(logger, "Error al recibir integer de socket:%d", socket_cliente);
+	}
+	return integer;
+}
+void procesar_mensajes(int id_cliente, int socket_cliente_envio){
+	t_cliente_info* cliente_info = buscar_cliente(id_cliente);
+	int socket_envio_rta;
+	if(cliente_info != NULL)
+		socket_envio_rta = cliente_info->socket;
+	else
+		socket_envio_rta = socket_cliente_envio;
+
+	while(1){
+		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_cliente_envio);
+		log_info(logger, "Se recibe tipo de mensaje:%s", get_nombre_mensaje(tipo_mensaje));
+
+		switch (tipo_mensaje) {
+
+		case CONSULTAR_RESTAURANTES:
+			;
+			t_list* lista_aux_restos = list_create();
+			char* nombre_resto_1 = "RESTO_1";
+			char* nombre_resto_2 = "RESTO_2";
+			list_add(lista_aux_restos, nombre_resto_1);
+			list_add(lista_aux_restos, nombre_resto_2);
+			log_info(logger, "LLEGO ACA");
+			t_rta_consultar_restaurantes* rta_consultar_rtes = malloc(sizeof(t_rta_consultar_restaurantes));
+			rta_consultar_rtes->cantRestaurantes = 2;
+			rta_consultar_rtes->restaurantes = lista_aux_restos;
+			enviarRespuesta(RTA_CONSULTAR_RESTAURANTES,rta_consultar_rtes,socket_envio_rta,logger);
+			free(rta_consultar_rtes);
+
+			break;
+
+		case GUARDAR_PEDIDO:
+			;
+			//		TODO:
+			break;
+
+		case GUARDAR_PLATO:
+			;
+			//		TODO:
+			break;
+
+		case OBTENER_PEDIDO:
+			;
+			//		TODO:
+			break;
+
+		case CONFIRMAR_PEDIDO:
+			;
+			//		TODO:
+			break;
+
+		case PLATO_LISTO:
+			;
+			//		TODO:
+			break;
+
+		case FINALIZAR_PEDIDO:
+			;
+			//		TODO:
+			break;
+
+		default:
+			;
+			break;
+		}
+	}
+}
 void connection_handler(int* socket_emisor){
-	u_int32_t tipo_mensaje;
-	recv(*socket_emisor, &tipo_mensaje, sizeof(u_int32_t), MSG_WAITALL);
-	t_tipoMensaje tipo_mensaje_enum = tipo_mensaje;
+	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_emisor);
+	log_info(logger, "Se recibe tipo de mensaje:%s", get_nombre_mensaje(tipo_mensaje));
 
-	switch (tipo_mensaje_enum) {
+	switch (tipo_mensaje) {
 
-	case SOCKET_ESCUCHA:;
-		void* recibido = recibirMensaje(*socket_emisor, logger);
-		u_int32_t* id = recibido;
-//		agregar_cliente(msg, *socket_emisor);
-		log_info(logger, "Se agregó a cliente con ID_CLIENTE:%d Y SOCKET:%d", id, *socket_emisor);
-		free(id);
+	case SOCKET_ESCUCHA:
+		;
+		int id_cliente_escucha = recibir_int(*socket_emisor);
+		t_cliente_info* cliente_info = crear_cliente_info(id_cliente_escucha, *socket_emisor);
+		agregar_a_lista_clientes(cliente_info);
+		log_info(logger,
+				"Se agregó cliente con ID_CLIENTE:%d Y SOCKET_ESCUCHA:%d a lista_clientes",
+				id_cliente_escucha, *socket_emisor);
 		break;
 
-	case GUARDAR_PEDIDO:;
-//		t_guardar_pedido* msj_guardar_pedido = malloc(msg->header.longitud);
-//		memcpy(msj_guardar_pedido, msg->content, msg->header.longitud);
+	case SOCKET_ENVIO:
+		;
+		int id_cliente_envio = recibir_int(*socket_emisor);
+		log_info(logger, "Se recibe mensaje SOCKET_ENVIO de SOCKET:%d", *socket_emisor);
 
-//		log_trace(logger, "MENSAJE GUARDAR_PEDIDO\n");
-//		log_trace(logger, "NOMBRE_RESTAURANTE: %s\n",
-//				msj_guardar_pedido->nombre_restaurante);
-//		log_trace(logger, "ID_PEDIDO: %d\n", msj_guardar_pedido->id_pedido);
-		/*TODO:*/
-//		int resultado = guardar_pedido();
-//		u_int32_t resultado = 1;
-//		t_cliente_info* cliente_info = buscar_cliente(msg->header.idProceso);
+		procesar_mensajes(id_cliente_envio, *socket_emisor);
 
-//		if(existe_cliente(cliente_info))
-//			enviarMensaje(COMANDA, 0 ,RESPUESTA_OK_FAIL, sizeof(u_int32_t), &resultado, cliente_info->socket, msg->header.tipoProceso, logger);
-//		else
-//			enviarMensaje(COMANDA, 0 ,RESPUESTA_OK_FAIL, sizeof(u_int32_t), &resultado, *socket_emisor, msg->header.tipoProceso, logger);
+		break;
+
+//	case CONSULTAR_RESTAURANTES:
+//			;
+//			t_list* lista_aux_restos = list_create();
+//			char* nombre_resto_1 = "RESTO_1";
+//			char* nombre_resto_2 = "RESTO_2";
+//			list_add(lista_aux_restos, nombre_resto_1);
+//			list_add(lista_aux_restos, nombre_resto_2);
+//			log_info(logger, "LLEGO ACA");
+//			t_rta_consultar_restaurantes* rta_consultar_rtes = malloc(sizeof(t_rta_consultar_restaurantes));
+//			rta_consultar_rtes->cantRestaurantes = 2;
+//			rta_consultar_rtes->restaurantes = lista_aux_restos;
+//			enviarRespuesta(RTA_CONSULTAR_RESTAURANTES,rta_consultar_rtes,*socket_emisor,logger);
+//			free(rta_consultar_rtes);
 //
-//		free(msj_guardar_pedido);
-
-		break;
-
-	case GUARDAR_PLATO:
-		;
-//		TODO:
-		break;
-
-	case OBTENER_PEDIDO:
-		;
-//		TODO:
-		break;
-
-	case CONFIRMAR_PEDIDO:
-		;
-//		TODO:
-		break;
-
-	case PLATO_LISTO:
-		;
-//		TODO:
-		break;
-
-	case FINALIZAR_PEDIDO:
-		;
-//		TODO:
-		break;
+//			break;
 
 	default:
 		break;
 //		log_error(logger, "Mensaje no reconocido: %s",
 //					get_nombre_mensaje( msg->header.tipoMensaje));
 	}
-//	free(msg);
 }
 
 void esperar_cliente(int socket_servidor){
