@@ -23,7 +23,6 @@
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/string.h>
-#include <commons/bitarray.h>
 #include <commons/collections/list.h>
 #include <commons/error.h>
 
@@ -53,8 +52,8 @@ typedef enum{
 	FINALIZAR_PEDIDO,
 	TERMINAR_PEDIDO,
 	OBTENER_RECETA,
-	SOCKET_ESCUCHA,//FALTA IMPLEMENTAR
-	SOCKET_ENVIO//FALTA IMPLEMENTAR
+	SOCKET_ESCUCHA,
+	SOCKET_ENVIO
 }t_tipoMensaje;
 
 typedef enum{
@@ -75,31 +74,6 @@ typedef enum{
 	RTA_OBTENER_RECETA
 }t_tipoRespuesta;
 
-
-//typedef enum tipoMensaje {
-//	HANDSHAKE,
-//	CONSULTAR_RESTAURANTES,
-//	SELECCIONAR_RESTAURANTE,
-//	OBTENER_RESTAURANTE,
-//	CONSULTAR_PLATOS,
-//	CREAR_PEDIDO,
-//	GUARDAR_PEDIDO,
-//	ANADIR_PLATO,
-//	GUARDAR_PLATO,
-//	CONFIRMAR_PEDIDO,
-//	PLATO_LISTO,
-//	CONSULTAR_PEDIDO,
-//	OBTENER_PEDIDO,
-//	FINALIZAR_PEDIDO,
-//	TERMINAR_PEDIDO,
-//	OBTENER_RECETA,
-//	RESULTADO_GUARDAR,
-//	RESPUESTA_OK_FAIL,
-//	CLIENTE_RECIBE_INFO,
-//	SALIR
-//	// Agregar los que falten
-//	// Para la consola
-//}t_tipoMensaje;
 
 //typedef struct {
 //	t_tipoProceso 	tipoProceso;
@@ -158,33 +132,6 @@ typedef enum{
 //	uint32_t posY;
 //}__attribute__((packed)) t_restaurante;
 
-/*----Tipos Restaurante -- */
-
-typedef struct {
-	uint32_t id;
-	char  afinidad[100];//Milanesas
-}__attribute__((packed)) t_cocinero;
-
-typedef struct {
-	uint32_t id;
-	uint32_t id_Cliente;
-	char* platos[32];//[Milanesas, Pastas, Ensalada]
-	uint32_t cant_Platos[32];//[3, 5, 4]
-	uint32_t precioTotal;// 300
-}__attribute__((packed)) t_pedido;
-
-typedef struct {
-	uint32_t id;
-	char* nombre[32];//Milanesas
-	uint32_t precio;// 30
-}__attribute__((packed)) t_plato;
-
-typedef struct {
-	uint32_t id;
-	char nombre[32];//Milanesas
-	char* pasos[32];//[Trocear, Empanar, Reposar, Hornear]
-	int  tiempos_pasos[32];//[4, 5, 3, 10]
-}__attribute__((packed)) t_receta;
 
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso);
@@ -212,6 +159,7 @@ t_tipoMensaje tipo_mensaje_string_to_enum(char*);//Recibe en string el tipo de m
 
 char* get_nombre_proceso(int);//Recibe en ENUM el nombre del proceso y lo devuelve en string
 char* get_nombre_mensaje(int);//Recibe en ENUM el nombre del msj y lo devuelve en string
+char* get_nombre_respuesta(int);//Recibe en ENUM el nombre de la rta y lo devuelve en string
 
 /* ---------- Paths ---------- */
 char* getCurrentPath(void);//ATENCION: Liberar el string devuelto

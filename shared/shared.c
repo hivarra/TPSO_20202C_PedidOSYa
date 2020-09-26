@@ -34,9 +34,29 @@ char* mensajes_str[] = {
 		"FINALIZAR_PEDIDO",
 		"TERMINAR_PEDIDO",
 		"OBTENER_RECETA",
-		"RESPUESTA_OK_FAIL",
-		"CLIENTE_RECIBE_INFO",
-		"SALIR"};
+		"SOCKET_ESCUCHA",
+		"SOCKET_ENVIO"};
+
+char* respuestas_str[] = {
+		"RTA_CONSULTAR_RESTAURANTES",
+		"RTA_SELECCIONAR_RESTAURANTE",
+		"RTA_OBTENER_RESTAURANTE",
+		"RTA_OBTENER_RESTAURANTE",
+		"RTA_CONSULTAR_PLATOS",
+		"RTA_CREAR_PEDIDO",
+		"RTA_GUARDAR_PEDIDO",
+		"RTA_ANADIR_PLATO",
+		"RTA_GUARDAR_PLATO",
+		"RTA_CONFIRMAR_PEDIDO",
+		"RTA_PLATO_LISTO",
+		"RTA_CONSULTAR_PEDIDO",
+		"RTA_OBTENER_PEDIDO",
+		"RTA_FINALIZAR_PEDIDO",
+		"RTA_TERMINAR_PEDIDO",
+		"RTA_OBTENER_RECETA",
+		"SOCKET_ESCUCHA",
+		"SOCKET_ENVIO"};
+
 
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso) {
@@ -197,6 +217,11 @@ char* get_nombre_mensaje(int enum_mensaje) {
 	return mensajes_str[enum_mensaje];
 }
 
+char* get_nombre_respuesta(int enum_respuesta) {
+
+	return respuestas_str[enum_respuesta];
+}
+
 t_tipoProceso tipo_proceso_string_to_enum(char *sval) {
 	t_tipoProceso result = APP;
 	for (int i = 0; procesos_str[i] != NULL; ++i, ++result)
@@ -250,8 +275,8 @@ uint64_t timestamp() {
 void liberar_lista(char** lista){
 	int contador = 0;
 	while(lista[contador] != NULL){
-	        free(lista[contador]);
-	        contador++;
+		free(lista[contador]);
+		contador++;
 	}
 	free(lista);
 }

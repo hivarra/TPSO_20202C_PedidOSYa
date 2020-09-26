@@ -11,15 +11,6 @@
 #define L_STRING 32
 
 #include "shared.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-
-#include <commons/collections/list.h>
-#include <commons/log.h>
 
 typedef enum{
 	PENDIENTE,
@@ -93,8 +84,8 @@ typedef struct {
 	uint32_t posY;
 	uint32_t cantHornos;
 	uint32_t cantCocineros;
-	uint32_t cantAfinidad;
-	t_list* afinidad_cocineros;//char comida[L_STRING]
+	uint32_t cantAfinidades;
+	t_list* afinidades_cocineros;//char comida[L_STRING]
 	uint32_t cantRecetas;
 	t_list* recetas;//t_receta
 }t_rta_obtener_restaurante;
@@ -222,6 +213,8 @@ typedef struct {
 	 uint32_t precio;
  }t_receta;*/
 
+
+
 int enviarMensaje(t_tipoMensaje, void* puntero_content, int fd_socketReceptor, t_log*);//Al crearse dos sockets por cada nueva conexion, y crear dos hilos por proceso conectado, los tipos de procesos y ids pueden enviarse solo en un struct del SOCKET_ESCUCHA O HANDSHAKE
 
 int enviarRespuesta(t_tipoRespuesta, void* puntero_content, int fd_socketReceptor, t_log*);
@@ -229,9 +222,7 @@ int enviarRespuesta(t_tipoRespuesta, void* puntero_content, int fd_socketRecepto
 
 void* recibirMensaje(int fd_socket_emisor, t_log*);//Recibe el socket emisor y un logger y retorna un void* que hay que castear de acuerdo al tipoMensaje recibido en el primer recv
 
-//void* recibirRespuesta(int fd_socket_emisor, int num_tipoRespuesta,  t_log*);//Recibe el socket emisor, el tipo de respuesta recibido en el primer rcv  y un logger y retorna un void* que hay que castear de acuerdo al tipoMensaje recibido en el primer recv
-void* recibirRespuesta(int socketEmisor, t_tipoRespuesta tipoRespuesta, t_log* logger);/*DESPUES SACAR Y DEJAR EL DE ARRIBA*/
+void* recibirRespuesta(int fd_socketEmisor, t_tipoRespuesta tipoRespuesta_enum, t_log*);//Recibe el socket emisor, el tipo de respuesta recibido en el primer rcv  y un logger y retorna un void* que hay que castear de acuerdo al tipoMensaje recibido en el primer recv
 
-void* empaquetar(t_tipoMensaje tipo_mensaje, t_buffer* buffer, int* bytes);
 
 #endif /* PROTOCOLO_H_ */
