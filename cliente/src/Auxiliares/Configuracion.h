@@ -12,18 +12,11 @@
 #include <shared.h>
 
 typedef struct {
-	char* ip_comanda;
-	int puerto_comanda;
-	char* ip_restaurante;
-	int puerto_restaurante;
-	char* ip_sindicato;
-	int puerto_sindicato;
-	char* ip_app;
-	int puerto_app;
+	char* ip;
+	int puerto;
 	char* archivo_log;
 	int posicion_x;
 	int posicion_y;
-	char* proceso_server;
 	u_int32_t id_cliente;
 } t_cliente_config;
 

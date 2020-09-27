@@ -22,26 +22,6 @@ void _leer_consola(){
 	}
 	free(line);
 }
-void crear_hilo_recepcion_mensajes(){
-	socket_recepcion = conectar_a_server_de_config();
-	enviarMensaje(SOCKET_ESCUCHA, &cliente_config.id_cliente,socket_recepcion, logger);
-
-	pthread_t hilo_recepcion;
-	pthread_create(&hilo_recepcion,NULL,(void*)inicializar_conexion_recepcion,NULL);
-	pthread_detach(hilo_recepcion);
-}
-void  inicializar_conexion_envio(){
-	socket_envio = conectar_a_server_de_config();
-	enviarMensaje(SOCKET_ENVIO,&cliente_config.id_cliente,socket_envio,logger);
-}
-void crear_hilo_conexion_envio(){
-//	socket_envio = conectar_a_server_de_config();
-//	enviarMensaje(SOCKET_ENVIO,&cliente_config.id_cliente,socket_envio,logger);
-
-	pthread_t hilo_envio;
-	pthread_create(&hilo_envio,NULL,(void*)inicializar_conexion_envio,NULL);
-	pthread_detach(hilo_envio);
-}
 t_tipoRespuesta recibir_tipo_respuesta(int socket_cliente) {
 	t_tipoRespuesta tipo_respuesta;
 
@@ -53,8 +33,8 @@ t_tipoRespuesta recibir_tipo_respuesta(int socket_cliente) {
 	return tipo_respuesta;
 }
 void inicializar_conexion_recepcion(int* socket){
-//	socket_recepcion = conectar_a_server_de_config();
-//	enviarMensaje(SOCKET_ESCUCHA, &cliente_config.id_cliente,socket_recepcion, logger);
+	socket_recepcion = conectar_a_server();
+	enviarMensaje(SOCKET_ESCUCHA, &cliente_config.id_cliente,socket_recepcion, logger);
 
 	while(1){
 		t_tipoRespuesta tipo_respuesta = recibir_tipo_respuesta(socket_recepcion);
@@ -74,29 +54,29 @@ void inicializar_conexion_recepcion(int* socket){
 		}
 	}
 }
-int conectar_a_server_de_config(){
-	t_tipoProceso proceso_enum = tipo_proceso_string_to_enum(cliente_config.proceso_server);
+void crear_hilo_recepcion_mensajes(){
+	pthread_t hilo_recepcion;
+	pthread_create(&hilo_recepcion,NULL,(void*)inicializar_conexion_recepcion,NULL);
+	pthread_detach(hilo_recepcion);
+}
+void  inicializar_conexion_envio(){
+	socket_envio = conectar_a_server();
+	enviarMensaje(SOCKET_ENVIO,&cliente_config.id_cliente,socket_envio,logger);
+}
+void crear_hilo_conexion_envio(){
+	pthread_t hilo_envio;
+	pthread_create(&hilo_envio,NULL,(void*)inicializar_conexion_envio,NULL);
+	pthread_detach(hilo_envio);
+}
+int conectar_a_server(){
 	int socket_aux;
 
-	switch(proceso_enum){
-	case APP :;
-		socket_aux = conectar_a_servidor(cliente_config.ip_app, cliente_config.puerto_app, cliente_config.id_cliente, CLIENTE, APP, logger);
-		log_info(logger, "Conectando con APP. Socket: %d\n", socket_aux);
-		break;
-	case COMANDA :;
-		socket_aux = conectar_a_servidor(cliente_config.ip_comanda, cliente_config.puerto_comanda, cliente_config.id_cliente, CLIENTE, COMANDA, logger);
-		log_info(logger, "Conectando con COMANDA. Socket: %d\n", socket_aux);
-		break;
-	case SINDICATO :;
-		socket_aux = conectar_a_servidor(cliente_config.ip_sindicato, cliente_config.puerto_sindicato, cliente_config.id_cliente, CLIENTE, SINDICATO, logger);
-		log_info(logger, "Conectando con SINDICATO. Socket: %d\n", socket_aux);
-		break;
-	default:;
-		log_info(logger, "El proceso al que se intenta conectar no existe capo...");
-		break;
+	socket_aux = conectar_a_servidor(cliente_config.ip, cliente_config.puerto, cliente_config.id_cliente, CLIENTE, APP, logger);
+	log_info(logger, "Conectando con servidor. Socket: %d\n", socket_aux);
+
+	if(socket_aux<0){
+		log_error(logger,"Error al conectarse a servidor.");
 	}
-	if(socket_aux<0)
-		log_error(logger,"Error al conectarse a %s", cliente_config.proceso_server);
 
 	return socket_aux;
 }
@@ -106,7 +86,9 @@ void procesar_solicitud(char** parametros){
 
 	switch(mensaje_enum) {
 		case CONSULTAR_RESTAURANTES:;
-			enviarMensaje(CONSULTAR_RESTAURANTES, NULL, socket_envio,logger);
+			int ret = enviarMensaje(CONSULTAR_RESTAURANTES, NULL, socket_envio,logger);
+			log_info(logger,"PRUEBA RETORNO:%d",ret);
+
 			break;
 		case SELECCIONAR_RESTAURANTE:;
 			break;
@@ -117,14 +99,6 @@ void procesar_solicitud(char** parametros){
 		case CREAR_PEDIDO:;
 			break;
 		case GUARDAR_PEDIDO:;
-//			t_guardar_pedido* guardar_pedido = malloc(sizeof(t_guardar_pedido));
-//			strcpy(guardar_pedido->nombre_restaurante, parametros[1]);
-//			guardar_pedido->id_pedido = atoi(parametros[2]);
-//
-//			enviarMensaje(CLIENTE, cliente_config.id_cliente, mensaje_enum, sizeof(t_guardar_pedido), guardar_pedido, socket_envio, proceso_enum, logger);
-//
-//			free(guardar_pedido);
-
 			break;
 		case ANADIR_PLATO:;
 			break;

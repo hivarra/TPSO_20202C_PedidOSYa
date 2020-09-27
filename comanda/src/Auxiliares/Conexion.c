@@ -25,65 +25,66 @@ u_int32_t recibir_int(int socket_cliente) {
 }
 void procesar_mensajes(t_cliente_info* args_conexion){
 	t_cliente_info* cliente_info = buscar_cliente(args_conexion->id_cliente);
-	log_info(logger, "CONTESTO POR SOCKET:%d", args_conexion->socket);
+	log_info(logger, "CONTESTO POR SOCKET:%d", cliente_info->socket);
 
 	while(1){
-		t_tipoMensaje* tipo_mensaje = recibirMensaje(args_conexion->socket,logger);
-		log_info(logger, "tipo de mensaje:%d", *tipo_mensaje);
-		log_info(logger, "Se recibe tipo de mensaje:%s", get_nombre_mensaje(*tipo_mensaje));
+//		t_tipoMensaje* tipo_mensaje = recibirMensaje(args_conexion->socket,logger);
+		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(args_conexion->socket);
+		log_info(logger, "tipo de mensaje:%d", tipo_mensaje);
+		log_info(logger, "Se recibe tipo de mensaje:%s", get_nombre_mensaje(tipo_mensaje));
 
-		switch (*tipo_mensaje) {
-
-		case CONSULTAR_RESTAURANTES:
-			;
-			t_list* lista_aux_restos = list_create();
-			char* nombre_resto_1 = "RESTO_1";
-			char* nombre_resto_2 = "RESTO_2";
-			list_add(lista_aux_restos, nombre_resto_1);
-			list_add(lista_aux_restos, nombre_resto_2);
-			log_info(logger, "LLEGO ACA");
-			t_rta_consultar_restaurantes* rta_consultar_rtes = malloc(sizeof(t_rta_consultar_restaurantes));
-			rta_consultar_rtes->cantRestaurantes = 2;
-			rta_consultar_rtes->restaurantes = lista_aux_restos;
-			enviarRespuesta(RTA_CONSULTAR_RESTAURANTES,rta_consultar_rtes,cliente_info->socket,logger);
-			free(rta_consultar_rtes);
-
-			break;
-
-		case GUARDAR_PEDIDO:
-			;
-			//		TODO:
-			break;
-
-		case GUARDAR_PLATO:
-			;
-			//		TODO:
-			break;
-
-		case OBTENER_PEDIDO:
-			;
-			//		TODO:
-			break;
-
-		case CONFIRMAR_PEDIDO:
-			;
-			//		TODO:
-			break;
-
-		case PLATO_LISTO:
-			;
-			//		TODO:
-			break;
-
-		case FINALIZAR_PEDIDO:
-			;
-			//		TODO:
-			break;
-
-		default:
-			;
-			break;
-		}
+//		switch (tipo_mensaje) {
+//
+//		case CONSULTAR_RESTAURANTES:
+//			;
+//			t_list* lista_aux_restos = list_create();
+//			char* nombre_resto_1 = "RESTO_1";
+//			char* nombre_resto_2 = "RESTO_2";
+//			list_add(lista_aux_restos, nombre_resto_1);
+//			list_add(lista_aux_restos, nombre_resto_2);
+//			log_info(logger, "LLEGO ACA");
+//			t_rta_consultar_restaurantes* rta_consultar_rtes = malloc(sizeof(t_rta_consultar_restaurantes));
+//			rta_consultar_rtes->cantRestaurantes = 2;
+//			rta_consultar_rtes->restaurantes = lista_aux_restos;
+//			enviarRespuesta(RTA_CONSULTAR_RESTAURANTES,rta_consultar_rtes,cliente_info->socket,logger);
+//			free(rta_consultar_rtes);
+//
+//			break;
+//
+//		case GUARDAR_PEDIDO:
+//			;
+//			//		TODO:
+//			break;
+//
+//		case GUARDAR_PLATO:
+//			;
+//			//		TODO:
+//			break;
+//
+//		case OBTENER_PEDIDO:
+//			;
+//			//		TODO:
+//			break;
+//
+//		case CONFIRMAR_PEDIDO:
+//			;
+//			//		TODO:
+//			break;
+//
+//		case PLATO_LISTO:
+//			;
+//			//		TODO:
+//			break;
+//
+//		case FINALIZAR_PEDIDO:
+//			;
+//			//		TODO:
+//			break;
+//
+//		default:
+//			;
+//			break;
+//		}
 	}
 }
 void connection_handler(int* socket_emisor){
@@ -105,7 +106,7 @@ void connection_handler(int* socket_emisor){
 	case SOCKET_ENVIO:
 		;
 		int id_cliente_envio = recibir_int(*socket_emisor);
-		log_info(logger, "Se recibe mensaje SOCKET_ENVIO de SOCKET:%d", *socket_emisor);
+		log_info(logger, "Se recibe mensaje SOCKET_ENVIO de SOCKET:%d con ID_CLIENTE:%d",*socket_emisor,id_cliente_envio);
 
 		t_cliente_info* args = malloc(sizeof(t_cliente_info));
 		args->id_cliente = id_cliente_envio;
@@ -213,14 +214,6 @@ void *escuchar_conexiones(){
 		pthread_detach(hilo_conexion);
 	}
 }
-//void agregar_cliente(t_mensaje* msg,int socket){
-//	t_cliente_info* cliente_info = guardar_info_cliente(msg, socket);
-//	agregar_a_lista_clientes(cliente_info);
-//}
-//t_cliente_info* guardar_info_cliente(t_mensaje* msg,int socket){
-//	u_int32_t id_cliente = msg->header.idProceso;
-//	return crear_cliente_info(id_cliente, socket);
-//}
 t_cliente_info* crear_cliente_info(int id_cliente, int socket){
 	t_cliente_info* cliente = malloc(sizeof(t_cliente_info));
 	cliente->id_cliente = id_cliente;

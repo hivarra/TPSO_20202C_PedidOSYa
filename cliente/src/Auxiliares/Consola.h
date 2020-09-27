@@ -24,7 +24,7 @@ void leer_consola();
 void _leer_consola();
 int procesar_comando(char *line);
 void procesar_solicitud(char** parametros);
-int conectar_a_server_de_config();
+int conectar_a_server();
 void inicializar_conexion_recepcion();
 void crear_hilo_recepcion_mensajes();
 void crear_hilo_conexion_envio();
