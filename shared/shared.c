@@ -34,10 +34,8 @@ char* mensajes_str[] = {
 		"FINALIZAR_PEDIDO",
 		"TERMINAR_PEDIDO",
 		"OBTENER_RECETA",
-		"RESPUESTA_OK_FAIL",
 		"SOCKET_ESCUCHA",
-		"SOCKET_ENVIO"
-};
+		"SOCKET_ENVIO"};
 
 char* respuestas_str[] = {
 		"RTA_CONSULTAR_RESTAURANTES",
@@ -219,6 +217,11 @@ char* get_nombre_mensaje(int enum_mensaje) {
 	return mensajes_str[enum_mensaje];
 }
 
+char* get_nombre_respuesta(int enum_respuesta) {
+
+	return respuestas_str[enum_respuesta];
+}
+
 t_tipoProceso tipo_proceso_string_to_enum(char *sval) {
 	t_tipoProceso result = APP;
 	for (int i = 0; procesos_str[i] != NULL; ++i, ++result)
@@ -272,8 +275,8 @@ uint64_t timestamp() {
 void liberar_lista(char** lista){
 	int contador = 0;
 	while(lista[contador] != NULL){
-	        free(lista[contador]);
-	        contador++;
+		free(lista[contador]);
+		contador++;
 	}
 	free(lista);
 }

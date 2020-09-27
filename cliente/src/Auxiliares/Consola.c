@@ -23,13 +23,24 @@ void _leer_consola(){
 	free(line);
 }
 void crear_hilo_recepcion_mensajes(){
+	socket_recepcion = conectar_a_server_de_config();
+	enviarMensaje(SOCKET_ESCUCHA, &cliente_config.id_cliente,socket_recepcion, logger);
+
 	pthread_t hilo_recepcion;
 	pthread_create(&hilo_recepcion,NULL,(void*)inicializar_conexion_recepcion,NULL);
 	pthread_detach(hilo_recepcion);
 }
-void crear_conexion_envio(){
+void  inicializar_conexion_envio(){
 	socket_envio = conectar_a_server_de_config();
 	enviarMensaje(SOCKET_ENVIO,&cliente_config.id_cliente,socket_envio,logger);
+}
+void crear_hilo_conexion_envio(){
+//	socket_envio = conectar_a_server_de_config();
+//	enviarMensaje(SOCKET_ENVIO,&cliente_config.id_cliente,socket_envio,logger);
+
+	pthread_t hilo_envio;
+	pthread_create(&hilo_envio,NULL,(void*)inicializar_conexion_envio,NULL);
+	pthread_detach(hilo_envio);
 }
 t_tipoRespuesta recibir_tipo_respuesta(int socket_cliente) {
 	t_tipoRespuesta tipo_respuesta;
@@ -41,13 +52,15 @@ t_tipoRespuesta recibir_tipo_respuesta(int socket_cliente) {
 	}
 	return tipo_respuesta;
 }
-void inicializar_conexion_recepcion(){
-	socket_recepcion = conectar_a_server_de_config();
-	enviarMensaje(SOCKET_ESCUCHA, &cliente_config.id_cliente,socket_recepcion, logger);
+void inicializar_conexion_recepcion(int* socket){
+//	socket_recepcion = conectar_a_server_de_config();
+//	enviarMensaje(SOCKET_ESCUCHA, &cliente_config.id_cliente,socket_recepcion, logger);
 
 	while(1){
 		t_tipoRespuesta tipo_respuesta = recibir_tipo_respuesta(socket_recepcion);
+		log_info(logger,"PRUEBA:%d",tipo_respuesta);
 		log_info(logger, "LLEGO ACA");
+
 		switch(tipo_respuesta){
 			case RTA_CONSULTAR_RESTAURANTES:;
 				t_rta_consultar_restaurantes* rta_consultar_restaurantes = recibirRespuesta(socket_recepcion,RTA_CONSULTAR_RESTAURANTES,logger);
@@ -89,7 +102,6 @@ int conectar_a_server_de_config(){
 }
 void procesar_solicitud(char** parametros){
 	t_tipoMensaje mensaje_enum = tipo_mensaje_string_to_enum(parametros[0]);
-
 	log_info(logger, "Mensaje a enviar: %s\n", parametros[0]);
 
 	switch(mensaje_enum) {

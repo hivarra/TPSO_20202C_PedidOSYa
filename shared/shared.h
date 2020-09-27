@@ -52,7 +52,6 @@ typedef enum{
 	FINALIZAR_PEDIDO,
 	TERMINAR_PEDIDO,
 	OBTENER_RECETA,
-	RESPUESTA_OK_FAIL,
 	SOCKET_ESCUCHA,
 	SOCKET_ENVIO
 }t_tipoMensaje;
@@ -133,36 +132,6 @@ typedef enum{
 //	uint32_t posY;
 //}__attribute__((packed)) t_restaurante;
 
-<<<<<<< HEAD
-/*----Tipos Restaurante -- */
-
-typedef struct {
-	uint32_t id;
-	char  afinidad[100];//Milanesas
-}__attribute__((packed)) t_cocinero;
-
-typedef struct {
-	uint32_t id;
-	uint32_t id_Cliente;
-	char* platos[32];//[Milanesas, Pastas, Ensalada]
-	uint32_t cant_Platos[32];//[3, 5, 4]
-	uint32_t precioTotal;// 300
-}__attribute__((packed)) t_pedido;
-
-typedef struct {
-	uint32_t id;
-	char* nombre[32];//Milanesas
-	uint32_t precio;// 30
-}__attribute__((packed)) t_plato;
-
-//typedef struct {
-//	uint32_t id;
-//	char nombre[32];//Milanesas
-//	char* pasos[32];//[Trocear, Empanar, Reposar, Hornear]
-//	int  tiempos_pasos[32];//[4, 5, 3, 10]
-//}__attribute__((packed)) t_receta;
-=======
->>>>>>> 742956012763318a0e71ab8152db296c57566fb1
 
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso);

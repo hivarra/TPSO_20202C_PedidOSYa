@@ -35,6 +35,32 @@ void* empaquetar(t_tipoMensaje tipo_mensaje, t_buffer* buffer, int* bytes){
 
 	return fullSerializado;
 }
+/*lo agregue por las dudas que rompa por el t_tipoRespuesta*/
+void* empaquetar_2(t_tipoRespuesta tipo_mensaje, t_buffer* buffer, int* bytes){
+
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->tipoMensaje = tipo_mensaje;
+	paquete->buffer = buffer;
+
+	*bytes = sizeof(paquete->tipoMensaje)
+			+ sizeof(buffer->size)
+			+ buffer->size;
+
+	void* fullSerializado = malloc(*bytes);
+	int offset = 0;
+
+	memcpy(fullSerializado+offset, &(paquete->tipoMensaje), sizeof(paquete->tipoMensaje));
+	offset =+ sizeof(paquete->tipoMensaje);
+	memcpy(fullSerializado+offset, &(paquete->buffer->size), sizeof(paquete->buffer->size));
+	offset =+ sizeof(paquete->buffer->size);
+	memcpy(fullSerializado+offset, paquete->buffer->stream, paquete->buffer->size);
+	offset =+ paquete->buffer->size;
+
+	free(paquete);
+
+	return fullSerializado;
+}
 
 void* serializar_rta_consultar_restaurantes(uint32_t* largo, void* content){
 
@@ -684,7 +710,7 @@ int enviarRespuesta(t_tipoRespuesta tipoRespuesta, void* content, int socketRece
 	}
 
 	int cant_bytes;
-	void* paquete = empaquetar(tipoRespuesta, buffer, &cant_bytes);
+	void* paquete = empaquetar_2(tipoRespuesta, buffer, &cant_bytes);
 
 	if (buffer->stream != NULL)
 		free(buffer->stream);

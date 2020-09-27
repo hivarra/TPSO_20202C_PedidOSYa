@@ -17,7 +17,7 @@ int main(void) {
 
 	crear_hilo_recepcion_mensajes();
 
-	crear_conexion_envio();
+	crear_hilo_conexion_envio();
 
 	leer_consola();
 

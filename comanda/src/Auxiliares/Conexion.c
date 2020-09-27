@@ -23,19 +23,16 @@ u_int32_t recibir_int(int socket_cliente) {
 	}
 	return integer;
 }
-void procesar_mensajes(int id_cliente, int socket_cliente_envio){
-	t_cliente_info* cliente_info = buscar_cliente(id_cliente);
-	int socket_envio_rta;
-	if(cliente_info != NULL)
-		socket_envio_rta = cliente_info->socket;
-	else
-		socket_envio_rta = socket_cliente_envio;
+void procesar_mensajes(t_cliente_info* args_conexion){
+	t_cliente_info* cliente_info = buscar_cliente(args_conexion->id_cliente);
+	log_info(logger, "CONTESTO POR SOCKET:%d", args_conexion->socket);
 
 	while(1){
-		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_cliente_envio);
-		log_info(logger, "Se recibe tipo de mensaje:%s", get_nombre_mensaje(tipo_mensaje));
+		t_tipoMensaje* tipo_mensaje = recibirMensaje(args_conexion->socket,logger);
+		log_info(logger, "tipo de mensaje:%d", *tipo_mensaje);
+		log_info(logger, "Se recibe tipo de mensaje:%s", get_nombre_mensaje(*tipo_mensaje));
 
-		switch (tipo_mensaje) {
+		switch (*tipo_mensaje) {
 
 		case CONSULTAR_RESTAURANTES:
 			;
@@ -48,7 +45,7 @@ void procesar_mensajes(int id_cliente, int socket_cliente_envio){
 			t_rta_consultar_restaurantes* rta_consultar_rtes = malloc(sizeof(t_rta_consultar_restaurantes));
 			rta_consultar_rtes->cantRestaurantes = 2;
 			rta_consultar_rtes->restaurantes = lista_aux_restos;
-			enviarRespuesta(RTA_CONSULTAR_RESTAURANTES,rta_consultar_rtes,socket_envio_rta,logger);
+			enviarRespuesta(RTA_CONSULTAR_RESTAURANTES,rta_consultar_rtes,cliente_info->socket,logger);
 			free(rta_consultar_rtes);
 
 			break;
@@ -110,7 +107,13 @@ void connection_handler(int* socket_emisor){
 		int id_cliente_envio = recibir_int(*socket_emisor);
 		log_info(logger, "Se recibe mensaje SOCKET_ENVIO de SOCKET:%d", *socket_emisor);
 
-		procesar_mensajes(id_cliente_envio, *socket_emisor);
+		t_cliente_info* args = malloc(sizeof(t_cliente_info));
+		args->id_cliente = id_cliente_envio;
+		args->socket = *socket_emisor;
+
+		pthread_t hilo_procesar_msj;
+		pthread_create(&hilo_procesar_msj,NULL,(void*)procesar_mensajes,args);
+		pthread_detach(hilo_procesar_msj);
 
 		break;
 
@@ -121,7 +124,6 @@ void connection_handler(int* socket_emisor){
 //			char* nombre_resto_2 = "RESTO_2";
 //			list_add(lista_aux_restos, nombre_resto_1);
 //			list_add(lista_aux_restos, nombre_resto_2);
-//			log_info(logger, "LLEGO ACA");
 //			t_rta_consultar_restaurantes* rta_consultar_rtes = malloc(sizeof(t_rta_consultar_restaurantes));
 //			rta_consultar_rtes->cantRestaurantes = 2;
 //			rta_consultar_rtes->restaurantes = lista_aux_restos;
