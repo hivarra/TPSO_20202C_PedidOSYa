@@ -23,10 +23,66 @@ int main(int argc, char **argv) {
 	/* 3. Conexion*/
 	/*TODO:Conectarse a app ysindicato*/
 	conectar_a_app();
-	/*TODO:Quedarse escuchando peticiones de cliente*/
+
+	/*TODO:Quedarse escuchando peticiones de clientes y APP*/
+	//pthread_create(&hilo_servidor, NULL,(void*)conectar_a_app, NULL);
+
+	incializar();
 
 	sleep(20);
 	destruir_logger(logger);
 	puts("Fin RESTAURANTE");
 	return EXIT_SUCCESS;
 }
+
+void incializar(){
+
+	iniciarListas();
+	iniciarCocinerosDefault();
+	//iniciarRecetasDefault();
+	//iniciarPlatosDefault();
+}
+
+void iniciarListas (){
+
+	cocineros = list_create();
+	recetas = list_create();
+	platos = list_create();
+}
+
+void iniciarCocinerosDefault(){
+
+		t_cocinero* cocinero= malloc(sizeof(t_cocinero));
+		cocinero-> id = 1;
+		strcpy(cocinero->afinidad, restaurante_conf.afinidad_cocineros[0]);
+
+		imprimirCocinero(cocinero);
+}
+
+
+void imprimirCocinero(t_cocinero* cocinero){
+
+	log_info(logger, "Cocinero id %d | Afinidad %s",cocinero-> id , cocinero-> afinidad );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

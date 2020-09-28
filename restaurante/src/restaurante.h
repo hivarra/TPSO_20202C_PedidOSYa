@@ -15,4 +15,11 @@
 #include "Auxiliares/Utils.h"
 
 
+
+pthread_t hilo_servidor;
+
+
+
+
+
 #endif /* RESTAURANTE_H_ */
