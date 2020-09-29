@@ -19,44 +19,38 @@ char* procesos_str[] = {
 
 char* mensajes_str[] = {
 		"HANDSHAKE",
-		"CONSULTAR_RESTAURANTES",
-		"SELECCIONAR_RESTAURANTE",
-		"OBTENER_RESTAURANTE",
-		"CONSULTAR_PLATOS",
-		"CREAR_PEDIDO",
-		"GUARDAR_PEDIDO",
-		"ANADIR_PLATO",
-		"GUARDAR_PLATO",
-		"CONFIRMAR_PEDIDO",
-		"PLATO_LISTO",
-		"CONSULTAR_PEDIDO",
-		"OBTENER_PEDIDO",
-		"FINALIZAR_PEDIDO",
-		"TERMINAR_PEDIDO",
-		"OBTENER_RECETA",
-		"SOCKET_ESCUCHA",
-		"SOCKET_ENVIO"};
-
-char* respuestas_str[] = {
-		"RTA_CONSULTAR_RESTAURANTES",
-		"RTA_SELECCIONAR_RESTAURANTE",
-		"RTA_OBTENER_RESTAURANTE",
-		"RTA_OBTENER_RESTAURANTE",
-		"RTA_CONSULTAR_PLATOS",
-		"RTA_CREAR_PEDIDO",
-		"RTA_GUARDAR_PEDIDO",
-		"RTA_ANADIR_PLATO",
-		"RTA_GUARDAR_PLATO",
-		"RTA_CONFIRMAR_PEDIDO",
-		"RTA_PLATO_LISTO",
-		"RTA_CONSULTAR_PEDIDO",
-		"RTA_OBTENER_PEDIDO",
-		"RTA_FINALIZAR_PEDIDO",
-		"RTA_TERMINAR_PEDIDO",
-		"RTA_OBTENER_RECETA",
-		"SOCKET_ESCUCHA",
-		"SOCKET_ENVIO"};
-
+		"SOCKET ENVIO",
+		"SOCKET ESCUCHA",
+		"CONSULTAR RESTAURANTES",
+		"SELECCIONAR RESTAURANTE",
+		"OBTENER RESTAURANTE",
+		"CONSULTAR PLATOS",
+		"CREAR PEDIDO",
+		"GUARDAR PEDIDO",
+		"ANADIR PLATO",
+		"GUARDAR PLATO",
+		"CONFIRMAR PEDIDO",
+		"PLATO LISTO",
+		"CONSULTAR PEDIDO",
+		"OBTENER PEDIDO",
+		"FINALIZAR PEDIDO",
+		"TERMINAR PEDIDO",
+		"OBTENER RECETA",
+		"RTA. CONSULTAR RESTAURANTES",
+		"RTA. SELECCIONAR RESTAURANTE",
+		"RTA. OBTENER RESTAURANTE",
+		"RTA. CONSULTAR PLATOS",
+		"RTA. CREAR PEDIDO",
+		"RTA. GUARDAR PEDIDO",
+		"RTA. ANADIR PLATO",
+		"RTA. GUARDAR PLATO",
+		"RTA. CONFIRMAR PEDIDO",
+		"RTA. PLATO LISTO",
+		"RTA. CONSULTAR PEDIDO",
+		"RTA. OBTENER PEDIDO",
+		"RTA. FINALIZAR PEDIDO",
+		"RTA. TERMINAR PEDIDO",
+		"RTA. OBTENER RECETA"};
 
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso) {
@@ -164,11 +158,6 @@ int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmi
 		return -1;
 	}
 
-//	loggear(logger,LOG_LEVEL_INFO, "INICIO Handshake(%d)...", tipoProcesoReceptor);
-//	enviarMensaje(tipoProcesoEmisor, id_proceso, HANDSHAKE, 0, NULL, socket_cliente, tipoProcesoReceptor, logger);
-//	t_mensaje* msg = recibirMensaje(socket_cliente, logger);
-//	destruirMensaje(msg);
-//	loggear(logger,LOG_LEVEL_INFO, "FIN Handshake(%d)", tipoProcesoReceptor);
 	return socket_cliente;
 }
 
@@ -215,11 +204,6 @@ char* get_nombre_proceso(int enum_proceso) {
 char* get_nombre_mensaje(int enum_mensaje) {
 
 	return mensajes_str[enum_mensaje];
-}
-
-char* get_nombre_respuesta(int enum_respuesta) {
-
-	return respuestas_str[enum_respuesta];
 }
 
 t_tipoProceso tipo_proceso_string_to_enum(char *sval) {

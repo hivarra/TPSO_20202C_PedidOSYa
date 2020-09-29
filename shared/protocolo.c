@@ -10,18 +10,18 @@
 
 /************PRIVATE************/
 
-void* empaquetar(t_tipoMensaje tipo_mensaje, t_buffer* buffer, int* bytes){
+int empaquetar_enviar_free_buffer(t_tipoMensaje tipoMensaje, t_buffer* buffer, int socketReceptor, t_log* logger){
 
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 
-	paquete->tipoMensaje = tipo_mensaje;
+	paquete->tipoMensaje = tipoMensaje;
 	paquete->buffer = buffer;
 
-	*bytes = sizeof(paquete->tipoMensaje)
+	int bytes = sizeof(paquete->tipoMensaje)
 			+ sizeof(buffer->size)
 			+ buffer->size;
 
-	void* fullSerializado = malloc(*bytes);
+	void* fullSerializado = malloc(bytes);
 	int offset = 0;
 
 	memcpy(fullSerializado+offset, &(paquete->tipoMensaje), sizeof(paquete->tipoMensaje));
@@ -33,545 +33,15 @@ void* empaquetar(t_tipoMensaje tipo_mensaje, t_buffer* buffer, int* bytes){
 
 	free(paquete);
 
-	return fullSerializado;
-}
-/*lo agregue por las dudas que rompa por el t_tipoRespuesta*/
-void* empaquetar_2(t_tipoRespuesta tipo_mensaje, t_buffer* buffer, int* bytes){
-
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-
-	paquete->tipoMensaje = tipo_mensaje;
-	paquete->buffer = buffer;
-
-	*bytes = sizeof(paquete->tipoMensaje)
-			+ sizeof(buffer->size)
-			+ buffer->size;
-
-	void* fullSerializado = malloc(*bytes);
-	int offset = 0;
-
-	memcpy(fullSerializado+offset, &(paquete->tipoMensaje), sizeof(paquete->tipoMensaje));
-	offset =+ sizeof(paquete->tipoMensaje);
-	memcpy(fullSerializado+offset, &(paquete->buffer->size), sizeof(paquete->buffer->size));
-	offset =+ sizeof(paquete->buffer->size);
-	memcpy(fullSerializado+offset, paquete->buffer->stream, paquete->buffer->size);
-	offset =+ paquete->buffer->size;
-
-	free(paquete);
-
-	return fullSerializado;
-}
-
-void* serializar_rta_consultar_restaurantes(uint32_t* largo, void* content){
-
-	t_rta_consultar_restaurantes* rta = content;
-
-	*largo += sizeof(rta->cantRestaurantes)
-			+rta->cantRestaurantes*L_STRING;
-
-	void* serializado = malloc(*largo);
-	int offset = 0;
-
-	memcpy(serializado+offset, &rta->cantRestaurantes, sizeof(rta->cantRestaurantes));
-	offset += sizeof(rta->cantRestaurantes);
-
-	for (int i = 0; i < rta->cantRestaurantes; i++){
-		memcpy(serializado+offset, list_get(rta->restaurantes, i), L_STRING);
-		offset += L_STRING;
-	}
-	return serializado;
-}
-
-void* deserializar_rta_consultar_restaurantes(t_buffer* buffer){
-
-	t_rta_consultar_restaurantes* rta = malloc(sizeof(t_rta_consultar_restaurantes));
-
-	int offset = 0;
-
-	memcpy(&rta->cantRestaurantes, buffer->stream+offset, sizeof(rta->cantRestaurantes));
-	offset =+ sizeof(rta->cantRestaurantes);
-
-	rta->restaurantes = list_create();
-
-	for (int i = 0; i < rta->cantRestaurantes; i++){
-
-		char restaurante_i[L_STRING];
-
-		memcpy(restaurante_i, buffer->stream+offset, L_STRING);
-		offset += L_STRING;
-
-		list_add(rta->restaurantes, restaurante_i);//TODO:REVISAR SI NO SE PIERDE REFERENCIA AL CHAR[]. AL PARECER LA FUNCION LIST_ADD USA STATIC VAR POR LO QUE NO DEBERIA PERDERSE
-	}
-
-	free(buffer->stream);
-
-	return rta;
-}
-
-void* serializar_rta_obtener_receta(uint32_t* largo, void* content){
-
-	t_receta* rta = content;
-
-	*largo += L_STRING
-			+sizeof(rta->precio)
-			+sizeof(rta->cantPasos)
-			+rta->cantPasos*sizeof(t_paso_receta);
-
-	void* serializado = malloc(*largo);
-	int offset = 0;
-
-	memcpy(serializado+offset, rta->nombre, L_STRING);
-	offset += L_STRING;
-	memcpy(serializado+offset, &rta->precio, sizeof(rta->precio));
-	offset += sizeof(rta->precio);
-	memcpy(serializado+offset, &rta->cantPasos, sizeof(rta->cantPasos));
-	offset += sizeof(rta->cantPasos);
-
-	for (int i = 0; i < rta->cantPasos; i++){
-		memcpy(serializado+offset, list_get(rta->pasos, i), sizeof(t_paso_receta));
-		offset += sizeof(t_paso_receta);
-	}
-	return serializado;
-}
-
-void* deserializar_rta_obtener_receta(t_buffer* buffer){
-
-	t_receta* rta = malloc(sizeof(t_receta));
-
-	int offset = 0;
-
-	memcpy(rta->nombre, buffer->stream+offset, L_STRING);
-	offset =+ L_STRING;
-	memcpy(&rta->precio, buffer->stream+offset, sizeof(rta->precio));
-	offset =+ sizeof(rta->precio);
-	memcpy(&rta->cantPasos, buffer->stream+offset, sizeof(rta->cantPasos));
-	offset =+ sizeof(rta->cantPasos);
-
-	rta->pasos = list_create();
-
-	for (int i = 0; i < rta->cantPasos; i++){
-
-		t_paso_receta* paso_i = malloc(sizeof(t_paso_receta));
-
-		memcpy(paso_i, buffer->stream+offset, sizeof(t_paso_receta));
-		offset =+ sizeof(t_paso_receta);
-
-		list_add(rta->pasos, paso_i);
-	}
-
-	free(buffer->stream);
-
-	return rta;
-}
-
-void* serializar_rta_obtener_restaurante(uint32_t* largo, void* content){
-	/*****Inner Function*****/
-	int tamanio_total_recetas(uint32_t cant_recetas, t_list* recetas){
-		int tamanio = 0;
-		for (int i = 0; i < cant_recetas; i++){
-			t_receta* receta_i = list_get(recetas, i);
-			tamanio += L_STRING
-					+sizeof(receta_i->precio)
-					+sizeof(receta_i->cantPasos)
-					+receta_i->cantPasos*sizeof(t_paso_receta);
-		}
-		return tamanio;
-	}
-	/**********/
-
-	t_rta_obtener_restaurante* rta = content;
-
-	*largo += sizeof(rta->posX)
-			+sizeof(rta->posY)
-			+sizeof(rta->cantHornos)
-			+sizeof(rta->cantCocineros)
-			+sizeof(rta->cantAfinidades)
-			+rta->cantAfinidades*L_STRING
-			+sizeof(rta->cantRecetas)
-			+tamanio_total_recetas(rta->cantRecetas, rta->recetas);
-
-	void* serializado = malloc(*largo);
-	int offset = 0;
-
-	memcpy(serializado+offset, &rta->posX, sizeof(rta->posX));
-	offset += sizeof(rta->posX);
-	memcpy(serializado+offset, &rta->posY, sizeof(rta->posY));
-	offset += sizeof(rta->posY);
-	memcpy(serializado+offset, &rta->cantHornos, sizeof(rta->cantHornos));
-	offset += sizeof(rta->cantHornos);
-	memcpy(serializado+offset, &rta->cantCocineros, sizeof(rta->cantCocineros));
-	offset += sizeof(rta->cantCocineros);
-	memcpy(serializado+offset, &rta->cantAfinidades, sizeof(rta->cantAfinidades));
-	offset += sizeof(rta->cantAfinidades);
-
-	for (int i = 0; i < rta->cantAfinidades; i++){
-		memcpy(serializado+offset, list_get(rta->afinidades_cocineros, i), L_STRING);
-		offset += L_STRING;
-	}
-
-	memcpy(serializado+offset, &rta->cantRecetas, sizeof(rta->cantRecetas));
-	offset += sizeof(rta->cantRecetas);
-
-	for (int i = 0; i < rta->cantRecetas; i++){
-		uint32_t largo_receta = 0;
-		void* receta_serializada = serializar_rta_obtener_receta(&largo_receta, list_get(rta->recetas, i));
-		memcpy(serializado+offset, receta_serializada, largo_receta);
-		free(receta_serializada);
-		offset += largo_receta;
-	}
-	return serializado;
-}
-
-void* deserializar_rta_obtener_restaurante(t_buffer* buffer){
-
-	t_rta_obtener_restaurante* rta = malloc(sizeof(t_rta_obtener_restaurante));
-
-	int offset = 0;
-
-	memcpy(&rta->posX, buffer->stream+offset, sizeof(rta->posX));
-	offset =+ sizeof(rta->posX);
-	memcpy(&rta->posY, buffer->stream+offset, sizeof(rta->posY));
-	offset =+ sizeof(rta->posY);
-	memcpy(&rta->cantHornos, buffer->stream+offset, sizeof(rta->cantHornos));
-	offset =+ sizeof(rta->cantHornos);
-	memcpy(&rta->cantCocineros, buffer->stream+offset, sizeof(rta->cantCocineros));
-	offset =+ sizeof(rta->cantAfinidades);
-	memcpy(&rta->cantCocineros, buffer->stream+offset, sizeof(rta->cantAfinidades));
-	offset =+ sizeof(rta->cantAfinidades);
-
-	rta->afinidades_cocineros = list_create();
-
-	for (int i = 0; i < rta->cantAfinidades; i++){
-
-		char afinidad_i[L_STRING];
-
-		memcpy(afinidad_i, buffer->stream+offset, L_STRING);
-		offset += L_STRING;
-
-		list_add(rta->afinidades_cocineros, afinidad_i);
-	}
-
-	memcpy(&rta->cantRecetas, buffer->stream+offset, sizeof(rta->cantRecetas));
-	offset =+ sizeof(rta->cantRecetas);
-
-	rta->recetas = list_create();
-
-	for (int i = 0; i < rta->cantRecetas; i++){
-
-		t_receta* receta_i = malloc(sizeof(t_receta));
-
-		memcpy(receta_i->nombre, buffer->stream+offset, L_STRING);
-		offset =+ L_STRING;
-		memcpy(&receta_i->precio, buffer->stream+offset, sizeof(receta_i->precio));
-		offset =+ sizeof(receta_i->precio);
-		memcpy(&receta_i->cantPasos, buffer->stream+offset, sizeof(receta_i->cantPasos));
-		offset =+ sizeof(receta_i->cantPasos);
-
-		receta_i->pasos = list_create();
-
-		for (int j = 0; j < receta_i->cantPasos; j++){
-
-			t_paso_receta* paso_j = malloc(sizeof(t_paso_receta));
-			memcpy(paso_j, buffer->stream+offset, sizeof(t_paso_receta));
-			offset =+ sizeof(t_paso_receta);
-
-			list_add(receta_i->pasos, paso_j);
-		}
-
-		list_add(rta->recetas, receta_i);
-	}
-
-	free(buffer->stream);
-
-	return rta;
-
-}
-
-
-void* serializar_rta_consultar_platos(uint32_t* largo, void* content){
-
-	t_rta_consultar_platos* rta = content;
-
-	*largo += sizeof(rta->cantComidas)
-			+rta->cantComidas*sizeof(t_comida);
-
-	void* serializado = malloc(*largo);
-	int offset = 0;
-
-	memcpy(serializado+offset, &rta->cantComidas, sizeof(rta->cantComidas));
-	offset += sizeof(rta->cantComidas);
-
-	for (int i = 0; i < rta->cantComidas; i++){
-		memcpy(serializado+offset, list_get(rta->comidas, i), sizeof(t_comida));
-		offset += sizeof(t_comida);
-	}
-	return serializado;
-}
-
-void* deserializar_rta_consultar_platos(t_buffer* buffer){
-
-	t_rta_consultar_platos* rta = malloc(sizeof(t_rta_consultar_platos));
-
-	int offset = 0;
-
-	memcpy(&rta->cantComidas, buffer->stream+offset, sizeof(rta->cantComidas));
-	offset =+ sizeof(rta->cantComidas);
-
-	rta->comidas = list_create();
-
-	for (int i = 0; i < rta->cantComidas; i++){
-
-		t_comida* comida_i = malloc(sizeof(t_comida));
-
-		memcpy(comida_i, buffer->stream+offset, sizeof(t_comida));
-		offset =+ sizeof(t_comida);
-
-		list_add(rta->comidas, comida_i);
-	}
-
-	free(buffer->stream);
-
-	return rta;
-}
-
-void* serializar_rta_consultar_pedido(uint32_t* largo, void* content){
-
-	t_rta_consultar_pedido* rta = content;
-
-	*largo += L_STRING
-			+sizeof(rta->estado)
-			+sizeof(rta->cantComidas)
-			+rta->cantComidas*sizeof(t_comida);
-
-	void* serializado = malloc(*largo);
-	int offset = 0;
-
-	memcpy(serializado+offset, rta->nombre_restaurante, L_STRING);
-	offset += L_STRING;
-	memcpy(serializado+offset, &rta->estado, sizeof(rta->estado));
-	offset += sizeof(rta->estado);
-	memcpy(serializado+offset, &rta->cantComidas, sizeof(rta->cantComidas));
-	offset += sizeof(rta->cantComidas);
-
-	for (int i = 0; i < rta->cantComidas; i++){
-		memcpy(serializado+offset, list_get(rta->comidas, i), sizeof(t_comida));
-		offset += sizeof(t_comida);
-	}
-	return serializado;
-}
-
-void* deserializar_rta_consultar_pedido(t_buffer* buffer){
-
-	t_rta_consultar_pedido* rta = malloc(sizeof(t_rta_consultar_pedido));
-
-	int offset = 0;
-
-	memcpy(rta->nombre_restaurante, buffer->stream+offset, L_STRING);
-	offset =+ L_STRING;
-	memcpy(&rta->estado, buffer->stream+offset, sizeof(rta->estado));
-	offset =+ sizeof(rta->estado);
-	memcpy(&rta->cantComidas, buffer->stream+offset, sizeof(rta->cantComidas));
-	offset =+ sizeof(rta->cantComidas);
-
-	rta->comidas = list_create();
-
-	for (int i = 0; i < rta->cantComidas; i++){
-
-		t_comida* comida_i = malloc(sizeof(t_comida));
-
-		memcpy(comida_i, buffer->stream+offset, sizeof(t_comida));
-		offset =+ sizeof(t_comida);
-
-		list_add(rta->comidas, comida_i);
-	}
-
-	free(buffer->stream);
-
-	return rta;
-}
-
-void* serializar_rta_obtener_pedido(uint32_t* largo, void* content){
-
-	t_rta_obtener_pedido* rta = content;
-
-	*largo += sizeof(rta->cantComidas)
-			+rta->cantComidas*sizeof(t_comida);
-
-	void* serializado = malloc(*largo);
-	int offset = 0;
-
-	memcpy(serializado+offset, &rta->cantComidas, sizeof(rta->cantComidas));
-	offset += sizeof(rta->cantComidas);
-
-	for (int i = 0; i < rta->cantComidas; i++){
-		memcpy(serializado+offset, list_get(rta->comidas, i), sizeof(t_comida));
-		offset += sizeof(t_comida);
-	}
-	return serializado;
-}
-
-void* deserializar_rta_obtener_pedido(t_buffer* buffer){
-
-	t_rta_obtener_pedido* rta = malloc(sizeof(t_rta_obtener_pedido));
-
-	int offset = 0;
-
-	memcpy(&rta->cantComidas, buffer->stream+offset, sizeof(rta->cantComidas));
-	offset =+ sizeof(rta->cantComidas);
-
-	rta->comidas = list_create();
-
-	for (int i = 0; i < rta->cantComidas; i++){
-
-		t_comida* comida_i = malloc(sizeof(t_comida));
-
-		memcpy(comida_i, buffer->stream+offset, sizeof(t_comida));
-		offset =+ sizeof(t_comida);
-
-		list_add(rta->comidas, comida_i);
-	}
-
-	free(buffer->stream);
-
-	return rta;
-}
-
-
-/************PUBLIC************/
-
-int enviarMensaje(t_tipoMensaje tipoMensaje, void* content, int socketReceptor, t_log* logger) {
-
-	t_buffer* buffer = malloc(sizeof(t_buffer));
-
-	buffer->size = 0;
-	buffer->stream = NULL;
-
-	switch(tipoMensaje){
-		case SOCKET_ESCUCHA:
-
-			buffer->size = sizeof(uint32_t);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case SOCKET_ENVIO:
-
-			buffer->size = sizeof(uint32_t);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case SELECCIONAR_RESTAURANTE:
-
-			buffer->size = sizeof(t_seleccionar_restaurante);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case OBTENER_RESTAURANTE:
-
-			buffer->size = L_STRING;
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case CONSULTAR_PLATOS:
-
-			buffer->size = L_STRING;
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case GUARDAR_PEDIDO:
-
-			buffer->size = sizeof(t_guardar_pedido);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case ANADIR_PLATO:
-
-			buffer->size = sizeof(t_anadir_plato);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case GUARDAR_PLATO:
-
-			buffer->size = sizeof(t_guardar_plato);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case CONFIRMAR_PEDIDO:
-
-			buffer->size = sizeof(uint32_t);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case PLATO_LISTO:
-
-			buffer->size = sizeof(t_plato_listo);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case CONSULTAR_PEDIDO:
-
-			buffer->size = sizeof(uint32_t);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case OBTENER_PEDIDO:
-
-			buffer->size = sizeof(t_obtener_pedido);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case FINALIZAR_PEDIDO:
-
-			buffer->size = sizeof(t_finalizar_pedido);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case TERMINAR_PEDIDO:
-
-			buffer->size = sizeof(t_terminar_pedido);
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		case OBTENER_RECETA:
-
-			buffer->size = L_STRING;
-			buffer->stream = malloc(buffer->size);
-			memcpy(buffer->stream, content, buffer->size);
-
-			break;
-		default:;
-
-			break;
-	}//LOS MENSAJES QUE NO ESTEN EN ESA LISTA SE ENVIARAN SIN PARAMETROS (CONSULTAR_RESTAURANTES, CREAR_PEDIDO)
-
-	int cant_bytes;
-	void* paquete = empaquetar(tipoMensaje, buffer, &cant_bytes);
-
-	if (buffer->stream != NULL)
+	if(buffer->stream != NULL)
 		free(buffer->stream);
 
 	free(buffer);
 
-	if (send(socketReceptor, paquete, cant_bytes, 0) <= 0) {
-		free(paquete);
-		log_error(logger, "No se pudo enviar mensaje %s al socket %d.", get_nombre_mensaje(tipoMensaje), socketReceptor);
+	if (send(socketReceptor, fullSerializado, bytes, 0) <= 0) {
+		log_error(logger, "No se pudo enviar el mensaje %s al socket %d.", get_nombre_mensaje(tipoMensaje), socketReceptor);
 		return -1;
 	}
-
-	free(paquete);
 	return 0;
 }
 
@@ -605,194 +75,994 @@ void* recibirMensaje(int socketEmisor, t_log* logger) {
 	return stream;
 }
 
+void* serializar_rta_consultar_restaurantes(uint32_t* largo, t_rta_consultar_restaurantes* rta){
 
-int enviarRespuesta(t_tipoRespuesta tipoRespuesta, void* content, int socketReceptor, t_log* logger) {
+	*largo += sizeof(rta->cantRestaurantes)
+			+rta->cantRestaurantes*L_REST;
+
+	void* serializado = malloc(*largo);
+	int offset = 0;
+
+	memcpy(serializado+offset, &rta->cantRestaurantes, sizeof(rta->cantRestaurantes));
+	offset += sizeof(rta->cantRestaurantes);
+
+	for (int i = 0; i < rta->cantRestaurantes; i++){
+		memcpy(serializado+offset, list_get(rta->restaurantes, i), L_REST);
+		offset += L_REST;
+	}
+	return serializado;
+}
+
+t_rta_consultar_restaurantes* deserializar_rta_consultar_restaurantes(void* serializado){
+
+	t_rta_consultar_restaurantes* rta = malloc(sizeof(t_rta_consultar_restaurantes));
+
+	int offset = 0;
+
+	memcpy(&rta->cantRestaurantes, serializado+offset, sizeof(rta->cantRestaurantes));
+	offset =+ sizeof(rta->cantRestaurantes);
+
+	rta->restaurantes = list_create();
+
+	for (int i = 0; i < rta->cantRestaurantes; i++){
+
+		char restaurante_i[L_REST];
+
+		memcpy(restaurante_i, serializado+offset, L_REST);
+		offset += L_REST;
+
+		list_add(rta->restaurantes, restaurante_i);//TODO:REVISAR SI NO SE PIERDE REFERENCIA AL CHAR[]. AL PARECER LA FUNCION LIST_ADD USA STATIC VAR POR LO QUE NO DEBERIA PERDERSE
+	}
+
+	free(serializado);
+
+	return rta;
+}
+
+void* serializar_rta_obtener_restaurante(uint32_t* largo, t_rta_obtener_restaurante* rta){
+
+	*largo += sizeof(rta->posX)
+			+sizeof(rta->posY)
+			+sizeof(rta->cantHornos)
+			+sizeof(rta->cantCocineros)
+			+rta->cantCocineros*L_PLATO
+			+sizeof(rta->cantPlatos)
+			+rta->cantPlatos*sizeof(t_plato);
+
+	void* serializado = malloc(*largo);
+	int offset = 0;
+
+	memcpy(serializado+offset, &rta->posX, sizeof(rta->posX));
+	offset += sizeof(rta->posX);
+	memcpy(serializado+offset, &rta->posY, sizeof(rta->posY));
+	offset += sizeof(rta->posY);
+	memcpy(serializado+offset, &rta->cantHornos, sizeof(rta->cantHornos));
+	offset += sizeof(rta->cantHornos);
+	memcpy(serializado+offset, &rta->cantCocineros, sizeof(rta->cantCocineros));
+	offset += sizeof(rta->cantCocineros);
+
+	for (int i = 0; i < rta->cantCocineros; i++){
+		memcpy(serializado+offset, list_get(rta->cocineros, i), L_PLATO);
+		offset += L_PLATO;
+	}
+
+	memcpy(serializado+offset, &rta->cantPlatos, sizeof(rta->cantPlatos));
+	offset += sizeof(rta->cantPlatos);
+
+	for (int i = 0; i < rta->cantPlatos; i++){
+		memcpy(serializado+offset, list_get(rta->platos, i), L_PLATO);
+		offset += L_PLATO;
+	}
+	return serializado;
+}
+
+t_rta_obtener_restaurante* deserializar_rta_obtener_restaurante(void* serializado){
+
+	t_rta_obtener_restaurante* rta = malloc(sizeof(t_rta_obtener_restaurante));
+
+	int offset = 0;
+
+	memcpy(&rta->posX, serializado+offset, sizeof(rta->posX));
+	offset =+ sizeof(rta->posX);
+	memcpy(&rta->posY, serializado+offset, sizeof(rta->posY));
+	offset =+ sizeof(rta->posY);
+	memcpy(&rta->cantHornos, serializado+offset, sizeof(rta->cantHornos));
+	offset =+ sizeof(rta->cantHornos);
+	memcpy(&rta->cantCocineros, serializado+offset, sizeof(rta->cantCocineros));
+	offset =+ sizeof(rta->cantCocineros);
+
+	rta->cocineros = list_create();
+
+	for (int i = 0; i < rta->cantCocineros; i++){
+
+		char afinidad_cocinero_i[L_PLATO];
+
+		memcpy(afinidad_cocinero_i, serializado+offset, L_PLATO);
+		offset += L_PLATO;
+
+		list_add(rta->cocineros, afinidad_cocinero_i);
+	}
+
+	memcpy(&rta->cantPlatos, serializado+offset, sizeof(rta->cantPlatos));
+	offset =+ sizeof(rta->cantPlatos);
+
+	rta->platos = list_create();
+
+	for (int i = 0; i < rta->cantPlatos; i++){
+
+		t_plato* plato_i = malloc(sizeof(t_plato));
+
+		memcpy(plato_i, serializado+offset, sizeof(t_plato));
+		offset =+ sizeof(t_plato);
+
+		list_add(rta->platos, plato_i);
+	}
+
+	free(serializado);
+
+	return rta;
+
+}
+
+void* serializar_rta_consultar_platos(uint32_t* largo, t_rta_consultar_platos* rta){
+
+	*largo += sizeof(rta->cantPlatos)
+			+rta->cantPlatos*sizeof(t_plato);
+
+	void* serializado = malloc(*largo);
+	int offset = 0;
+
+	memcpy(serializado+offset, &rta->cantPlatos, sizeof(rta->cantPlatos));
+	offset += sizeof(rta->cantPlatos);
+
+	for (int i = 0; i < rta->cantPlatos; i++){
+		memcpy(serializado+offset, list_get(rta->platos, i), sizeof(t_plato));
+		offset += sizeof(t_plato);
+	}
+	return serializado;
+}
+
+t_rta_consultar_platos* deserializar_rta_consultar_platos(void* serializado){
+
+	t_rta_consultar_platos* rta = malloc(sizeof(t_rta_consultar_platos));
+
+	int offset = 0;
+
+	memcpy(&rta->cantPlatos, serializado+offset, sizeof(rta->cantPlatos));
+	offset =+ sizeof(rta->cantPlatos);
+
+	rta->platos = list_create();
+
+	for (int i = 0; i < rta->cantPlatos; i++){
+
+		t_plato* plato_i = malloc(sizeof(t_plato));
+
+		memcpy(plato_i, serializado+offset, sizeof(t_plato));
+		offset =+ sizeof(t_plato);
+
+		list_add(rta->platos, plato_i);
+	}
+
+	free(serializado);
+
+	return rta;
+}
+
+void* serializar_rta_consultar_pedido(uint32_t* largo, t_rta_consultar_pedido* rta){
+
+	*largo += L_REST
+			+sizeof(rta->estado)
+			+sizeof(rta->cantComidas)
+			+rta->cantComidas*sizeof(t_comida);
+
+	void* serializado = malloc(*largo);
+	int offset = 0;
+
+	memcpy(serializado+offset, rta->restaurante, L_REST);
+	offset += L_REST;
+	memcpy(serializado+offset, &rta->estado, sizeof(rta->estado));
+	offset += sizeof(rta->estado);
+	memcpy(serializado+offset, &rta->cantComidas, sizeof(rta->cantComidas));
+	offset += sizeof(rta->cantComidas);
+
+	for (int i = 0; i < rta->cantComidas; i++){
+		memcpy(serializado+offset, list_get(rta->comidas, i), sizeof(t_comida));
+		offset += sizeof(t_comida);
+	}
+	return serializado;
+}
+
+t_rta_consultar_pedido* deserializar_rta_consultar_pedido(void* serializado){
+
+	t_rta_consultar_pedido* rta = malloc(sizeof(t_rta_consultar_pedido));
+
+	int offset = 0;
+
+	memcpy(rta->restaurante, serializado+offset, L_REST);
+	offset =+ L_REST;
+	memcpy(&rta->estado, serializado+offset, sizeof(rta->estado));
+	offset =+ sizeof(rta->estado);
+	memcpy(&rta->cantComidas, serializado+offset, sizeof(rta->cantComidas));
+	offset =+ sizeof(rta->cantComidas);
+
+	rta->comidas = list_create();
+
+	for (int i = 0; i < rta->cantComidas; i++){
+
+		t_comida* comida_i = malloc(sizeof(t_comida));
+
+		memcpy(comida_i, serializado+offset, sizeof(t_comida));
+		offset =+ sizeof(t_comida);
+
+		list_add(rta->comidas, comida_i);
+	}
+
+	free(serializado);
+
+	return rta;
+}
+
+void* serializar_rta_obtener_pedido(uint32_t* largo, t_rta_obtener_pedido* rta){
+
+	*largo += sizeof(rta->estado)
+			+sizeof(rta->cantComidas)
+			+rta->cantComidas*sizeof(t_comida);
+
+	void* serializado = malloc(*largo);
+	int offset = 0;
+
+	memcpy(serializado+offset, &rta->estado, sizeof(rta->estado));
+	offset += sizeof(rta->estado);
+	memcpy(serializado+offset, &rta->cantComidas, sizeof(rta->cantComidas));
+	offset += sizeof(rta->cantComidas);
+
+	for (int i = 0; i < rta->cantComidas; i++){
+		memcpy(serializado+offset, list_get(rta->comidas, i), sizeof(t_comida));
+		offset += sizeof(t_comida);
+	}
+	return serializado;
+}
+
+t_rta_obtener_pedido* deserializar_rta_obtener_pedido(void* serializado){
+
+	t_rta_obtener_pedido* rta = malloc(sizeof(t_rta_obtener_pedido));
+
+	int offset = 0;
+
+	memcpy(&rta->cantComidas, serializado+offset, sizeof(rta->cantComidas));
+	offset =+ sizeof(rta->cantComidas);
+
+	rta->comidas = list_create();
+
+	for (int i = 0; i < rta->cantComidas; i++){
+
+		t_comida* comida_i = malloc(sizeof(t_comida));
+
+		memcpy(comida_i, serializado+offset, sizeof(t_comida));
+		offset =+ sizeof(t_comida);
+
+		list_add(rta->comidas, comida_i);
+	}
+
+	free(serializado);
+
+	return rta;
+}
+
+void* serializar_rta_obtener_receta(uint32_t* largo, t_rta_obtener_receta* rta){
+
+	*largo += L_PLATO
+			+sizeof(rta->cantPasos)
+			+rta->cantPasos*sizeof(t_paso_receta);
+
+	void* serializado = malloc(*largo);
+	int offset = 0;
+
+	memcpy(serializado+offset, rta->nombre, L_PLATO);
+	offset += L_PLATO;
+	memcpy(serializado+offset, &rta->cantPasos, sizeof(rta->cantPasos));
+	offset += sizeof(rta->cantPasos);
+
+	for (int i = 0; i < rta->cantPasos; i++){
+		memcpy(serializado+offset, list_get(rta->pasos, i), sizeof(t_paso_receta));
+		offset += sizeof(t_paso_receta);
+	}
+	return serializado;
+}
+
+t_rta_obtener_receta* deserializar_rta_obtener_receta(void* serializado){
+
+	t_rta_obtener_receta* rta = malloc(sizeof(t_rta_obtener_receta));
+
+	int offset = 0;
+
+	memcpy(rta->nombre, serializado+offset, L_PLATO);
+	offset =+ L_PLATO;
+	memcpy(&rta->cantPasos, serializado+offset, sizeof(rta->cantPasos));
+	offset =+ sizeof(rta->cantPasos);
+
+	rta->pasos = list_create();
+
+	for (int i = 0; i < rta->cantPasos; i++){
+
+		t_paso_receta* paso_i = malloc(sizeof(t_paso_receta));
+
+		memcpy(paso_i, serializado+offset, sizeof(t_paso_receta));
+		offset =+ sizeof(t_paso_receta);
+
+		list_add(rta->pasos, paso_i);
+	}
+
+	free(serializado);
+
+	return rta;
+}
+
+/************PUBLIC************/
+
+/************ENVIAR MENSAJES************/
+
+int enviar_handshake(int socketReceptor, t_log* logger) {
 
 	t_buffer* buffer = malloc(sizeof(t_buffer));
 
 	buffer->size = 0;
 	buffer->stream = NULL;
 
-	switch(tipoRespuesta){
+	int resultado_envio = empaquetar_enviar_free_buffer(HANDSHAKE, buffer, socketReceptor, logger);
 
-	case RTA_CONSULTAR_RESTAURANTES:
+	return resultado_envio;
+}
 
-		buffer->stream = serializar_rta_consultar_restaurantes(&buffer->size, content);
-		break;
+int enviar_socket_envio(t_socket_envio* mensaje, int socketReceptor, t_log* logger) {
 
-	case RTA_SELECCIONAR_RESTAURANTE:
+	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, sizeof(uint32_t));
-		break;
+	buffer->size = sizeof(t_socket_envio);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
 
-	case RTA_OBTENER_RESTAURANTE:
+	int resultado_envio = empaquetar_enviar_free_buffer(SOCKET_ENVIO, buffer, socketReceptor, logger);
 
-		buffer->stream = serializar_rta_obtener_restaurante(&buffer->size, content);
-		break;
+	return resultado_envio;
+}
 
-	case RTA_CONSULTAR_PLATOS:
+int enviar_socket_escucha(t_socket_escucha* mensaje, int socketReceptor, t_log* logger) {
 
-		buffer->stream = serializar_rta_consultar_platos(&buffer->size, content);
-		break;
+	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-	case RTA_CREAR_PEDIDO:
+	buffer->size = sizeof(t_socket_escucha);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, sizeof(uint32_t));
-		break;
+	int resultado_envio = empaquetar_enviar_free_buffer(SOCKET_ESCUCHA, buffer, socketReceptor, logger);
 
-	case RTA_GUARDAR_PEDIDO:
+	return resultado_envio;
+}
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, sizeof(uint32_t));
-		break;
+int enviar_consultar_restaurantes(int socketReceptor, t_log* logger) {
 
-	case RTA_ANADIR_PLATO:
+	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, sizeof(uint32_t));
-		break;
+	buffer->size = 0;
+	buffer->stream = NULL;
 
-	case RTA_GUARDAR_PLATO:
+	int resultado_envio = empaquetar_enviar_free_buffer(CONSULTAR_RESTAURANTES, buffer, socketReceptor, logger);
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, sizeof(uint32_t));
-		break;
+	return resultado_envio;
+}
 
-	case RTA_CONFIRMAR_PEDIDO:
+int enviar_seleccionar_restaurante(t_seleccionar_restaurante* mensaje, int socketReceptor, t_log* logger) {
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, sizeof(uint32_t));
-		break;
+	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-	case RTA_PLATO_LISTO:
+	buffer->size = sizeof(t_seleccionar_restaurante);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, sizeof(uint32_t));
-		break;
+	int resultado_envio = empaquetar_enviar_free_buffer(SELECCIONAR_RESTAURANTE, buffer, socketReceptor, logger);
 
-	case RTA_CONSULTAR_PEDIDO:
+	return resultado_envio;
+}
 
-		buffer->stream = serializar_rta_consultar_pedido(&buffer->size, content);
-		break;
+int enviar_obtener_restaurante(char* mensaje, int socketReceptor, t_log* logger) {
 
-	case RTA_OBTENER_PEDIDO:
+	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-		buffer->stream = serializar_rta_obtener_pedido(&buffer->size, content);
-		break;
+	buffer->size = L_REST;
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
 
-	case RTA_FINALIZAR_PEDIDO:
+	int resultado_envio = empaquetar_enviar_free_buffer(OBTENER_RESTAURANTE, buffer, socketReceptor, logger);
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, sizeof(uint32_t));
-		break;
+	return resultado_envio;
+}
 
-	case RTA_TERMINAR_PEDIDO:
+int enviar_consultar_platos(char* mensaje, int socketReceptor, t_log* logger) {
 
-		buffer->size = sizeof(uint32_t);
-		buffer->stream = malloc(buffer->size);
-		memcpy(buffer->stream, content, sizeof(uint32_t));
-		break;
+	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-	case RTA_OBTENER_RECETA:
+	buffer->size = L_REST;
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
 
-		buffer->stream = serializar_rta_obtener_receta(&buffer->size, content);
-		break;
-	}
+	int resultado_envio = empaquetar_enviar_free_buffer(CONSULTAR_PLATOS, buffer, socketReceptor, logger);
 
-	int cant_bytes;
-	void* paquete = empaquetar_2(tipoRespuesta, buffer, &cant_bytes);
+	return resultado_envio;
+}
 
-	if (buffer->stream != NULL)
-		free(buffer->stream);
+int enviar_crear_pedido(int socketReceptor, t_log* logger) {
 
-	free(buffer);
+	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-	if (send(socketReceptor, paquete, cant_bytes, 0) <= 0) {
-		free(paquete);
-		log_error(logger, "No se pudo enviar la respuesta %s al socket %d.", get_nombre_respuesta(tipoRespuesta), socketReceptor);
+	buffer->size = 0;
+	buffer->stream = NULL;
+
+	int resultado_envio = empaquetar_enviar_free_buffer(CREAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_guardar_pedido(t_guardar_pedido* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(t_guardar_pedido);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(GUARDAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_anadir_plato(t_anadir_plato* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(t_anadir_plato);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(ANADIR_PLATO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_guardar_plato(t_guardar_plato* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(t_guardar_plato);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(GUARDAR_PLATO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_confirmar_pedido(t_confirmar_pedido* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(t_confirmar_pedido);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(CONFIRMAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_plato_listo(t_plato_listo* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(t_plato_listo);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(PLATO_LISTO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_consultar_pedido(uint32_t mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(CONSULTAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_obtener_pedido(t_obtener_pedido* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(t_obtener_pedido);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(OBTENER_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_finalizar_pedido(t_finalizar_pedido* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(t_finalizar_pedido);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(FINALIZAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_terminar_pedido(t_terminar_pedido* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(t_terminar_pedido);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(TERMINAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_obtener_receta(char* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = L_PLATO;
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(OBTENER_RECETA, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+/************ENVIAR RESPUESTAS************/
+
+int enviar_rta_consultar_restaurantes(t_rta_consultar_restaurantes* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->stream = serializar_rta_consultar_restaurantes(&buffer->size, mensaje);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_CONSULTAR_RESTAURANTES, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_seleccionar_restaurante(uint32_t resultado, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &resultado, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_SELECCIONAR_RESTAURANTE, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_obtener_restaurante(t_rta_obtener_restaurante* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->stream = serializar_rta_obtener_restaurante(&buffer->size, mensaje);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_OBTENER_RESTAURANTE, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_consultar_platos(t_rta_consultar_platos* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->stream = serializar_rta_consultar_platos(&buffer->size, mensaje);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_CONSULTAR_PLATOS, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_crear_pedido(uint32_t id_pedido,int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &id_pedido, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_CREAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_guardar_pedido(uint32_t resultado, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &resultado, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_GUARDAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_anadir_plato(uint32_t resultado, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &resultado, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_ANADIR_PLATO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_guardar_plato(uint32_t resultado, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &resultado, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_GUARDAR_PLATO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_confirmar_pedido(uint32_t resultado, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &resultado, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_CONFIRMAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_plato_listo(uint32_t resultado, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &resultado, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_PLATO_LISTO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_consultar_pedido(t_rta_consultar_pedido* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->stream = serializar_rta_consultar_pedido(&buffer->size, mensaje);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_CONSULTAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_obtener_pedido(t_rta_obtener_pedido* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->stream = serializar_rta_obtener_pedido(&buffer->size, mensaje);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_OBTENER_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_finalizar_pedido(uint32_t resultado, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &resultado, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_FINALIZAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_terminar_pedido(uint32_t resultado, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->size = sizeof(uint32_t);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, &resultado, buffer->size);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_TERMINAR_PEDIDO, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+int enviar_rta_obtener_receta(t_rta_obtener_receta* mensaje, int socketReceptor, t_log* logger) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+
+	buffer->stream = serializar_rta_obtener_receta(&buffer->size, mensaje);
+
+	int resultado_envio = empaquetar_enviar_free_buffer(RTA_OBTENER_RECETA, buffer, socketReceptor, logger);
+
+	return resultado_envio;
+}
+
+/************RECIBIR MENSAJES************/
+
+t_tipoMensaje recibir_tipo_mensaje(int socket_cliente, t_log* logger) {
+	uint32_t tipo_mensaje_u;
+
+	if (recv(socket_cliente, &tipo_mensaje_u, sizeof(t_tipoMensaje), MSG_WAITALL) < sizeof(uint32_t)) {
+		log_error(logger, "Error al recibir tipo de mensaje de socket:%d", socket_cliente);
 		return -1;
 	}
 
-	free(paquete);
-	return 0;
+	t_tipoMensaje tipo_mensaje = tipo_mensaje_u;
+
+	return tipo_mensaje;
 }
 
-void* recibirRespuesta(int socketEmisor, t_tipoRespuesta tipoRespuesta, t_log* logger) {
+void* recibir_handshake(int socketEmisor, t_log* logger) {
 
-	t_buffer* buffer = malloc(sizeof(t_buffer));
+	return recibirMensaje(socketEmisor, logger);//==return NULL
+}
 
-	buffer->size = 0;
-	buffer->stream = NULL;
+t_socket_envio* recibir_socket_envio(int socketEmisor, t_log* logger) {
 
-	int bytes_recibidos = 0;
+	t_socket_envio* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
 
-	bytes_recibidos =+ recv(socketEmisor, &buffer->size, sizeof(buffer->size), MSG_WAITALL);
+t_socket_escucha* recibir_socket_escucha(int socketEmisor, t_log* logger) {
 
-	if (buffer->size > 0){
-		buffer->stream = malloc(buffer->size);
-		bytes_recibidos =+ recv(socketEmisor, buffer->stream, buffer->size, MSG_WAITALL);
-	}
+	t_socket_escucha* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
 
-	if (bytes_recibidos < sizeof(buffer->size)+buffer->size) {
-		if (buffer->stream != NULL)
-			free(buffer->stream);
-		free(buffer);
-		log_error(logger, "Se desconecto o ocurrio un error con el socket (sock_id: %d).", socketEmisor);
-		return NULL;
-	}
+void* recibir_consultar_restaurantes(int socketEmisor, t_log* logger) {
 
-	void* stream = NULL;
+	return recibirMensaje(socketEmisor, logger);//==return NULL
+}
 
-	switch(tipoRespuesta){
+t_seleccionar_restaurante* recibir_seleccionar_restaurante(int socketEmisor, t_log* logger) {
 
-	case RTA_CONSULTAR_RESTAURANTES:
+	t_seleccionar_restaurante* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
 
-		stream = deserializar_rta_consultar_restaurantes(buffer);
-		break;
+char* recibir_obtener_restaurante(int socketEmisor, t_log* logger) {
 
-	case RTA_OBTENER_RESTAURANTE:
+	char* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
 
-		stream = deserializar_rta_obtener_restaurante(buffer);
-		break;
+char* recibir_consultar_platos(int socketEmisor, t_log* logger) {
 
-	case RTA_CONSULTAR_PLATOS:
+	char* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
 
-		stream = deserializar_rta_consultar_platos(buffer);
-		break;
+void* recibir_crear_pedido(int socketEmisor, t_log* logger) {
 
-	case RTA_CONSULTAR_PEDIDO:
+	return recibirMensaje(socketEmisor, logger);//==return NULL
+}
 
-		stream = deserializar_rta_consultar_pedido(buffer);
-		break;
+t_guardar_pedido* recibir_guardar_pedido(int socketEmisor, t_log* logger) {
 
-	case RTA_OBTENER_PEDIDO:
+	t_guardar_pedido* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
 
-		stream = deserializar_rta_obtener_pedido(buffer);
-		break;
+t_anadir_plato* recibir_anadir_plato(int socketEmisor, t_log* logger) {
 
-	case RTA_OBTENER_RECETA:
+	t_anadir_plato* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
 
-		stream = deserializar_rta_obtener_receta(buffer);
-		break;
+t_guardar_plato* recibir_guardar_plato(int socketEmisor, t_log* logger) {
 
-	default://LAS RESPUESTAS QUE NO NECESITAN SER DESERIALIZADAS SE DEVUELVEN DIRECTAMENTE, LUEGO CASTEANDO FUERA DE ESTA FUNCION GRACIAS A ATRIBUTTED PACKED
+	t_guardar_plato* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
 
-			stream = buffer->stream;
+t_confirmar_pedido* recibir_confirmar_pedido(int socketEmisor, t_log* logger) {
 
-		break;
-	}
+	t_confirmar_pedido* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
 
-	free(buffer);
+t_plato_listo* recibir_plato_listo(int socketEmisor, t_log* logger) {
 
-	return stream;
+	t_plato_listo* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
+
+uint32_t recibir_consultar_pedido(int socketEmisor, t_log* logger) {
+
+	uint32_t* recibido = recibirMensaje(socketEmisor, logger);
+
+	uint32_t id_pedido = *recibido;
+	free(recibido);
+
+	return id_pedido;
+}
+
+t_obtener_pedido* recibir_obtener_pedido(int socketEmisor, t_log* logger) {
+
+	t_obtener_pedido* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
+
+t_finalizar_pedido* recibir_finalizar_pedido(int socketEmisor, t_log* logger) {
+
+	t_finalizar_pedido* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
+
+t_terminar_pedido* recibir_terminar_pedido(int socketEmisor, t_log* logger) {
+
+	t_terminar_pedido* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
+
+char* recibir_obtener_receta(int socketEmisor, t_log* logger) {
+
+	char* recibido = recibirMensaje(socketEmisor, logger);
+	return recibido;
+}
+
+/************ENVIAR RESPUESTAS************/
+
+t_rta_consultar_restaurantes* recibir_rta_consultar_restaurantes(int socketEmisor, t_log* logger) {
+
+	void* serializado = recibirMensaje(socketEmisor, logger);
+
+	return deserializar_rta_consultar_restaurantes(serializado);
+}
+
+uint32_t recibir_rta_seleccionar_restaurante(int socketEmisor, t_log* logger) {
+
+	uint32_t* resultado_u = recibirMensaje(socketEmisor, logger);
+	uint32_t resultado = *resultado_u;
+	free(resultado_u);
+
+	return resultado;
+}
+
+t_rta_obtener_restaurante* recibir_rta_obtener_restaurante(int socketEmisor, t_log* logger) {
+
+	void* serializado = recibirMensaje(socketEmisor, logger);
+
+	return deserializar_rta_obtener_restaurante(serializado);
+}
+
+t_rta_consultar_platos* recibir_rta_consultar_platos(int socketEmisor, t_log* logger) {
+
+	void* serializado = recibirMensaje(socketEmisor, logger);
+
+	return deserializar_rta_consultar_platos(serializado);
+}
+
+uint32_t recibir_rta_crear_pedido(int socketEmisor, t_log* logger) {
+
+	uint32_t* id_pedido_u = recibirMensaje(socketEmisor, logger);
+	uint32_t id_pedido = *id_pedido_u;
+	free(id_pedido_u);
+
+	return id_pedido;
+}
+
+uint32_t recibir_rta_guardar_pedido(int socketEmisor, t_log* logger) {
+
+	uint32_t* resultado_u = recibirMensaje(socketEmisor, logger);
+	uint32_t resultado = *resultado_u;
+	free(resultado_u);
+
+	return resultado;
+}
+
+uint32_t recibir_rta_anadir_plato(int socketEmisor, t_log* logger) {
+
+	uint32_t* resultado_u = recibirMensaje(socketEmisor, logger);
+	uint32_t resultado = *resultado_u;
+	free(resultado_u);
+
+	return resultado;
+}
+
+uint32_t recibir_rta_guardar_plato(int socketEmisor, t_log* logger) {
+
+	uint32_t* resultado_u = recibirMensaje(socketEmisor, logger);
+	uint32_t resultado = *resultado_u;
+	free(resultado_u);
+
+	return resultado;
+}
+
+uint32_t recibir_rta_confirmar_pedido(int socketEmisor, t_log* logger) {
+
+	uint32_t* resultado_u = recibirMensaje(socketEmisor, logger);
+	uint32_t resultado = *resultado_u;
+	free(resultado_u);
+
+	return resultado;
+}
+
+uint32_t recibir_rta_plato_listo(int socketEmisor, t_log* logger) {
+
+	uint32_t* resultado_u = recibirMensaje(socketEmisor, logger);
+	uint32_t resultado = *resultado_u;
+	free(resultado_u);
+
+	return resultado;
+}
+
+t_rta_consultar_pedido* recibir_rta_consultar_pedido(int socketEmisor, t_log* logger) {
+
+	void* serializado = recibirMensaje(socketEmisor, logger);
+
+	return deserializar_rta_consultar_pedido(serializado);
+}
+
+t_rta_obtener_pedido* recibir_rta_obtener_pedido(int socketEmisor, t_log* logger) {
+
+	void* serializado = recibirMensaje(socketEmisor, logger);
+
+	return deserializar_rta_obtener_pedido(serializado);
+}
+
+uint32_t recibir_rta_finalizar_pedido(int socketEmisor, t_log* logger) {
+
+	uint32_t* resultado_u = recibirMensaje(socketEmisor, logger);
+	uint32_t resultado = *resultado_u;
+	free(resultado_u);
+
+	return resultado;
+}
+
+uint32_t recibir_rta_terminar_pedido(int socketEmisor, t_log* logger) {
+
+	uint32_t* resultado_u = recibirMensaje(socketEmisor, logger);
+	uint32_t resultado = *resultado_u;
+	free(resultado_u);
+
+	return resultado;
+}
+
+t_rta_obtener_receta* recibir_rta_obtener_receta(int socketEmisor, t_log* logger) {
+
+	void* serializado = recibirMensaje(socketEmisor, logger);
+
+	return deserializar_rta_obtener_receta(serializado);
 }

@@ -27,7 +27,7 @@
 #include <commons/error.h>
 
 /* ---------- Definición de tipos ---------- */
-typedef enum tipoProceso {
+typedef enum{
 	APP,
 	CLIENTE,
 	COMANDA,
@@ -37,6 +37,8 @@ typedef enum tipoProceso {
 
 typedef enum{
 	HANDSHAKE,
+	SOCKET_ENVIO,
+	SOCKET_ESCUCHA,
 	CONSULTAR_RESTAURANTES,
 	SELECCIONAR_RESTAURANTE,
 	OBTENER_RESTAURANTE,
@@ -52,11 +54,6 @@ typedef enum{
 	FINALIZAR_PEDIDO,
 	TERMINAR_PEDIDO,
 	OBTENER_RECETA,
-	SOCKET_ESCUCHA,
-	SOCKET_ENVIO
-}t_tipoMensaje;
-
-typedef enum{
 	RTA_CONSULTAR_RESTAURANTES,
 	RTA_SELECCIONAR_RESTAURANTE,
 	RTA_OBTENER_RESTAURANTE,
@@ -72,66 +69,7 @@ typedef enum{
 	RTA_FINALIZAR_PEDIDO,
 	RTA_TERMINAR_PEDIDO,
 	RTA_OBTENER_RECETA
-}t_tipoRespuesta;
-
-
-//typedef struct {
-//	t_tipoProceso 	tipoProceso;
-//	uint32_t			idProceso;
-//	t_tipoMensaje 	tipoMensaje;
-//	uint32_t 		longitud;
-//}__attribute__((packed)) t_header;
-//
-//
-//typedef struct {
-//	t_header 		header;
-//	void* 			content;
-//}__attribute__((packed)) t_mensaje;
-
-/*Protocolos*/
-
-//typedef struct {
-//	char nombre_restaurante[32];
-//	uint32_t id_pedido;
-//}__attribute__((packed)) t_guardar_pedido;
-//
-//typedef struct {
-//	char nombre_restaurante[32];
-//	uint32_t id_pedido;
-//	char comida[32];
-//	uint32_t cantidad_comida;
-//}__attribute__((packed)) t_guardar_plato;
-//
-//typedef struct {
-//	uint32_t id_pedido;
-//}__attribute__((packed)) t_confirmar_pedido;
-//
-//typedef struct {
-//	char nombre_restaurante[32];
-//	uint32_t id_pedido;
-//	char* comida[32];
-//}__attribute__((packed)) t_plato_listo;
-//
-//typedef struct {
-//	char nombre_restaurante[32];
-//	uint32_t id_pedido;
-//}__attribute__((packed)) t_finalizar_pedido;
-//
-//typedef struct {
-//	char nombre_restaurante[32];
-//	uint32_t id_pedido;
-//}__attribute__((packed)) t_obtener_pedido;
-//
-//typedef struct {
-//	uint32_t respuesta_ok_fail;
-//}__attribute__((packed)) t_respuesta_ok_fail;
-//
-//typedef struct {
-//	char nombre[100];
-//	uint32_t posX;
-//	uint32_t posY;
-//}__attribute__((packed)) t_restaurante;
-
+}t_tipoMensaje;
 
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso);
@@ -159,7 +97,6 @@ t_tipoMensaje tipo_mensaje_string_to_enum(char*);//Recibe en string el tipo de m
 
 char* get_nombre_proceso(int);//Recibe en ENUM el nombre del proceso y lo devuelve en string
 char* get_nombre_mensaje(int);//Recibe en ENUM el nombre del msj y lo devuelve en string
-char* get_nombre_respuesta(int);//Recibe en ENUM el nombre de la rta y lo devuelve en string
 
 /* ---------- Paths ---------- */
 char* getCurrentPath(void);//ATENCION: Liberar el string devuelto
