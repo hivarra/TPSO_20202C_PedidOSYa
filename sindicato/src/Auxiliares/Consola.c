@@ -31,6 +31,27 @@ void *crear_consola() {
 
 		switch (comando_e) {
 
+		case crearRestaurante_:
+			printf("CONSOLA: Se ingresó comando CrearRestaurante \n");
+			if (comando[1] == NULL || comando[2] == NULL || comando[3] == NULL
+					|| comando[4] == NULL || comando[5] == NULL
+					|| comando[6] == NULL || comando[7] == NULL) {
+				printf("Falta ingresar datos para utilizar CrearRestaurante\n");
+				break;
+			}
+
+			break;
+
+		case crearReceta_:
+
+			printf("CONSOLA: Se ingresó comando CrearReceta \n");
+			if (comando[1] == NULL || comando[2] == NULL || comando[3] == NULL) {
+				printf("Falta ingresar datos para utilizar CrearReceta\n");
+				break;
+			}
+
+			break;
+
 		}
 		return 0;
 	}
@@ -45,8 +66,7 @@ char *character_name_generator(const char *text, int state) {
 	static int list_index, len;
 	char *name;
 
-	char *character_names[] = { "SELECT", "INSERT", "CREATE", "DESCRIBE",
-			"DROP", "SALIR", NULL };
+	char *character_names[] = { "CrearRestaurante", "CrearReceta", NULL };
 
 	if (!state) {
 		list_index = 0;
@@ -62,10 +82,9 @@ char *character_name_generator(const char *text, int state) {
 }
 
 t_tipoComando buscar_enum_sfs(char *sval) {
-	t_tipoComando result = select_;
+	t_tipoComando result = crearRestaurante_;
 	int i = 0;
-	char* comandos_str[] = { "SELECT",
-	NULL };
+	char* comandos_str[] = { "CrearRestaurante", "CrearReceta", NULL };
 	if (sval == NULL)
 		return -2;
 	for (i = 0; comandos_str[i] != NULL; ++i, ++result)

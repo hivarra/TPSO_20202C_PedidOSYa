@@ -6,7 +6,8 @@
 #include <readline/history.h>
 
 typedef enum t_tipoComando {
-select_
+	crearRestaurante_,
+	crearReceta_
 } t_tipoComando;
 
 void *crear_consola();
