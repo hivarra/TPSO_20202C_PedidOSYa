@@ -26,11 +26,17 @@ int main(int argc, char **argv) {
 	mostrar_propiedades();
 	/* 3. File System */
 	montarFileSystem();
-	/* 4. Inicializar conexiones*/
+
+	/* 4. Hilos */
+
+	CrearHiloConsola();
+	/* 5. Inicializar conexiones*/
 	/*TODO: levantar server para recibir peticiones de restaurantes y clientes*/
 
 //	destruir_config(config);
 //	destruir_logger(logger);
+
+	sleep(30);
 
 	puts("Fin Proceso SINDICATO");
 	return EXIT_SUCCESS;
