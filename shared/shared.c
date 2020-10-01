@@ -142,7 +142,7 @@ int aceptarConexiones(int socket, t_log* logger) {
 	return client_socket;
 }
 
-int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger) {
+int conectar_a_servidor(char* ip, int puerto, t_log* logger) {
 
 	int socket_cliente;
 
@@ -154,7 +154,7 @@ int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmi
 
 	if(conectarseAServidor(socket_cliente, ip, puerto, logger)<=0)
 	{
-		log_error(logger, "CONEXION | No se pudo conectar a servidor %s", get_nombre_proceso(tipoProcesoReceptor));
+		log_error(logger, "CONEXION | No se pudo conectar a servidor");
 		return -1;
 	}
 
@@ -176,6 +176,7 @@ int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger) {
 //	log_info(logger, "Conectado al Servidor correctamente.");
 	return 1;
 }
+
 /* ---------- Exit ---------- */
 void _exit_with_error(char* error_msg, void * buffer, t_log* logger) {
 

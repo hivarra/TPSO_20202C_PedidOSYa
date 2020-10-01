@@ -84,7 +84,7 @@ int crear_conexion(char*, char*);//Recibe char* ip, char* puerto, y se conecta a
 int definirSocket(t_log* logger);
 int bindearSocketYEscuchar(int socket, char *ip, int puerto, t_log* logger);
 int aceptarConexiones(int socket, t_log* logger);
-int conectar_a_servidor(char* ip, int puerto, int id_proceso, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
+int conectar_a_servidor(char* ip, int puerto, t_log* logger);
 int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
 
 /* ---------- Exit ---------- */
