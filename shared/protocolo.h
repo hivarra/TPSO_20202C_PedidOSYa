@@ -8,11 +8,9 @@
 #ifndef PROTOCOLO_H_
 #define PROTOCOLO_H_
 
-#define L_ID 32
-#define L_REST 32
-#define L_PLATO 32
-#define L_PASO_REC 32
-//#define L_STRING 32
+#define L_ID 32//largo de los ID (nombres) usados en Cliente y Restaurenate
+#define L_PLATO 12//Largo de todas las comidas, ej. Milanesa, ensalada, etc
+#define L_PASO_REC 32////Largo de los pasos de las recetas, ej. Hornear, Reposar, etc.
 
 #include "shared.h"
 
@@ -55,6 +53,9 @@ typedef struct{
 
 /****************Protocolos****************/
 
+/********HANDSHAKE********/
+//Recibe: nada
+
 /********Socket envio********///SE USA DESDE CLIENTE HACIA APP, O DESDE RESTAURANTE HACIA APP
 //Recibe:
 typedef struct{
@@ -78,7 +79,7 @@ typedef struct{
 //Retorna:
 typedef struct{
 	uint32_t cantRestaurantes;
-	t_list* restaurantes;//char restaurante[L_REST]
+	t_list* restaurantes;//char restaurante[L_ID]
 }t_rta_consultar_restaurantes;
 
 
@@ -86,14 +87,14 @@ typedef struct{
 //Recibe:
 typedef struct{
 	char cliente[L_ID];//No tiene utilidad este parametro
-	char restarurante[L_REST];
+	char restarurante[L_ID];
 }__attribute__((packed)) t_seleccionar_restaurante;
 
 //Retorna: uint32_t(0 = FAIL, 1 = OK)
 
 
 /********Obtener Restaurante********/
-//Recibe: char nombre_restaurante[L_REST]
+//Recibe: char nombre_restaurante[L_ID]
 
 //Retorna:
 typedef struct{
@@ -108,7 +109,7 @@ typedef struct{
 
 
 /********Consultar Platos********/
-//Recibe: char nombre_restaurante[L_REST]
+//Recibe: char nombre_restaurante[L_ID]
 
 //Retorna:
 typedef struct{
@@ -126,7 +127,7 @@ typedef struct{
 /********Guardar Pedido********/
 //Recibe:
 typedef struct{
-	char restaurante[L_REST];
+	char restaurante[L_ID];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_guardar_pedido;
 
@@ -146,7 +147,7 @@ typedef struct{
 /********Guardar Plato********/
 //Recibe:
 typedef struct{
-	char restaurante[L_REST];
+	char restaurante[L_ID];
 	uint32_t id_pedido;
 	char plato[L_PLATO];
 	uint32_t cantPlato;
@@ -158,7 +159,7 @@ typedef struct{
 /********Confirmar Pedido********/
 //Recibe:
 typedef struct{
-	char restaurante[L_REST];
+	char restaurante[L_ID];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_confirmar_pedido;
 
@@ -168,7 +169,7 @@ typedef struct{
 /********Plato Listo*******/
 //Recibe:
 typedef struct{
-	char restaurante[L_REST];
+	char restaurante[L_ID];
 	uint32_t id_pedido;
 	char plato[L_PLATO];
 }__attribute__((packed)) t_plato_listo;
@@ -181,7 +182,7 @@ typedef struct{
 
 //Retorna:
 typedef struct{
-	char restaurante[L_REST];
+	char restaurante[L_ID];
 	uint32_t estado;
 	uint32_t cantComidas;
 	t_list* comidas;//t_comida
@@ -191,7 +192,7 @@ typedef struct{
 /********Obtener Pedido********/
 //Recibe:
 typedef struct{
-	char restaurante[L_REST];
+	char restaurante[L_ID];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_obtener_pedido;
 
@@ -206,7 +207,7 @@ typedef struct{
 /********Finalizar Pedido********/
 //Recibe:
 typedef struct{
-	char restaurante[L_REST];
+	char restaurante[L_ID];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_finalizar_pedido;
 
@@ -216,7 +217,7 @@ typedef struct{
 /********Terminaar Pedido********/
 //Recibe:
 typedef struct{
-	char nombre_restaurante[L_REST];
+	char nombre_restaurante[L_ID];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_terminar_pedido;
 
@@ -234,90 +235,116 @@ typedef struct{
 }t_rta_obtener_receta;
 
 
+/********MENSAJES COMPARTIDOS********/
 t_tipoMensaje recibir_tipo_mensaje(int fd_socket_emisor, t_log*);//DEVUELVE EL TIPO DE MENSAJE O -1 CASO DE ERROR
 
-int enviar_handshake(int socketReceptor, t_log* logger);//envia solamente el tipo de mensaje (HANDSHAKE)
-void* recibir_handshake(int socketEmisor, t_log* logger);//recibe NULL (no hace falta hacerle free)
+int enviar_mensaje_vacio(t_tipoMensaje tipoMensaje, int socketReceptor, t_log* logger);//SE ENVIA COMO PARAMETRO SOLO EL TIPO DE MENSAJE
+void* recibir_mensaje_vacio(int socketEmisor, t_log* logger);//RECIBE NULL, PARA PODER LIBERAR EL RECV, PERO CON recibir_tipo_mensaje YA SE SABE QUE MENSAJE ES
 
+int enviar_entero(t_tipoMensaje tipoMensaje, uint32_t numero, int socketReceptor, t_log* logger);//ENVIA UN RESULTADO O UN ID_PEDIDO
+uint32_t recibir_entero(int socketEmisor, t_log* logger);
+
+
+/********HANDSHAKE********/
+//int enviar_mensaje_vacio(t_tipoMensaje HANDSHAKE, int socketReceptor, t_log* logger);
+//void* recibir_mensaje_vacio(int socketEmisor, t_log* logger);
+
+/********SOCKET ENVIO********/
 int enviar_socket_envio(t_socket_envio* mensaje, int socketReceptor, t_log* logger);
 t_socket_envio* recibir_socket_envio(int socketEmisor, t_log* logger);
 
+/********SOCKET ESCUCHA********/
 int enviar_socket_escucha(t_socket_escucha* mensaje, int socketReceptor, t_log* logger);
 t_socket_escucha* recibir_socket_escucha(int socketEmisor, t_log* logger);
 
-int enviar_consultar_restaurantes(int socketReceptor, t_log* logger);
+/********CONSULTAR RESTAURANTES********/
+//int enviar_mensaje_vacio(t_tipoMensaje CONSULTAR_RESTAURANTES, int socketReceptor, t_log* logger);
+//void* recibir_mensaje_vacio(int socketEmisor, t_log* logger);
 int enviar_rta_consultar_restaurantes(t_rta_consultar_restaurantes* mensaje, int socketReceptor, t_log* logger);
-void* recibir_consultar_restaurantes(int socketEmisor, t_log* logger);//recibe NULL (no hace falta hacerle free)
 t_rta_consultar_restaurantes* recibir_rta_consultar_restaurantes(int socketEmisor, t_log* logger);
 
+/********SELECCIONAR RESTAURANTE********/
 int enviar_seleccionar_restaurante(t_seleccionar_restaurante* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_seleccionar_restaurante(uint32_t resultado, int socketReceptor, t_log* logger);
 t_seleccionar_restaurante* recibir_seleccionar_restaurante(int socketEmisor, t_log* logger);
-uint32_t recibir_rta_seleccionar_restaurante(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_SELECCIONAR_RESTAURANTE, uint32_t RESULTADO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
+/********OBTENER RESTAURANTE********/
 int enviar_obtener_restaurante(char* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_obtener_restaurante(t_rta_obtener_restaurante* mensaje, int socketReceptor, t_log* logger);
 char* recibir_obtener_restaurante(int socketEmisor, t_log* logger);
+int enviar_rta_obtener_restaurante(t_rta_obtener_restaurante* mensaje, int socketReceptor, t_log* logger);
 t_rta_obtener_restaurante* recibir_rta_obtener_restaurante(int socketEmisor, t_log* logger);
 
+/********CONSULTAR PLATOS********/
 int enviar_consultar_platos(char* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_consultar_platos(t_rta_consultar_platos* mensaje, int socketReceptor, t_log* logger);
 char* recibir_consultar_platos(int socketEmisor, t_log* logger);
+int enviar_rta_consultar_platos(t_rta_consultar_platos* mensaje, int socketReceptor, t_log* logger);
 t_rta_consultar_platos* recibir_rta_consultar_platos(int socketEmisor, t_log* logger);
 
-int enviar_crear_pedido(int socketReceptor, t_log* logger);
-int enviar_rta_crear_pedido(uint32_t id_pedido,int socketReceptor, t_log* logger);
-void* recibir_crear_pedido(int socketEmisor, t_log* logger);//recibe NULL (no hace falta hacerle free)
-uint32_t recibir_rta_crear_pedido(int socketEmisor, t_log* logger);
+/********CREAR PEDIDO********/
+//int enviar_mensaje_vacio(t_tipoMensaje CREAR_PEDIDO, int socketReceptor, t_log* logger);
+//void* recibir_mensaje_vacio(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_CREAR_PEDIDO, uint32_t ID_PEDIDO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
+/********GUARDAR PEDIDO********/
 int enviar_guardar_pedido(t_guardar_pedido* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_guardar_pedido(uint32_t resultado, int socketReceptor, t_log* logger);
 t_guardar_pedido* recibir_guardar_pedido(int socketEmisor, t_log* logger);
-uint32_t recibir_rta_guardar_pedido(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_GAURDAR_PEDIDO, uint32_t RESULTADO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
+/********ANADIR PLATO********/
 int enviar_anadir_plato(t_anadir_plato* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_anadir_plato(uint32_t resultado, int socketReceptor, t_log* logger);
 t_anadir_plato* recibir_anadir_plato(int socketEmisor, t_log* logger);
-uint32_t recibir_rta_anadir_plato(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_ANADIR_PLATO, uint32_t RESULTADO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
+/********GUARDAR PLATO********/
 int enviar_guardar_plato(t_guardar_plato* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_guardar_plato(uint32_t resultado, int socketReceptor, t_log* logger);
 t_guardar_plato* recibir_guardar_plato(int socketEmisor, t_log* logger);
-uint32_t recibir_rta_guardar_plato(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_GUARDAR_PLATO, uint32_t RESULTADO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
+/********CONFIRMAR PEDIDO********/
 int enviar_confirmar_pedido(t_confirmar_pedido* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_confirmar_pedido(uint32_t resultado, int socketReceptor, t_log* logger);
 t_confirmar_pedido* recibir_confirmar_pedido(int socketEmisor, t_log* logger);
-uint32_t recibir_rta_confirmar_pedido(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_CONFIRMAR_PEDIDO, uint32_t RESULTADO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
+/********PLATO LISTO********/
 int enviar_plato_listo(t_plato_listo* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_plato_listo(uint32_t resultado, int socketReceptor, t_log* logger);
 t_plato_listo* recibir_plato_listo(int socketEmisor, t_log* logger);
-uint32_t recibir_rta_plato_listo(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_PLATO_LISTO, uint32_t RESULTADO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
-int enviar_consultar_pedido(uint32_t mensaje, int socketReceptor, t_log* logger);
+/********CONSULTAR PEDIDO********/
+//int enviar_entero(t_tipoMensaje CONSULTAR_PEDIDO, uint32_t ID_PEDIDO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 int enviar_rta_consultar_pedido(t_rta_consultar_pedido* mensaje, int socketReceptor, t_log* logger);
-uint32_t recibir_consultar_pedido(int socketEmisor, t_log* logger);
 t_rta_consultar_pedido* recibir_rta_consultar_pedido(int socketEmisor, t_log* logger);
 
+/********OBTENER PEDIDO********/
 int enviar_obtener_pedido(t_obtener_pedido* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_obtener_pedido(t_rta_obtener_pedido* mensaje, int socketReceptor, t_log* logger);
 t_obtener_pedido* recibir_obtener_pedido(int socketEmisor, t_log* logger);
+int enviar_rta_obtener_pedido(t_rta_obtener_pedido* mensaje, int socketReceptor, t_log* logger);
 t_rta_obtener_pedido* recibir_rta_obtener_pedido(int socketEmisor, t_log* logger);
 
+/********FINALIZAR PEDIDO********/
 int enviar_finalizar_pedido(t_finalizar_pedido* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_finalizar_pedido(uint32_t resultado, int socketReceptor, t_log* logger);
 t_finalizar_pedido* recibir_finalizar_pedido(int socketEmisor, t_log* logger);
-uint32_t recibir_rta_finalizar_pedido(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_FINALIZAR_PEDIDO, uint32_t RESULTADO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
+/********TERMINAR PEDIDO********/
 int enviar_terminar_pedido(t_terminar_pedido* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_terminar_pedido(uint32_t resultado, int socketReceptor, t_log* logger);
 t_terminar_pedido* recibir_terminar_pedido(int socketEmisor, t_log* logger);
-uint32_t recibir_rta_terminar_pedido(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_TERMINAR_PEDIDO, uint32_t RESULTADO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
+/********OBTENER RECETA********/
 int enviar_obtener_receta(char* mensaje, int socketReceptor, t_log* logger);
-int enviar_rta_obtener_receta(t_rta_obtener_receta* mensaje, int socketReceptor, t_log* logger);
 char* recibir_obtener_receta(int socketEmisor, t_log* logger);
+int enviar_rta_obtener_receta(t_rta_obtener_receta* mensaje, int socketReceptor, t_log* logger);
 t_rta_obtener_receta* recibir_rta_obtener_receta(int socketEmisor, t_log* logger);
 
 #endif /* PROTOCOLO_H_ */
