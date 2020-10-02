@@ -8,9 +8,9 @@
 #ifndef PROTOCOLO_H_
 #define PROTOCOLO_H_
 
-#define L_ID 32//largo de los ID (nombres) usados en Cliente y Restaurenate
-#define L_PLATO 12//Largo de todas las comidas, ej. Milanesa, ensalada, etc
-#define L_PASO_REC 32////Largo de los pasos de las recetas, ej. Hornear, Reposar, etc.
+#define L_ID 16//largo de los ID (nombres) usados en Cliente y Restaurenate
+#define L_PLATO 16//Largo de todas las comidas y afinidades, ej. Milanesa, ensalada, etc
+#define L_PASO_REC 16////Largo de los pasos de las recetas, ej. Hornear, Reposar, etc.
 
 #include "shared.h"
 
@@ -55,6 +55,7 @@ typedef struct{
 
 /********HANDSHAKE********/
 //Recibe: nada
+//Retorna: uint32_t tipoProceso;
 
 /********Socket envio********///SE USA DESDE CLIENTE HACIA APP, O DESDE RESTAURANTE HACIA APP
 //Recibe:
@@ -248,6 +249,8 @@ uint32_t recibir_entero(int socketEmisor, t_log* logger);
 /********HANDSHAKE********/
 //int enviar_mensaje_vacio(t_tipoMensaje HANDSHAKE, int socketReceptor, t_log* logger);
 //void* recibir_mensaje_vacio(int socketEmisor, t_log* logger);
+//int enviar_entero(t_tipoMensaje RTA_HANDSHAKE, uint32_t TIPO_PROCESO, int socketReceptor, t_log* logger);
+//uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
 /********SOCKET ENVIO********/
 int enviar_socket_envio(t_socket_envio* mensaje, int socketReceptor, t_log* logger);
