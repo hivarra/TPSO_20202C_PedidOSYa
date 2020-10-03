@@ -20,10 +20,10 @@ typedef struct{
 typedef struct{
 	u_int32_t nro_pagina;
 	u_int32_t nro_frame;
-	char* plato;
+	char plato[24];
 	bool uso;
 	bool modificado;
-	unsigned long long ultimo_uso;
+	uint64_t ultimo_uso;
 } t_entrada_pagina;
 
 t_dictionary *tablas_segmentos;//key:nombre_restaurante

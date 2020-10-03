@@ -7,137 +7,83 @@
 
 #include "Conexion.h"
 
-t_tipoMensaje recibir_tipo_mensaje(int socket_cliente) {
-	t_tipoMensaje tipo_mensaje;
-
-	if (recv(socket_cliente, &tipo_mensaje, sizeof(t_tipoMensaje), MSG_WAITALL) < 0) {
-		log_error(logger, "Error al recibir tipo de mensaje de socket:%d", socket_cliente);
-	}
-	return tipo_mensaje;
-}
-u_int32_t recibir_int(int socket_cliente) {
-	u_int32_t integer;
-
-	if (recv(socket_cliente, &integer, sizeof(u_int32_t), MSG_WAITALL) < 0) {
-		log_error(logger, "Error al recibir integer de socket:%d", socket_cliente);
-	}
-	return integer;
-}
-void procesar_mensajes(t_cliente_info* args_conexion){
-	t_cliente_info* cliente_info = buscar_cliente(args_conexion->id_cliente);
-	log_info(logger, "CONTESTO POR SOCKET:%d", cliente_info->socket);
-
-	while(1){
-//		t_tipoMensaje* tipo_mensaje = recibirMensaje(args_conexion->socket,logger);
-		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(args_conexion->socket);
-		log_info(logger, "tipo de mensaje:%d", tipo_mensaje);
-		log_info(logger, "Se recibe tipo de mensaje:%s", get_nombre_mensaje(tipo_mensaje));
-
-//		switch (tipo_mensaje) {
-//
-//		case CONSULTAR_RESTAURANTES:
-//			;
-//			t_list* lista_aux_restos = list_create();
-//			char* nombre_resto_1 = "RESTO_1";
-//			char* nombre_resto_2 = "RESTO_2";
-//			list_add(lista_aux_restos, nombre_resto_1);
-//			list_add(lista_aux_restos, nombre_resto_2);
-//			log_info(logger, "LLEGO ACA");
-//			t_rta_consultar_restaurantes* rta_consultar_rtes = malloc(sizeof(t_rta_consultar_restaurantes));
-//			rta_consultar_rtes->cantRestaurantes = 2;
-//			rta_consultar_rtes->restaurantes = lista_aux_restos;
-//			enviarRespuesta(RTA_CONSULTAR_RESTAURANTES,rta_consultar_rtes,cliente_info->socket,logger);
-//			free(rta_consultar_rtes);
-//
-//			break;
-//
-//		case GUARDAR_PEDIDO:
-//			;
-//			//		TODO:
-//			break;
-//
-//		case GUARDAR_PLATO:
-//			;
-//			//		TODO:
-//			break;
-//
-//		case OBTENER_PEDIDO:
-//			;
-//			//		TODO:
-//			break;
-//
-//		case CONFIRMAR_PEDIDO:
-//			;
-//			//		TODO:
-//			break;
-//
-//		case PLATO_LISTO:
-//			;
-//			//		TODO:
-//			break;
-//
-//		case FINALIZAR_PEDIDO:
-//			;
-//			//		TODO:
-//			break;
-//
-//		default:
-//			;
-//			break;
-//		}
-	}
-}
 void connection_handler(int* socket_emisor){
-	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_emisor);
-	log_info(logger, "Se recibe tipo de mensaje:%s", get_nombre_mensaje(tipo_mensaje));
+
+	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_emisor, logger);
+	log_info(logger, "Se recibe tipo de mensaje: %s", get_nombre_mensaje(tipo_mensaje));
 
 	switch (tipo_mensaje) {
 
-	case SOCKET_ESCUCHA:
-		;
-		int id_cliente_escucha = recibir_int(*socket_emisor);
-		t_cliente_info* cliente_info = crear_cliente_info(id_cliente_escucha, *socket_emisor);
-		agregar_a_lista_clientes(cliente_info);
-		log_info(logger,
-				"Se agregó cliente con ID_CLIENTE:%d Y SOCKET_ESCUCHA:%d a lista_clientes",
-				id_cliente_escucha, *socket_emisor);
-		break;
+		case HANDSHAKE:
 
-	case SOCKET_ENVIO:
-		;
-		int id_cliente_envio = recibir_int(*socket_emisor);
-		log_info(logger, "Se recibe mensaje SOCKET_ENVIO de SOCKET:%d con ID_CLIENTE:%d",*socket_emisor,id_cliente_envio);
+			recibir_mensaje_vacio(*socket_emisor, logger);
+			uint32_t miTipoProceso = COMANDA;
+			enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_emisor, logger);
+			break;
 
-		t_cliente_info* args = malloc(sizeof(t_cliente_info));
-		args->id_cliente = id_cliente_envio;
-		args->socket = *socket_emisor;
+		case GUARDAR_PEDIDO:{
 
-		pthread_t hilo_procesar_msj;
-		pthread_create(&hilo_procesar_msj,NULL,(void*)procesar_mensajes,args);
-		pthread_detach(hilo_procesar_msj);
+			t_guardar_pedido* recibido = recibir_guardar_pedido(*socket_emisor, logger);
+			//uint32_t resultado = procesar_guardar_pedido(recibido);
+			free(recibido);
+			//enviar_entero(RTA_GUARDAR_PEDIDO, resultado, *socket_emisor, logger);
+			break;
+		}
 
-		break;
+		case GUARDAR_PLATO:{
 
-//	case CONSULTAR_RESTAURANTES:
-//			;
-//			t_list* lista_aux_restos = list_create();
-//			char* nombre_resto_1 = "RESTO_1";
-//			char* nombre_resto_2 = "RESTO_2";
-//			list_add(lista_aux_restos, nombre_resto_1);
-//			list_add(lista_aux_restos, nombre_resto_2);
-//			t_rta_consultar_restaurantes* rta_consultar_rtes = malloc(sizeof(t_rta_consultar_restaurantes));
-//			rta_consultar_rtes->cantRestaurantes = 2;
-//			rta_consultar_rtes->restaurantes = lista_aux_restos;
-//			enviarRespuesta(RTA_CONSULTAR_RESTAURANTES,rta_consultar_rtes,*socket_emisor,logger);
-//			free(rta_consultar_rtes);
-//
-//			break;
+			t_guardar_plato* recibido = recibir_guardar_plato(*socket_emisor, logger);
+			//uint32_t resultado = procesar_guardar_plato(recibido);
+			free(recibido);
+			//enviar_entero(RTA_GUARDAR_PLATO, resultado, *socket_emisor, logger);
+			break;
+		}
 
-	default:
-		break;
-//		log_error(logger, "Mensaje no reconocido: %s",
-//					get_nombre_mensaje( msg->header.tipoMensaje));
+		case OBTENER_PEDIDO:{
+
+			t_obtener_pedido* recibido = recibir_obtener_pedido(*socket_emisor, logger);
+			//t_rta_obtener_pedido* respuesta = procesar_obtener_pedido(recibido);
+			free(recibido);
+			//enviar_rta_obtener_pedido(respuesta, *socket_emisor, logger);
+			//free(respuesta);
+			break;
+		}
+
+		case CONFIRMAR_PEDIDO:{
+
+			t_confirmar_pedido* recibido = recibir_confirmar_pedido(*socket_emisor, logger);
+			//uint32_t resultado = procesar_confirmar_pedido(recibido);
+			free(recibido);
+			//enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, *socket_emisor, logger);
+			break;
+		}
+
+		case PLATO_LISTO:{
+
+			t_plato_listo* recibido = recibir_plato_listo(*socket_emisor, logger);
+			//uint32_t resultado = procesar_plato_listo(recibido);
+			free(recibido);
+			//enviar_entero(RTA_PLATO_LISTO, resultado, *socket_emisor, logger);
+			break;
+		}
+
+		case FINALIZAR_PEDIDO:{
+
+			t_finalizar_pedido* recibido = recibir_finalizar_pedido(*socket_emisor, logger);
+			//uint32_t resultado = procesar_finalizar_pedido(recibido);
+			free(recibido);
+			//enviar_entero(RTA_FINALIZAR_PEDIDO, resultado, *socket_emisor, logger);
+			break;
+		}
+
+		default:
+
+			log_error(logger, "El tipo de mensaje %s no es admitido por COMANDA", get_nombre_mensaje(tipo_mensaje));
+			break;
+
 	}
+
+	close(*socket_emisor);
 }
 
 void esperar_cliente(int socket_servidor){
@@ -153,82 +99,62 @@ void esperar_cliente(int socket_servidor){
 	pthread_detach(hilo_conexion);
 }
 
-//void escuchar_conexiones(){
+void escuchar_conexiones_comanda(){
+
+	int socket_servidor;
+
+	struct addrinfo hints, *servinfo, *p;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	getaddrinfo(IP_COMANDA, config_get_string_value(config, "PUERTO_ESCUCHA"), &hints, &servinfo);
+
+	for (p=servinfo; p != NULL; p = p->ai_next)
+	{
+		if ((socket_servidor = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
+			continue;
+
+		if (bind(socket_servidor, p->ai_addr, p->ai_addrlen) == -1) {
+			close(socket_servidor);
+			continue;
+		}
+		break;
+	}
+
+	listen(socket_servidor, SOMAXCONN);
+
+	freeaddrinfo(servinfo);
+
+	log_info(logger, "SERVIDOR | Escuchando conexiones");
+
+	while(1)
+		esperar_cliente(socket_servidor);
+}
+
+//void *escuchar_conexiones(){
+//	/*Abro socket*/
+//	socket_comanda = definirSocket(logger);
+//	/*Bind & Listen*/
+//	if (bindearSocketYEscuchar(socket_comanda, IP_COMANDA , atoi(config_get_string_value(config, "PUERTO_ESCUCHA")),
+//			logger) <= 0)
+//		_exit_with_error("BIND", NULL, logger);
 //
-//	int socket_servidor;
+//	lista_clientes = list_create();
 //
-//	struct addrinfo hints, *servinfo, *p;
+//	/*Atiendo solicitudes creando un hilo para cada una*/
+//	while(1){
+//		pthread_t hilo_conexion;
+//		int* new_sock = malloc(sizeof(int));
 //
-//	memset(&hints, 0, sizeof(hints));
-//	hints.ai_family = AF_UNSPEC;
-//	hints.ai_socktype = SOCK_STREAM;
-//	hints.ai_flags = AI_PASSIVE;
+//		*new_sock = aceptarConexiones(socket_comanda, logger);
 //
-//	getaddrinfo(IP_COMANDA, comanda_conf.puerto_comanda, &hints, &servinfo);
+//		if(new_sock < 0)
+//			log_error(logger, "Error al realizar ACCEPT.\n");
 //
-//	for (p=servinfo; p != NULL; p = p->ai_next)
-//	{
-//		if ((socket_servidor = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
-//			log_error(logger, "No se pudo abrir el socket de escucha");
-//			continue;
-//
-//		if (bind(socket_servidor, p->ai_addr, p->ai_addrlen) == -1) {
-//			log_error(logger, "No se pudo bindear el socket de escucha");
-//			close(socket_servidor);
-//			continue;
-//		}
-//		break;
+//		pthread_create(&hilo_conexion,NULL,(void*)connection_handler,new_sock);
+//		pthread_detach(hilo_conexion);
 //	}
-//
-//	listen(socket_servidor, SOMAXCONN);
-//
-//	freeaddrinfo(servinfo);
-//
-//	log_info(logger, "SERVIDOR | Escuchando conexiones");
-//
-//	while(1)
-//		esperar_cliente(socket_servidor);
 //}
-
-void *escuchar_conexiones(){
-	/*Abro socket*/
-	socket_comanda = definirSocket(logger);
-	/*Bind & Listen*/
-	if (bindearSocketYEscuchar(socket_comanda, IP_COMANDA , atoi(comanda_conf.puerto_comanda),
-			logger) <= 0)
-		_exit_with_error("BIND", NULL, logger);
-
-	lista_clientes = list_create();
-
-	/*Atiendo solicitudes creando un hilo para cada una*/
-	while(1){
-		pthread_t hilo_conexion;
-		int* new_sock = malloc(sizeof(int));
-
-		*new_sock = aceptarConexiones(socket_comanda, logger);
-
-		if(new_sock < 0)
-			log_error(logger, "Error al realizar ACCEPT.\n");
-
-		pthread_create(&hilo_conexion,NULL,(void*)connection_handler,new_sock);
-		pthread_detach(hilo_conexion);
-	}
-}
-t_cliente_info* crear_cliente_info(int id_cliente, int socket){
-	t_cliente_info* cliente = malloc(sizeof(t_cliente_info));
-	cliente->id_cliente = id_cliente;
-	cliente->socket = socket;
-	return cliente;
-}
-void agregar_a_lista_clientes(t_cliente_info* cliente_info){
-	list_add(lista_clientes, cliente_info);
-}
-t_cliente_info* buscar_cliente(int id_cliente){
-	int es_cliente(t_cliente_info* cliente){
-		return cliente->id_cliente == id_cliente;
-	}
-	return list_find(lista_clientes, (void*)es_cliente);
-}
-int existe_cliente(t_cliente_info* cliente_info){
-	return cliente_info != NULL;
-}

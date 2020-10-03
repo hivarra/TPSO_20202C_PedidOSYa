@@ -10,8 +10,7 @@
 
 #include <shared.h>
 #include <signal.h>
-#include "Auxiliares/Logueo.h"
-#include "Auxiliares/Configuracion.h"
+#include "Auxiliares/Config_y_log.h"
 #include "Auxiliares/Conexion.h"
 #include "Auxiliares/Utils.h"
 #include "Auxiliares/MMU.h"

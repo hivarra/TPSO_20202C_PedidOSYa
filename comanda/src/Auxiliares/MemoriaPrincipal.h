@@ -8,12 +8,17 @@
 #ifndef AUXILIARES_MEMORIAPRINCIPAL_H_
 #define AUXILIARES_MEMORIAPRINCIPAL_H_
 
-#include "Configuracion.h"
+#include "Config_y_log.h"
+
+typedef enum{
+	LRU,
+	CLOCK_MEJ
+}t_algoritmo_reemplazo;
 
 typedef struct{
 	int tamanio_memoria;
 	int tamanio_swap;
-	char* algoritmo_reemplazo;
+	t_algoritmo_reemplazo algoritmo_reemplazo;
 }t_params_global_mem_principal;
 
 void* memoria_fisica;

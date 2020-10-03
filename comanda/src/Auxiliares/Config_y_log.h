@@ -5,28 +5,17 @@
  *      Author: utnso
  */
 
-#ifndef AUXILIARES_CONFIGURACION_H_
-#define AUXILIARES_CONFIGURACION_H_
+#ifndef AUXILIARES_CONFIG_Y_LOG_H_
+#define AUXILIARES_CONFIG_Y_LOG_H_
 
 #include <shared.h>
-#include "Logueo.h"
-
-// Definición de tipos
-typedef struct {
-	uint32_t tamanio_memoria;
-	uint32_t tamanio_swap;
-	char* algoritmo_reemplazo;
-	char* puerto_comanda;
-	char* archivo_log;
-
-} t_comanda_conf;
 
 // Variables globales
 t_config* config;
-t_comanda_conf comanda_conf;
-
+t_log* logger;
 
 void cargar_configuracion_comanda(char *path_config);
+void cargar_logger_comanda();
 void mostrar_propiedades();
 
-#endif /* AUXILIARES_CONFIGURACION_H_ */
+#endif /* AUXILIARES_CONFIG_Y_LOG_H_ */
