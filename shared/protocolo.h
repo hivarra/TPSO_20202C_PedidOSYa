@@ -36,7 +36,7 @@ typedef struct{
 }t_paquete;
 
 typedef struct{
-	char nombre[L_PASO_REC];
+	char accion[L_PASO_REC];
 	uint32_t tiempo;
 }__attribute__((packed)) t_paso_receta;
 
@@ -102,6 +102,7 @@ typedef struct{
 	uint32_t posX;
 	uint32_t posY;
 	uint32_t cantHornos;
+	uint32_t cantPedidos;
 	uint32_t cantCocineros;
 	t_list* cocineros;//char comida[L_PLATO](sin afinidad: "N")
 	uint32_t cantPlatos;

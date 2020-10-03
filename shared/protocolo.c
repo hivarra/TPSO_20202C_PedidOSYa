@@ -105,12 +105,12 @@ t_rta_consultar_restaurantes* deserializar_rta_consultar_restaurantes(void* seri
 
 	for (int i = 0; i < rta->cantRestaurantes; i++){
 
-		char restaurante_i[L_ID];
+		char* restaurante_i = malloc(L_ID);
 
 		memcpy(restaurante_i, serializado+offset, L_ID);
 		offset += L_ID;
 
-		list_add(rta->restaurantes, restaurante_i);//TODO:REVISAR SI NO SE PIERDE REFERENCIA AL CHAR[]. AL PARECER LA FUNCION LIST_ADD USA STATIC VAR POR LO QUE NO DEBERIA PERDERSE
+		list_add(rta->restaurantes, restaurante_i);
 	}
 
 	free(serializado);
@@ -123,6 +123,7 @@ void* serializar_rta_obtener_restaurante(uint32_t* largo, t_rta_obtener_restaura
 	*largo = sizeof(rta->posX)
 			+sizeof(rta->posY)
 			+sizeof(rta->cantHornos)
+			+sizeof(rta->cantPedidos)
 			+sizeof(rta->cantCocineros)
 			+rta->cantCocineros*L_PLATO
 			+sizeof(rta->cantPlatos)
@@ -137,6 +138,8 @@ void* serializar_rta_obtener_restaurante(uint32_t* largo, t_rta_obtener_restaura
 	offset += sizeof(rta->posY);
 	memcpy(serializado+offset, &rta->cantHornos, sizeof(rta->cantHornos));
 	offset += sizeof(rta->cantHornos);
+	memcpy(serializado+offset, &rta->cantPedidos, sizeof(rta->cantPedidos));
+	offset += sizeof(rta->cantPedidos);
 	memcpy(serializado+offset, &rta->cantCocineros, sizeof(rta->cantCocineros));
 	offset += sizeof(rta->cantCocineros);
 
@@ -167,6 +170,8 @@ t_rta_obtener_restaurante* deserializar_rta_obtener_restaurante(void* serializad
 	offset += sizeof(rta->posY);
 	memcpy(&rta->cantHornos, serializado+offset, sizeof(rta->cantHornos));
 	offset += sizeof(rta->cantHornos);
+	memcpy(&rta->cantPedidos, serializado+offset, sizeof(rta->cantPedidos));
+	offset += sizeof(rta->cantPedidos);
 	memcpy(&rta->cantCocineros, serializado+offset, sizeof(rta->cantCocineros));
 	offset += sizeof(rta->cantCocineros);
 
@@ -328,6 +333,8 @@ t_rta_obtener_pedido* deserializar_rta_obtener_pedido(void* serializado){
 
 	int offset = 0;
 
+	memcpy(&rta->estado, serializado+offset, sizeof(rta->estado));
+	offset += sizeof(rta->estado);
 	memcpy(&rta->cantComidas, serializado+offset, sizeof(rta->cantComidas));
 	offset += sizeof(rta->cantComidas);
 
