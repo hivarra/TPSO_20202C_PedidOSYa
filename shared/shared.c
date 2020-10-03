@@ -267,6 +267,29 @@ void liberar_lista(char** lista){
 	free(lista);
 }
 
+void crear_carpeta_log(char* path_log){
+
+	char** path_dividida = string_split(path_log, "/");
+
+	char* carpeta = string_new();
+	int counter = 0;
+
+	while(path_dividida[counter] != NULL){
+
+		if (path_dividida[counter+1] != NULL){
+			string_append(&carpeta, "/");
+			string_append(&carpeta, path_dividida[counter]);
+		}
+		counter++;
+	}
+
+	liberar_lista(path_dividida);
+
+	if (strlen(carpeta) > 0)
+		mkdir(carpeta, 0777);
+
+	free(carpeta);
+}
 
 /* ---------- Posiblemente no usados ---------- */
 char* getLogPath(char* nombre_archivo) {

@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <pthread.h>
@@ -107,6 +108,7 @@ char* getConfigPath(char*);//ATENCION: Liberar el string devuelto. Recibe un "co
 /* ---------- Extras ---------- */
 uint64_t timestamp(void);
 void liberar_lista(char**);//Recibe una lista de strings, generalmente devuelta por las commons, y libera la memoria usada
+void crear_carpeta_log(char* path_log);//recibe el path completo del log y crea una carpeta para poder guardar el log
 
 
 /**************************************************/
