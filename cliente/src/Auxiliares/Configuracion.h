@@ -17,7 +17,7 @@ typedef struct {
 	char* archivo_log;
 	int posicion_x;
 	int posicion_y;
-	u_int32_t id_cliente;
+	char* id_cliente;
 } t_cliente_config;
 
 t_config* config;

@@ -15,11 +15,13 @@ int main(void) {
 
 	configurarProceso();
 
-	crear_hilo_recepcion_mensajes();
+//	crear_hilo_recepcion_mensajes();
 
-	crear_hilo_conexion_envio();
+//	crear_hilo_conexion_envio();
 
-	leer_consola();
+	inicializar_conexion();
+
+//	leer_consola();
 
 	return EXIT_SUCCESS;
 }

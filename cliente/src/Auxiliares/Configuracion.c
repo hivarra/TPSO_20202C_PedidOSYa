@@ -27,5 +27,5 @@ void cargarConfigCliente() {
 		cliente_config.posicion_y = config_get_int_value(config, "POSICION_Y");
 
 	if (config_has_property(config, "ID_CLIENTE"))
-			cliente_config.id_cliente = config_get_int_value(config, "ID_CLIENTE");
+			cliente_config.id_cliente = config_get_string_value(config, "ID_CLIENTE");
 }
