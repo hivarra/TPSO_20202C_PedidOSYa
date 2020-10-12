@@ -719,7 +719,7 @@ uint32_t recibir_entero(int socketEmisor, t_log* logger) {
 	uint32_t* recibido = recibirMensaje(socketEmisor, logger);
 
 	uint32_t entero = *recibido;
-	free(recibido);
+//	free(recibido);
 
 	return entero;
 }

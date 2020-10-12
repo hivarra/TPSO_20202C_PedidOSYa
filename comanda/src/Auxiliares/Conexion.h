@@ -13,6 +13,8 @@
 #include <protocolo.h>
 #include "Config_y_log.h"
 
+int socket_comanda;
+
 void escuchar_conexiones_comanda();
 
 #endif /* AUXILIARES_CONEXION_H_ */

@@ -18,14 +18,16 @@
 #include "Configuracion.h"
 
 int socket_envio;
-int socket_recepcion;
+int socket_escucha;
+int socket_unidireccional;
+t_tipoProceso tipo_proceso_server;
 
 void leer_consola();
 void _leer_consola();
 int procesar_comando(char *line);
 void procesar_solicitud(char** parametros);
 int conectar_a_server();
-void inicializar_conexion_recepcion();
+void inicializar_conexion();
 void crear_hilo_recepcion_mensajes();
 void crear_hilo_conexion_envio();
 // Auxiliares de consola

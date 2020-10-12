@@ -8,7 +8,7 @@
 #include "Conexion.h"
 
 void connection_handler(int* socket_emisor){
-
+	log_info(logger,"CONECTADO CON SOCKET:%d",*socket_emisor);
 	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_emisor, logger);
 	log_info(logger, "Se recibe tipo de mensaje: %s", get_nombre_mensaje(tipo_mensaje));
 
@@ -23,10 +23,13 @@ void connection_handler(int* socket_emisor){
 
 		case GUARDAR_PEDIDO:{
 
-			t_guardar_pedido* recibido = recibir_guardar_pedido(*socket_emisor, logger);
+			t_guardar_pedido* msg_guardar_pedido = recibir_guardar_pedido(*socket_emisor, logger);
+			log_info(logger,"ID_PEDIDO:%d",msg_guardar_pedido->id_pedido);
+			log_info(logger,"RESTAURANTE:%s",msg_guardar_pedido->restaurante);
 			//uint32_t resultado = procesar_guardar_pedido(recibido);
-			free(recibido);
-			//enviar_entero(RTA_GUARDAR_PEDIDO, resultado, *socket_emisor, logger);
+			free(msg_guardar_pedido);
+			uint32_t resultado = 1;//PARA PRUEBA, DESPUES QUITAAAAR
+			enviar_entero(RTA_GUARDAR_PEDIDO, resultado, *socket_emisor, logger);
 			break;
 		}
 
@@ -134,27 +137,25 @@ void escuchar_conexiones_comanda(){
 		esperar_cliente(socket_servidor);
 }
 
-//void *escuchar_conexiones(){
-//	/*Abro socket*/
-//	socket_comanda = definirSocket(logger);
-//	/*Bind & Listen*/
-//	if (bindearSocketYEscuchar(socket_comanda, IP_COMANDA , atoi(config_get_string_value(config, "PUERTO_ESCUCHA")),
-//			logger) <= 0)
-//		_exit_with_error("BIND", NULL, logger);
-//
-//	lista_clientes = list_create();
-//
-//	/*Atiendo solicitudes creando un hilo para cada una*/
-//	while(1){
-//		pthread_t hilo_conexion;
-//		int* new_sock = malloc(sizeof(int));
-//
-//		*new_sock = aceptarConexiones(socket_comanda, logger);
-//
-//		if(new_sock < 0)
-//			log_error(logger, "Error al realizar ACCEPT.\n");
-//
-//		pthread_create(&hilo_conexion,NULL,(void*)connection_handler,new_sock);
-//		pthread_detach(hilo_conexion);
-//	}
-//}
+void *escuchar_conexiones(){
+	/*Abro socket*/
+	socket_comanda = definirSocket(logger);
+	/*Bind & Listen*/
+	if (bindearSocketYEscuchar(socket_comanda, IP_COMANDA , atoi(config_get_string_value(config, "PUERTO_ESCUCHA")),
+			logger) <= 0)
+		_exit_with_error("BIND", NULL, logger);
+
+	/*Atiendo solicitudes creando un hilo para cada una*/
+	while(1){
+		pthread_t hilo_conexion;
+		int* new_sock = malloc(sizeof(int));
+
+		*new_sock = aceptarConexiones(socket_comanda, logger);
+
+		if(new_sock < 0)
+			log_error(logger, "Error al realizar ACCEPT.\n");
+
+		pthread_create(&hilo_conexion,NULL,(void*)connection_handler,new_sock);
+		pthread_detach(hilo_conexion);
+	}
+}

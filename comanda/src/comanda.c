@@ -29,7 +29,8 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, &signalHandler);
 
 	/* 4. Escuchando conexiones*/
-	escuchar_conexiones_comanda();
+//	escuchar_conexiones_comanda();
+	escuchar_conexiones();
 
 	return EXIT_FAILURE;
 }

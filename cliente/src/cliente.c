@@ -15,23 +15,16 @@ int main(void) {
 
 	configurarProceso();
 
-//	crear_hilo_recepcion_mensajes();
-
-//	crear_hilo_conexion_envio();
-
 	inicializar_conexion();
 
-//	leer_consola();
+	leer_consola();
 
 	return EXIT_SUCCESS;
 }
 
 void configurarProceso() {
-
 	/* 0. Configuración */
 	cargarConfigCliente();
-
 	/* 1. Log */
 	logger = configurar_logger(cliente_config.archivo_log, "cliente");
-
 }
