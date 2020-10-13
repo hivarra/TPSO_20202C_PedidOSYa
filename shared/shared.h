@@ -26,6 +26,7 @@
 #include <commons/string.h>
 #include <commons/collections/list.h>
 #include <commons/error.h>
+#include <errno.h>
 
 /* ---------- Definición de tipos ---------- */
 typedef enum{
@@ -108,7 +109,7 @@ char* getConfigPath(char*);//ATENCION: Liberar el string devuelto. Recibe un "co
 /* ---------- Extras ---------- */
 uint64_t timestamp(void);
 void liberar_lista(char**);//Recibe una lista de strings, generalmente devuelta por las commons, y libera la memoria usada
-void crear_carpeta_log(char* path_log);//recibe el path completo del log y crea una carpeta para poder guardar el log
+int crear_carpeta_log(char* path_log);//recibe el path completo del log y crea una carpeta para poder guardar el log. Devuelve 1 si se creo o si estaba creada, 0 si no se creo
 
 
 /**************************************************/

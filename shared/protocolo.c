@@ -205,7 +205,6 @@ t_rta_obtener_restaurante* deserializar_rta_obtener_restaurante(void* serializad
 	free(serializado);
 
 	return rta;
-
 }
 
 void* serializar_rta_consultar_platos(uint32_t* largo, t_rta_consultar_platos* rta){
@@ -471,11 +470,11 @@ int enviar_socket_escucha(t_socket_escucha* mensaje, int socketReceptor, t_log* 
 	return resultado_envio;
 }
 
-int enviar_seleccionar_restaurante(t_seleccionar_restaurante* mensaje, int socketReceptor, t_log* logger) {
+int enviar_seleccionar_restaurante(char* mensaje, int socketReceptor, t_log* logger) {
 
 	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-	buffer->size = sizeof(t_seleccionar_restaurante);
+	buffer->size = L_ID;
 	buffer->stream = malloc(buffer->size);
 	memcpy(buffer->stream, mensaje, buffer->size);
 
@@ -736,9 +735,9 @@ t_socket_escucha* recibir_socket_escucha(int socketEmisor, t_log* logger) {
 	return recibido;
 }
 
-t_seleccionar_restaurante* recibir_seleccionar_restaurante(int socketEmisor, t_log* logger) {
+char* recibir_seleccionar_restaurante(int socketEmisor, t_log* logger) {
 
-	t_seleccionar_restaurante* recibido = recibirMensaje(socketEmisor, logger);
+	char* recibido = recibirMensaje(socketEmisor, logger);
 	return recibido;
 }
 
