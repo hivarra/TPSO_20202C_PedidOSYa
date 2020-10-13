@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
 	/* 4. Escuchando conexiones*/
 //	escuchar_conexiones_comanda();
-	escuchar_conexiones();
+	escuchar__conexiones_comanda();
 
 	return EXIT_FAILURE;
 }

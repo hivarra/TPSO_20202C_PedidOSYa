@@ -8,18 +8,20 @@
 #include "Conexion.h"
 
 void connection_handler(int* socket_emisor){
-	log_info(logger,"CONECTADO CON SOCKET:%d",*socket_emisor);
+
+	log_info(logger,"CONECTADO CON SOCKET: %d",*socket_emisor);
 	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_emisor, logger);
 	log_info(logger, "Se recibe tipo de mensaje: %s", get_nombre_mensaje(tipo_mensaje));
 
 	switch (tipo_mensaje) {
 
-		case HANDSHAKE:
+		case HANDSHAKE:{
 
 			recibir_mensaje_vacio(*socket_emisor, logger);
 			uint32_t miTipoProceso = COMANDA;
 			enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_emisor, logger);
 			break;
+		}
 
 		case GUARDAR_PEDIDO:{
 
@@ -136,7 +138,7 @@ void escuchar_conexiones_comanda(){
 		esperar_cliente(socket_servidor);
 }
 
-void *escuchar_conexiones(){
+void escuchar__conexiones_comanda(){
 	/*Abro socket*/
 	socket_comanda = definirSocket(logger);
 	/*Bind & Listen*/
