@@ -80,7 +80,6 @@ void connection_handler(int* socket_emisor){
 		}
 
 		default:
-
 			log_error(logger, "El tipo de mensaje %s no es admitido por COMANDA", get_nombre_mensaje(tipo_mensaje));
 			break;
 

@@ -22,6 +22,12 @@ typedef struct {
 	uint32_t tiempoDescanso;
 }__attribute__((packed)) t_repartidor;
 
+typedef struct {
+	char* nombre;
+	uint32_t posX;
+	uint32_t posY;
+}__attribute__((packed)) t_restaurante;
+
 pthread_t hilo_servidor;
 t_restaurante* restaurante_default;
 

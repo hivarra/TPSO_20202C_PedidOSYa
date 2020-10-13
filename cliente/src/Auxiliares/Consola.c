@@ -22,14 +22,16 @@ void _leer_consola(){
 	}
 	free(line);
 }
-void inicializar_conexion_escucha(int* socket){
-	socket_escucha = conectar_a_server();
-
+void enviar_info_socket_escucha(int socket){
 	t_socket_escucha* socket_escucha_info = malloc(sizeof(t_socket_escucha));
 	strcpy(socket_escucha_info->id,cliente_config.id_cliente);
 	socket_escucha_info->tipoProceso = CLIENTE;
-	enviar_socket_escucha(socket_escucha_info,socket_escucha,logger);
+	enviar_socket_escucha(socket_escucha_info,socket,logger);
 	free(socket_escucha_info);
+}
+void inicializar_conexion_escucha(){
+	socket_escucha = conectar_a_server();
+	enviar_info_socket_escucha(socket_escucha);
 
 	while(1){
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_escucha,logger);
@@ -65,8 +67,7 @@ int conectar_a_server(){
 	}
 	return socket_aux;
 }
-void inicializar_conexion(){
-	/*REALIZO HANDSHAKE*/
+void realizar_handshake(){
 	int socket_handshake = conectar_a_server();
 	enviar_mensaje_vacio(HANDSHAKE, socket_handshake, logger);
 	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_handshake,logger);
@@ -77,16 +78,23 @@ void inicializar_conexion(){
 		log_info(logger,"FIN HANDSHAKE CON PROCESO: %s",get_nombre_proceso(tipo_proceso_server));
 	}
 	close(socket_handshake);
-	/*SI ME CONECTO A APP/RESTAURANTE, ENVIO SOCKET_ENVIO Y SOCKET_ESCUCHA*/
+}
+void enviar_info_socket_envio(){
+	t_socket_envio* param_socket_envio = malloc(sizeof(t_socket_envio));
+	strcpy(param_socket_envio->id,cliente_config.id_cliente);
+	param_socket_envio->posX = cliente_config.posicion_x;
+	param_socket_envio->posY = cliente_config.posicion_y;
+	param_socket_envio->tipoProceso = CLIENTE;
+	enviar_socket_envio(param_socket_envio,socket_envio,logger);
+	free(param_socket_envio);
+}
+void inicializar_conexion(){
+	/*REALIZO HANDSHAKE*/
+	realizar_handshake();
+	/*SI ME CONECTO A APP/RESTAURANTE,ENVIO INFO SOCKET_ENVIO Y CREO HILO PARA SOCKET_ESCUCHA*/
 	if(tipo_proceso_server == APP || tipo_proceso_server == RESTAURANTE){
 		socket_envio = conectar_a_server();
-		t_socket_envio* param_socket_envio = malloc(sizeof(t_socket_envio));
-		strcpy(param_socket_envio->id,cliente_config.id_cliente);
-		param_socket_envio->posX = cliente_config.posicion_x;
-		param_socket_envio->posY = cliente_config.posicion_y;
-		param_socket_envio->tipoProceso = CLIENTE;
-		enviar_socket_envio(param_socket_envio,socket_envio,logger);
-		free(param_socket_envio);
+		enviar_info_socket_envio();
 		crear_hilo_conexion_escucha();
 	}
 	/*SI ME CONECTO A COMANDA/SINDICATO, ME COMUNICO POR SOCKET_UNIDIRECCIONAL*/
@@ -132,7 +140,6 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			printf("No se reconoce el mensaje.\n");
 			break;
 	}
-	log_info(logger, "Mensaje enviado: %s\n", get_nombre_mensaje(tipo_mensaje));
 }
 void procesar_solicitud_comanda_sindicato(char** parametros){
 	t_tipoMensaje tipo_mensaje = tipo_mensaje_string_to_enum(parametros[0]);
