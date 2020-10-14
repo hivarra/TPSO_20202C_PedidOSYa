@@ -212,10 +212,10 @@ typedef struct{
 //Retorna: uint32_t(0 = FAIL, 1 = OK)
 
 
-/********Terminaar Pedido********/
+/********Terminar Pedido********/
 //Recibe:
 typedef struct{
-	char nombre_restaurante[L_ID];
+	char restaurante[L_ID];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_terminar_pedido;
 

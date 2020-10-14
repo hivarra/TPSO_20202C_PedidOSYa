@@ -40,8 +40,10 @@ int empaquetar_enviar_free_buffer(t_tipoMensaje tipoMensaje, t_buffer* buffer, i
 
 	if (send(socketReceptor, fullSerializado, bytes, 0) != bytes) {
 		log_error(logger, "No se pudo enviar el mensaje %s al socket %d.", get_nombre_mensaje(tipoMensaje), socketReceptor);
+		free(fullSerializado);
 		return -1;
 	}
+	free(fullSerializado);
 	return 0;
 }
 
@@ -700,7 +702,6 @@ t_tipoMensaje recibir_tipo_mensaje(int socket_cliente, t_log* logger) {
 	uint32_t tipo_mensaje_u;
 
 	if (recv(socket_cliente, &tipo_mensaje_u, sizeof(uint32_t), MSG_WAITALL) < sizeof(uint32_t)) {
-		log_error(logger, "Error al recibir tipo de mensaje de socket:%d", socket_cliente);
 		return -1;
 	}
 
@@ -718,7 +719,7 @@ uint32_t recibir_entero(int socketEmisor, t_log* logger) {
 	uint32_t* recibido = recibirMensaje(socketEmisor, logger);
 
 	uint32_t entero = *recibido;
-//	free(recibido);
+	free(recibido);
 
 	return entero;
 }
