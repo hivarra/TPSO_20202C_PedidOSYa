@@ -29,19 +29,20 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, &signalHandler);
 
 	/* 4. Escuchando conexiones*/
-//	escuchar_conexiones_comanda();
-	escuchar__conexiones_comanda();
+	escuchar_conexiones_comanda();
+	//escuchar__conexiones_comanda();
 
 	return EXIT_FAILURE;
 }
 
 void signalHandler(int sig){
-	puts("Fin COMANDA\n");
 
 	liberar_memoria();
 
 	destruir_logger(logger);
 	destruir_config(config);
+
+	puts("Fin COMANDA\n");
 
 	exit(EXIT_SUCCESS);
 }

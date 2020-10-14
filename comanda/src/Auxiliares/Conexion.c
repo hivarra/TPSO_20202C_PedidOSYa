@@ -9,8 +9,14 @@
 
 void connection_handler(int* socket_emisor){
 
-	log_info(logger,"CONECTADO CON SOCKET: %d",*socket_emisor);
 	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_emisor, logger);
+
+	if (tipo_mensaje == -1){
+		close(*socket_emisor);
+		free(socket_emisor);
+		pthread_exit(NULL);
+	}
+
 	log_info(logger, "Se recibe tipo de mensaje: %s", get_nombre_mensaje(tipo_mensaje));
 
 	switch (tipo_mensaje) {
@@ -26,11 +32,10 @@ void connection_handler(int* socket_emisor){
 		case GUARDAR_PEDIDO:{
 
 			t_guardar_pedido* msg_guardar_pedido = recibir_guardar_pedido(*socket_emisor, logger);
-			log_info(logger,"ID_PEDIDO:%d",msg_guardar_pedido->id_pedido);
-			log_info(logger,"RESTAURANTE:%s",msg_guardar_pedido->restaurante);
+			log_info(logger, "Restaurante: %s, ID_Pedido: %d", msg_guardar_pedido->restaurante, msg_guardar_pedido->id_pedido);
 			//uint32_t resultado = procesar_guardar_pedido(recibido);
 			free(msg_guardar_pedido);
-			uint32_t resultado = 1;//PARA PRUEBA, DESPUES QUITAAAAR
+			uint32_t resultado = 0;//PARA PRUEBA, DESPUES QUITAAAAR
 			enviar_entero(RTA_GUARDAR_PEDIDO, resultado, *socket_emisor, logger);
 			break;
 		}
@@ -86,8 +91,8 @@ void connection_handler(int* socket_emisor){
 			break;
 
 	}
-
 	close(*socket_emisor);
+	free(socket_emisor);
 }
 
 void esperar_cliente(int socket_servidor){
@@ -97,9 +102,11 @@ void esperar_cliente(int socket_servidor){
 
 	int tam_direccion = sizeof(struct sockaddr_in);
 
-	int socket_cliente = accept(socket_servidor, (void*) &dir_cliente, (void*) &tam_direccion);
+	int* new_socket = malloc(sizeof(int));
 
-	pthread_create(&hilo_conexion, NULL, (void*)connection_handler, &socket_cliente);
+	*new_socket = accept(socket_servidor, (void*) &dir_cliente, (void*) &tam_direccion);
+
+	pthread_create(&hilo_conexion, NULL, (void*)connection_handler, new_socket);
 	pthread_detach(hilo_conexion);
 }
 
