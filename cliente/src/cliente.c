@@ -26,5 +26,5 @@ void configurarProceso() {
 	/* 0. Configuración */
 	cargarConfigCliente();
 	/* 1. Log */
-	logger = configurar_logger(cliente_config.archivo_log, "cliente");
+	cargar_logger_cliente();
 }
