@@ -18,14 +18,24 @@ void iniciar_conexion_escucha(){
 			pthread_exit(NULL);
 		}
 
+		log_info(logger, "[ACTUALIZACIONES] Se recibe tipo de mensaje: %s", get_nombre_mensaje(tipo_mensaje));
+
 		switch(tipo_mensaje){
 
-			case RTA_CONSULTAR_RESTAURANTES:;
-				t_rta_consultar_restaurantes* rta_consultar_restaurantes = recibir_rta_consultar_restaurantes(socket_escucha,logger);
-				log_info(logger,"CANTIDAD_RESTAURANTES:%d",rta_consultar_restaurantes->cantRestaurantes);
-				imprimir_lista_strings(rta_consultar_restaurantes->restaurantes,"RESTAURANTES");
-
-				break;
+			case PLATO_LISTO:{
+				t_plato_listo* recibido = recibir_plato_listo(socket_escucha, logger);
+				log_info(logger, "Restaurante: %s, ID_Pedido: %d, Plato: %s", recibido->restaurante, recibido->id_pedido, recibido->plato);
+				free(recibido);
+				enviar_entero(RTA_PLATO_LISTO, 1, socket_escucha, logger);
+			}
+			break;
+			case FINALIZAR_PEDIDO:{
+				t_finalizar_pedido* recibido = recibir_finalizar_pedido(socket_escucha, logger);
+				log_info(logger, "Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
+				free(recibido);
+				enviar_entero(RTA_FINALIZAR_PEDIDO, 1, socket_escucha, logger);
+			}
+			break;
 			default:
 				puts("No se reconoce el tipo de mensaje recibido\n");
 				break;
@@ -35,7 +45,7 @@ void iniciar_conexion_escucha(){
 
 void enviar_info_socket_escucha(int socket){
 
-	t_socket_escucha* socket_escucha_info = malloc(sizeof(t_socket_escucha));
+	t_socket_escucha* socket_escucha_info = calloc(1,sizeof(t_socket_escucha));
 	strcpy(socket_escucha_info->id, cliente_config.id_cliente);
 	socket_escucha_info->tipoProceso = CLIENTE;
 	enviar_socket_escucha(socket_escucha_info, socket, logger);

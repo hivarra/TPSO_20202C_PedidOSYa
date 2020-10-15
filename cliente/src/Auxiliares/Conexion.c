@@ -19,7 +19,7 @@ int conectar_a_server(){
 
 void enviar_info_socket_envio(){
 
-	t_socket_envio* param_socket_envio = malloc(sizeof(t_socket_envio));
+	t_socket_envio* param_socket_envio = calloc(1,sizeof(t_socket_envio));
 	strcpy(param_socket_envio->id, cliente_config.id_cliente);
 	param_socket_envio->posX = cliente_config.posicion_x;
 	param_socket_envio->posY = cliente_config.posicion_y;
