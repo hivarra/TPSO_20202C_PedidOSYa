@@ -30,8 +30,8 @@ t_list* lista_clientes_restaurantes;
 
 void *crearServidor();
 void* atenderConexion();
-void inicializar_lista_clientes_rest();
-void incializar_resto_default();
+void inicializarListaClientesRest();
+void incializarRestoDefault();
 //void imprimir_restaurante(t_restaurante* restaurante);
 //void agregarRestaurante(t_restaurante* restaurante);
 
