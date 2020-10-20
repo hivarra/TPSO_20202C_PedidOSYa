@@ -28,10 +28,9 @@ int main(int argc, char **argv) {
 	montarFileSystem();
 
 	/* 4. Hilos */
-
-	CrearHiloConsola();
-	/* 5. Inicializar conexiones*/
-	/*TODO: levantar server para recibir peticiones de restaurantes y clientes*/
+	/* 4. Escuchando conexiones*/
+	escuchar_conexiones_sindicato();
+	crearHiloConsola();
 
 //	destruir_config(config);
 //	destruir_logger(logger);
