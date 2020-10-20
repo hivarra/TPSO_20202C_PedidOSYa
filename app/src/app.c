@@ -40,8 +40,8 @@ int main(int argc, char **argv)  {
 void inicializar() {
 
 	iniciarListas();
-	inicializar_lista_clientes_rest();
-	incializar_resto_default();
+	inicializarListaClientesRest();
+	incializarRestoDefault();
 	iniciarSemaforos();
 //	iniciarRestauranteDefault();
 	iniciarRepartidores();
