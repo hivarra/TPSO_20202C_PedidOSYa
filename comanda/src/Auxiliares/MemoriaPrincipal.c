@@ -9,8 +9,8 @@
 #include "MemoriaPrincipal.h"
 
 void inicializar_memoria_principal(){
-	memoria_fisica = malloc(mem_principal_global->tamanio_memoria);
-	memset(memoria_fisica, '\0', mem_principal_global->tamanio_memoria);//TODO VER SI ES NEC.
+	memoria_fisica = calloc(1,mem_principal_global->tamanio_memoria);//Inicializa con /0
+	//memset(memoria_fisica, '\0', mem_principal_global->tamanio_memoria);
 }
 
 void setear_params_global_mem_principal(){
