@@ -39,7 +39,7 @@ void cargar_logger_cliente() {
 		log_info(logger, "*************** NUEVO LOG ***************");
 	}
 	else{
-		puts("Error al crear la carpera del log\n");
+		puts("Error al crear la carpera del log");
 		exit(2);
 	}
 }

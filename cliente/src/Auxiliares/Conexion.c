@@ -33,7 +33,7 @@ void realizar_handshake(){
 	int socket_handshake = conectar_a_server();
 
 	if (socket_handshake == -1){
-		puts("No se pudo conectar al servidor. Se cierra el modulo Cliente\n");
+		puts("No se pudo conectar al servidor. Se cierra el modulo Cliente");
 		terminar_programa(-1);
 	}
 
@@ -75,10 +75,10 @@ void terminar_programa(int result){
 	if (socket_escucha != -1){
 		close(socket_escucha);
 		pthread_cancel(hilo_escucha);
-		puts("Ending listening thread...\n");
+		puts("Ending listening thread...");
 		sleep(2);
 	}
 
-	puts("Fin CLIENTE\n");
+	puts("Fin CLIENTE");
 	exit(result);
 }
