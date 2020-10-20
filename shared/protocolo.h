@@ -43,7 +43,7 @@ typedef struct{
 typedef struct{
 	char nombre[L_PLATO];
 	uint32_t precio;
-}t_plato;
+}__attribute__((packed)) t_plato;
 
 typedef struct{
 	char nombre[L_PLATO];
@@ -57,21 +57,21 @@ typedef struct{
 //Recibe: nada
 //Retorna: uint32_t tipoProceso;
 
-/********Socket envio********///SE USA DESDE CLIENTE HACIA APP, O DESDE RESTAURANTE HACIA APP
+/********Socket envio********///SE USA DESDE CLIENTE HACIA APP o RESTAURANTE, O DESDE RESTAURANTE HACIA APP
 //Recibe:
 typedef struct{
 	char id[L_ID];
 	uint32_t posX;
 	uint32_t posY;
 	uint32_t tipoProceso;
-}t_socket_envio;
+}__attribute__((packed)) t_socket_envio;
 
-/********Socket escucha********///SE USA DESDE CLIENTE HACIA APP, O DESDE RESTAURANTE HACIA APP
+/********Socket escucha********///SE USA DESDE CLIENTE HACIA APP o RESTAURANTE, O DESDE RESTAURANTE HACIA APP
 //Recibe:
 typedef struct{
 	char id[L_ID];
 	uint32_t tipoProceso;
-}t_socket_escucha;
+}__attribute__((packed)) t_socket_escucha;
 
 
 /********Consultar Restaurantes********/
@@ -85,11 +85,7 @@ typedef struct{
 
 
 /********Seleccionar Restaurante********/
-//Recibe:
-typedef struct{
-	char cliente[L_ID];//No tiene utilidad este parametro
-	char restarurante[L_ID];
-}__attribute__((packed)) t_seleccionar_restaurante;
+//Recibe: char nombre_restaurante[L_ID]
 
 //Retorna: uint32_t(0 = FAIL, 1 = OK)
 
@@ -216,10 +212,10 @@ typedef struct{
 //Retorna: uint32_t(0 = FAIL, 1 = OK)
 
 
-/********Terminaar Pedido********/
+/********Terminar Pedido********/
 //Recibe:
 typedef struct{
-	char nombre_restaurante[L_ID];
+	char restaurante[L_ID];
 	uint32_t id_pedido;
 }__attribute__((packed)) t_terminar_pedido;
 
@@ -241,7 +237,7 @@ typedef struct{
 t_tipoMensaje recibir_tipo_mensaje(int fd_socket_emisor, t_log*);//DEVUELVE EL TIPO DE MENSAJE O -1 CASO DE ERROR
 
 int enviar_mensaje_vacio(t_tipoMensaje tipoMensaje, int socketReceptor, t_log* logger);//SE ENVIA COMO PARAMETRO SOLO EL TIPO DE MENSAJE
-void* recibir_mensaje_vacio(int socketEmisor, t_log* logger);//RECIBE NULL, PARA PODER LIBERAR EL RECV, PERO CON recibir_tipo_mensaje YA SE SABE QUE MENSAJE ES
+void* recibir_mensaje_vacio(int socketEmisor, t_log* logger);//DEVUELVE NULL, ES SOLO PARA PODER LIBERAR EL RECV, PERO CON recibir_tipo_mensaje YA SE SABE QUE MENSAJE ES
 
 int enviar_entero(t_tipoMensaje tipoMensaje, uint32_t numero, int socketReceptor, t_log* logger);//ENVIA UN RESULTADO O UN ID_PEDIDO
 uint32_t recibir_entero(int socketEmisor, t_log* logger);
@@ -268,19 +264,19 @@ int enviar_rta_consultar_restaurantes(t_rta_consultar_restaurantes* mensaje, int
 t_rta_consultar_restaurantes* recibir_rta_consultar_restaurantes(int socketEmisor, t_log* logger);
 
 /********SELECCIONAR RESTAURANTE********/
-int enviar_seleccionar_restaurante(t_seleccionar_restaurante* mensaje, int socketReceptor, t_log* logger);
-t_seleccionar_restaurante* recibir_seleccionar_restaurante(int socketEmisor, t_log* logger);
+int enviar_seleccionar_restaurante(char* nombreRestaurante_L_ID, int socketReceptor, t_log* logger);
+char* recibir_seleccionar_restaurante(int socketEmisor, t_log* logger);
 //int enviar_entero(t_tipoMensaje RTA_SELECCIONAR_RESTAURANTE, uint32_t RESULTADO, int socketReceptor, t_log* logger);
 //uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
 /********OBTENER RESTAURANTE********/
-int enviar_obtener_restaurante(char* mensaje, int socketReceptor, t_log* logger);
+int enviar_obtener_restaurante(char* nombreRestaurante_L_ID, int socketReceptor, t_log* logger);
 char* recibir_obtener_restaurante(int socketEmisor, t_log* logger);
 int enviar_rta_obtener_restaurante(t_rta_obtener_restaurante* mensaje, int socketReceptor, t_log* logger);
 t_rta_obtener_restaurante* recibir_rta_obtener_restaurante(int socketEmisor, t_log* logger);
 
 /********CONSULTAR PLATOS********/
-int enviar_consultar_platos(char* mensaje, int socketReceptor, t_log* logger);
+int enviar_consultar_platos(char* nombreRestaurante_L_ID, int socketReceptor, t_log* logger);
 char* recibir_consultar_platos(int socketEmisor, t_log* logger);
 int enviar_rta_consultar_platos(t_rta_consultar_platos* mensaje, int socketReceptor, t_log* logger);
 t_rta_consultar_platos* recibir_rta_consultar_platos(int socketEmisor, t_log* logger);
@@ -346,7 +342,7 @@ t_terminar_pedido* recibir_terminar_pedido(int socketEmisor, t_log* logger);
 //uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
 /********OBTENER RECETA********/
-int enviar_obtener_receta(char* mensaje, int socketReceptor, t_log* logger);
+int enviar_obtener_receta(char* nombrePlato_L_PLATO, int socketReceptor, t_log* logger);
 char* recibir_obtener_receta(int socketEmisor, t_log* logger);
 int enviar_rta_obtener_receta(t_rta_obtener_receta* mensaje, int socketReceptor, t_log* logger);
 t_rta_obtener_receta* recibir_rta_obtener_receta(int socketEmisor, t_log* logger);

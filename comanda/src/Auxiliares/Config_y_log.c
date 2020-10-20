@@ -25,8 +25,13 @@ void cargar_configuracion_comanda(char * path_config) {
 		exit(2);
 	}
 
-	if (!config_has_property(config, "ALGORITMO_REEMPLAZO")) {
+	if (!config_has_property(config, "ALGORITMO_REEMPLAZO")){
 		puts("Error al leer ALGORITMO_REEMPLAZO de archivo de configuracion\n");
+		exit(2);
+	}
+	else if (strcmp(config_get_string_value(config, "ALGORITMO_REEMPLAZO"), "LRU")!= 0
+			&& strcmp(config_get_string_value(config, "ALGORITMO_REEMPLAZO"), "CLOCK_MEJ")!= 0){
+		puts("ALGORITMO_REEMPLAZO no valido\n");
 		exit(2);
 	}
 
@@ -42,10 +47,17 @@ void cargar_configuracion_comanda(char * path_config) {
 
 
 void cargar_logger_comanda() {
+	int carpeta_creada;
 
-	crear_carpeta_log(config_get_string_value(config, "ARCHIVO_LOG"));
-	logger = log_create(config_get_string_value(config, "ARCHIVO_LOG"), "Comanda", 1, LOG_LEVEL_TRACE);
-	log_info(logger, "*************** NUEVO LOG ***************");
+	carpeta_creada = crear_carpeta_log(config_get_string_value(config, "ARCHIVO_LOG"));
+	if (carpeta_creada){
+		logger = log_create(config_get_string_value(config, "ARCHIVO_LOG"), "Comanda", 1, LOG_LEVEL_TRACE);
+		log_info(logger, "*************** NUEVO LOG ***************");
+	}
+	else{
+		puts("Error al crear la carpera del log\n");
+		exit(2);
+	}
 }
 
 // Auxiliares

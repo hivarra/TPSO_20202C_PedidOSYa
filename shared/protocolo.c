@@ -40,8 +40,10 @@ int empaquetar_enviar_free_buffer(t_tipoMensaje tipoMensaje, t_buffer* buffer, i
 
 	if (send(socketReceptor, fullSerializado, bytes, 0) != bytes) {
 		log_error(logger, "No se pudo enviar el mensaje %s al socket %d.", get_nombre_mensaje(tipoMensaje), socketReceptor);
+		free(fullSerializado);
 		return -1;
 	}
+	free(fullSerializado);
 	return 0;
 }
 
@@ -205,7 +207,6 @@ t_rta_obtener_restaurante* deserializar_rta_obtener_restaurante(void* serializad
 	free(serializado);
 
 	return rta;
-
 }
 
 void* serializar_rta_consultar_platos(uint32_t* largo, t_rta_consultar_platos* rta){
@@ -471,11 +472,11 @@ int enviar_socket_escucha(t_socket_escucha* mensaje, int socketReceptor, t_log* 
 	return resultado_envio;
 }
 
-int enviar_seleccionar_restaurante(t_seleccionar_restaurante* mensaje, int socketReceptor, t_log* logger) {
+int enviar_seleccionar_restaurante(char* mensaje, int socketReceptor, t_log* logger) {
 
 	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-	buffer->size = sizeof(t_seleccionar_restaurante);
+	buffer->size = L_ID;
 	buffer->stream = malloc(buffer->size);
 	memcpy(buffer->stream, mensaje, buffer->size);
 
@@ -701,7 +702,6 @@ t_tipoMensaje recibir_tipo_mensaje(int socket_cliente, t_log* logger) {
 	uint32_t tipo_mensaje_u;
 
 	if (recv(socket_cliente, &tipo_mensaje_u, sizeof(uint32_t), MSG_WAITALL) < sizeof(uint32_t)) {
-		log_error(logger, "Error al recibir tipo de mensaje de socket:%d", socket_cliente);
 		return -1;
 	}
 
@@ -719,7 +719,7 @@ uint32_t recibir_entero(int socketEmisor, t_log* logger) {
 	uint32_t* recibido = recibirMensaje(socketEmisor, logger);
 
 	uint32_t entero = *recibido;
-//	free(recibido);
+	free(recibido);
 
 	return entero;
 }
@@ -736,9 +736,9 @@ t_socket_escucha* recibir_socket_escucha(int socketEmisor, t_log* logger) {
 	return recibido;
 }
 
-t_seleccionar_restaurante* recibir_seleccionar_restaurante(int socketEmisor, t_log* logger) {
+char* recibir_seleccionar_restaurante(int socketEmisor, t_log* logger) {
 
-	t_seleccionar_restaurante* recibido = recibirMensaje(socketEmisor, logger);
+	char* recibido = recibirMensaje(socketEmisor, logger);
 	return recibido;
 }
 

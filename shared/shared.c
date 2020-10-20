@@ -9,6 +9,7 @@
 #define CONEXIONES_MAXIMAS 10
 
 pthread_mutex_t lock_logger;
+extern int errno;
 
 char* procesos_str[] = {
 		"APP",
@@ -267,7 +268,9 @@ void liberar_lista(char** lista){
 	free(lista);
 }
 
-void crear_carpeta_log(char* path_log){
+int crear_carpeta_log(char* path_log){
+
+	int carpeta_creada = -1;
 
 	char** path_dividida = string_split(path_log, "/");
 
@@ -286,9 +289,14 @@ void crear_carpeta_log(char* path_log){
 	liberar_lista(path_dividida);
 
 	if (strlen(carpeta) > 0)
-		mkdir(carpeta, 0777);
+		carpeta_creada = mkdir(carpeta, 0777);
 
 	free(carpeta);
+
+	if (carpeta_creada == 0 || errno == EEXIST)
+		return 1;
+	else
+		return 0;
 }
 
 /* ---------- Posiblemente no usados ---------- */
