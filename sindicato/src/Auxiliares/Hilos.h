@@ -5,7 +5,7 @@
 
 pthread_t thread_consola;
 
-void CrearHiloConsola();
+void crearHiloConsola();
 
 
 #endif /* AUXILIARES_HILOS_H_ */
