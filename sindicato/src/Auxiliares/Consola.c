@@ -16,6 +16,7 @@ void *crear_consola() {
 		char *lineaCompleta = string_new();
 		string_append(&lineaCompleta, line);
 
+
 		char** comando = string_split(line, " ");
 		free(line);
 
@@ -32,29 +33,28 @@ void *crear_consola() {
 		switch (comando_e) {
 
 		case crearRestaurante_:
-			printf("CONSOLA: Se ingresó comando CrearRestaurante \n");
-			if (comando[1] == NULL || comando[2] == NULL || comando[3] == NULL
-					|| comando[4] == NULL || comando[5] == NULL
-					|| comando[6] == NULL || comando[7] == NULL) {
-				printf("Falta ingresar datos para utilizar CrearRestaurante\n");
-				break;
-			}
+			printf("CONSOLA: Se ingresó comando CREAR_RESTAURANTE \n");
+				crearRestaurante();
+				printf("CONSOLA: Se finalizó el comando CREAR_RESTAURANTE \n");
 
+				break;
+
+		case crearReceta_:;
+				printf("Creando Receta...\n");
 			break;
 
-		case crearReceta_:
+		default:
 
-			printf("CONSOLA: Se ingresó comando CrearReceta \n");
-			if (comando[1] == NULL || comando[2] == NULL || comando[3] == NULL) {
-				printf("Falta ingresar datos para utilizar CrearReceta\n");
-				break;
-			}
-
-			break;
-
+			printf("No se reconoce el comando %s .\n", comando[0]);
 		}
-		return 0;
+//		for(i=0;comando[i]!=NULL;i++)
+//			free(comando[i]);
+//		if(comando) free(comando);
+
+
+//		free(lineaCompleta);
 	}
+	return 0;
 }
 
 char **character_name_completion(const char *text, int start, int end) {
@@ -66,7 +66,7 @@ char *character_name_generator(const char *text, int state) {
 	static int list_index, len;
 	char *name;
 
-	char *character_names[] = { "CrearRestaurante", "CrearReceta", NULL };
+	char *character_names[] = { "CREAR_RESTAURANTE", "CREAR_RECETA", NULL };
 
 	if (!state) {
 		list_index = 0;
@@ -84,7 +84,7 @@ char *character_name_generator(const char *text, int state) {
 t_tipoComando buscar_enum_sfs(char *sval) {
 	t_tipoComando result = crearRestaurante_;
 	int i = 0;
-	char* comandos_str[] = { "CrearRestaurante", "CrearReceta", NULL };
+	char* comandos_str[] = { "CREAR_RESTAURANTE", "CREAR_RECETA", NULL };
 	if (sval == NULL)
 		return -2;
 	for (i = 0; comandos_str[i] != NULL; ++i, ++result)
@@ -92,5 +92,3 @@ t_tipoComando buscar_enum_sfs(char *sval) {
 			return result;
 	return -1;
 }
-
-

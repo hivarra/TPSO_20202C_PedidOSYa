@@ -1,10 +1,3 @@
-/*
- * Filesystem.c
- *
- *  Created on: 13 sep. 2020
- *      Author: utnso
- */
-
 #include "Filesystem.h"
 
 #define BLOCK_SIZE 64
@@ -88,15 +81,15 @@ void crearDirectorioFiles() {
 
 void crearDirectorioRestaurantes() {
 
-	char* ruta_restaurante = string_new();
-	string_append(&ruta_restaurante, ruta_files);
-	string_append(&ruta_restaurante, "/Restaurantes/");
-	crearDirectorio(ruta_restaurante);
+	ruta_restaurantes = string_new();
+	string_append(&ruta_restaurantes, ruta_files);
+	string_append(&ruta_restaurantes, "/Restaurantes/");
+	crearDirectorio(ruta_restaurantes);
 }
 
 void crearDirectorioRecetas() {
 
-	char* ruta_recetas = string_new();
+	ruta_recetas = string_new();
 	string_append(&ruta_recetas, ruta_files);
 	string_append(&ruta_recetas, "/Recetas/");
 	crearDirectorio(ruta_recetas);
@@ -168,6 +161,16 @@ void crearMetadataGlobal() {
 	fclose(file);
 	free(rutaMetadata);
 
+}
+
+void crearRestaurante() {
+
+	char* ruta_restaurante = string_new();
+	string_append(&ruta_restaurante, ruta_restaurantes);
+	string_append(&ruta_restaurante, "/Restaurante/");
+	log_info(logger, "RUTA: %s", ruta_restaurante);
+
+	crearDirectorio(ruta_restaurante);
 }
 
 void generarBloques() {

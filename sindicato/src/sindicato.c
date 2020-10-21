@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 
 	/* 4. Hilos */
 	/* 4. Escuchando conexiones*/
-	escuchar_conexiones_sindicato();
+	//escuchar_conexiones_sindicato();
 	crearHiloConsola();
 
 //	destruir_config(config);

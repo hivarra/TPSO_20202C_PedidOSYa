@@ -11,6 +11,7 @@ typedef enum t_tipoComando {
 } t_tipoComando;
 
 void *crear_consola();
+int procesar_comando(char *line);
 char **character_name_completion(const char *, int, int);
 char *character_name_generator(const char *, int);
 t_tipoComando buscar_enum_sfs(char *sval);

@@ -19,6 +19,9 @@ char* bmap;
 t_bitarray *bitmap;
 char* ruta_files;
 char* ruta_bloques;
+char* ruta_restaurantes;
+char* ruta_recetas;
+
 
 void montarFileSystem();
 void crearBitmap();
@@ -29,7 +32,9 @@ void crearDirectorioRecetas();
 void crearDirectorioBloques();
 void crearMetadataDirectorio(char* ruta);
 void crearMetadataGlobal();
+void crearRestaurante();
 void generarBloques();
 int existeDirectorio(char *path);
+
 
 #endif /* AUXILIARES_FILESYSTEM_H_ */
