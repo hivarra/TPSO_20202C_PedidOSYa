@@ -38,7 +38,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			if (tipo_rta == RTA_CONSULTAR_RESTAURANTES){
 				t_rta_consultar_restaurantes* respuesta = recibir_rta_consultar_restaurantes(socket_envio, logger);
 				for(int i = 0; i < respuesta->cantRestaurantes; i++){
-					log_info(logger, "Restaurante %d: %s", i+1, list_get(respuesta->restaurantes, i));
+					log_info(logger, "[RTA_CONSULTAR_RESTAURANTES]Restaurante %d: %s", i+1, list_get(respuesta->restaurantes, i));
 				}
 				list_destroy_and_destroy_elements(respuesta->restaurantes, free);
 				free(respuesta);
@@ -58,7 +58,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
 			if (tipo_rta == RTA_SELECCIONAR_RESTAURANTE){
 				uint32_t resultado = recibir_entero(socket_envio, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_SELECCIONAR_RESTAURANTE]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -71,7 +71,8 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			if (tipo_rta == RTA_CONSULTAR_PLATOS){
 				t_rta_consultar_platos* respuesta = recibir_rta_consultar_platos(socket_envio, logger);
 				for(int i = 0; i < respuesta->cantPlatos; i++){
-					log_info(logger, "Plato %d: %s", i+1, list_get(respuesta->platos, i));
+					t_plato* plato_i = list_get(respuesta->platos, i);
+					log_info(logger, "[RTA_CONSULTAR_PLATOS]Plato %d: %s, Precio: %d", i+1, plato_i->nombre, plato_i->precio);
 				}
 				list_destroy_and_destroy_elements(respuesta->platos, free);
 				free(respuesta);
@@ -83,7 +84,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
 			if (tipo_rta == RTA_CREAR_PEDIDO){
 				uint32_t id_recibido = recibir_entero(socket_envio, logger);
-				log_info(logger, "ID_Pedido recibido: %d", id_recibido);
+				log_info(logger, "[RTA_CREAR_PEDIDO]ID_Pedido: %d", id_recibido);
 			}
 		}
 		break;
@@ -101,7 +102,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
 			if (tipo_rta == RTA_ANADIR_PLATO){
 				uint32_t resultado = recibir_entero(socket_envio, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_ANADIR_PLATO]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -119,7 +120,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
 			if (tipo_rta == RTA_CONFIRMAR_PEDIDO){
 				uint32_t resultado = recibir_entero(socket_envio, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -138,7 +139,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
 			if (tipo_rta == RTA_PLATO_LISTO){
 				uint32_t resultado = recibir_entero(socket_envio, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_PLATO_LISTO]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -156,7 +157,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 				log_info(logger, "Restaurante: %s, Estado del pedido: %d", respuesta->restaurante, respuesta->estado);//TODO: FALTA QUE LO MUESTRE COMO STRING
 				for(int i = 0; i < respuesta->cantComidas; i++){
 					t_comida* comida_i = list_get(respuesta->comidas, i);
-					log_info(logger, "Comida %d: %s, Cant. total: %d, Cant. lista: %d", i+1, comida_i->nombre, comida_i->cantTotal, comida_i->cantLista);
+					log_info(logger, "[RTA_CONSULTAR_PEDIDO]Comida %d: %s, Cant. total: %d, Cant. lista: %d", i+1, comida_i->nombre, comida_i->cantTotal, comida_i->cantLista);
 				}
 				list_destroy_and_destroy_elements(respuesta->comidas, free);
 				free(respuesta);
@@ -190,14 +191,14 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_OBTENER_RESTAURANTE){
 				t_rta_obtener_restaurante* respuesta = recibir_rta_obtener_restaurante(socket_bidireccional, logger);
-				log_info(logger, "Posicion del restaurante: (%d, %d)", respuesta->posX, respuesta->posY);
-				log_info(logger, "Cant. de Hornos: %d, Cant. de Pedidos: %d", respuesta->cantHornos,  respuesta->cantPedidos);
+				log_info(logger, "[RTA_OBTENER_RESTAURANTE]Posicion del restaurante: (%d, %d)", respuesta->posX, respuesta->posY);
+				log_info(logger, "[RTA_OBTENER_RESTAURANTE]Cant. de Hornos: %d, Cant. de Pedidos: %d", respuesta->cantHornos,  respuesta->cantPedidos);
 				for(int i = 0; i < respuesta->cantCocineros; i++){
-					log_info(logger, "[Cocinero %d] Afinidad: %s", i+1, list_get(respuesta->cocineros, i));
+					log_info(logger, "[RTA_OBTENER_RESTAURANTE]Afinidad del cocinero %d: %s", i+1, list_get(respuesta->cocineros, i));
 				}
 				for(int i = 0; i < respuesta->cantPlatos; i++){
 					t_plato* plato_i = list_get(respuesta->platos, i);
-					log_info(logger, "[Plato %d] Nombre: %s, Precio: %d", i+1, plato_i->nombre, plato_i->precio);
+					log_info(logger, "[RTA_OBTENER_RESTAURANTE]Plato %d: Nombre: %s, Precio: %d", i+1, plato_i->nombre, plato_i->precio);
 				}
 				list_destroy_and_destroy_elements(respuesta->cocineros, free);
 				list_destroy_and_destroy_elements(respuesta->platos, free);
@@ -219,7 +220,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			if (tipo_rta == RTA_CONSULTAR_PLATOS){
 				t_rta_consultar_platos* respuesta = recibir_rta_consultar_platos(socket_bidireccional, logger);
 				for(int i = 0; i < respuesta->cantPlatos; i++){
-					log_info(logger, "Plato %d: %s", i+1, list_get(respuesta->platos, i));
+					log_info(logger, "[RTA_CONSULTAR_PLATOS]Plato %d: %s", i+1, list_get(respuesta->platos, i));
 				}
 				list_destroy_and_destroy_elements(respuesta->platos, free);
 				free(respuesta);
@@ -240,7 +241,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_GUARDAR_PEDIDO){
 				uint32_t resultado = recibir_entero(socket_bidireccional, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_GUARDAR_PEDIDO]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -260,7 +261,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_GUARDAR_PLATO){
 				uint32_t resultado = recibir_entero(socket_bidireccional, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_GUARDAR_PLATO]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -278,7 +279,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_CONFIRMAR_PEDIDO){
 				uint32_t resultado = recibir_entero(socket_bidireccional, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -297,7 +298,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_PLATO_LISTO){
 				uint32_t resultado = recibir_entero(socket_bidireccional, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_PLATO_LISTO]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -315,10 +316,10 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_OBTENER_PEDIDO){
 				t_rta_obtener_pedido* respuesta = recibir_rta_obtener_pedido(socket_bidireccional, logger);
-				log_info(logger, "Estado del pedido: %d", respuesta->estado);//TODO: FALTA QUE LO MUESTRE COMO STRING
+				log_info(logger, "[RTA_OBTENER_PEDIDO]Estado del pedido: %d", respuesta->estado);//TODO: FALTA QUE LO MUESTRE COMO STRING
 				for(int i = 0; i < respuesta->cantComidas; i++){
 					t_comida* comida_i = list_get(respuesta->comidas, i);
-					log_info(logger, "Comida %d: %s, Cant. total: %d, Cant. lista: %d", i+1, comida_i->nombre, comida_i->cantTotal, comida_i->cantLista);
+					log_info(logger, "[RTA_OBTENER_PEDIDO]Comida %d: %s, Cant. total: %d, Cant. lista: %d", i+1, comida_i->nombre, comida_i->cantTotal, comida_i->cantLista);
 				}
 				list_destroy_and_destroy_elements(respuesta->comidas, free);
 				free(respuesta);
@@ -339,7 +340,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_FINALIZAR_PEDIDO){
 				uint32_t resultado = recibir_entero(socket_bidireccional, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_FINALIZAR_PEDIDO]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -357,7 +358,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_TERMINAR_PEDIDO){
 				uint32_t resultado = recibir_entero(socket_bidireccional, logger);
-				log_info(logger, "Resultado recibido: %s",resultado? "OK":"FAIL");
+				log_info(logger, "[RTA_TERMINAR_PEDIDO]Resultado: %s",resultado? "OK":"FAIL");
 			}
 		}
 		break;
@@ -374,10 +375,10 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_OBTENER_RECETA){
 				t_rta_obtener_receta* respuesta = recibir_rta_obtener_receta(socket_bidireccional, logger);
-				log_info(logger, "Receta: %s", respuesta->nombre);
+				log_info(logger, "[RTA_OBTENER_RECETA]Receta: %s", respuesta->nombre);
 				for(int i = 0; i < respuesta->cantPasos; i++){
 					t_paso_receta* paso_receta_i = list_get(respuesta->pasos, i);
-					log_info(logger, "Paso %d: %s, Tiempo: %d", i+1, paso_receta_i->accion, paso_receta_i->tiempo);
+					log_info(logger, "[RTA_OBTENER_RECETA]Paso %d: %s, Tiempo: %d", i+1, paso_receta_i->accion, paso_receta_i->tiempo);
 				}
 				list_destroy_and_destroy_elements(respuesta->pasos, free);
 				free(respuesta);

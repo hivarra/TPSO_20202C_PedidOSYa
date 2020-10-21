@@ -24,14 +24,14 @@ void iniciar_conexion_escucha(){
 
 			case PLATO_LISTO:{
 				t_plato_listo* recibido = recibir_plato_listo(socket_escucha, logger);
-				log_info(logger, "Restaurante: %s, ID_Pedido: %d, Plato: %s", recibido->restaurante, recibido->id_pedido, recibido->plato);
+				log_info(logger, "[PLATO_LISTO]Restaurante: %s, ID_Pedido: %d, Plato: %s", recibido->restaurante, recibido->id_pedido, recibido->plato);
 				free(recibido);
 				enviar_entero(RTA_PLATO_LISTO, 1, socket_escucha, logger);
 			}
 			break;
 			case FINALIZAR_PEDIDO:{
 				t_finalizar_pedido* recibido = recibir_finalizar_pedido(socket_escucha, logger);
-				log_info(logger, "Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
+				log_info(logger, "[FINALIZAR_PEDIDO]Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
 				free(recibido);
 				enviar_entero(RTA_FINALIZAR_PEDIDO, 1, socket_escucha, logger);
 			}
