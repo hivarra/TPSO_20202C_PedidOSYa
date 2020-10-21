@@ -7,6 +7,8 @@
 
 #ifndef AUXILIARES_CONEXION_H_
 #define AUXILIARES_CONEXION_H_
+#define L_STRING 32
+
 
 #include <shared.h>
 #include "Configuracion.h"
@@ -21,6 +23,18 @@ t_list* recetas;
 t_list* pedidos;
 
 pthread_mutex_t mutex_cocineros;
+
+typedef struct{
+	uint32_t posX;
+	uint32_t posY;
+	char nombre[L_STRING];//Confirmado
+	uint32_t cantHornos;
+	uint32_t cantPedidos;
+	uint32_t cantCocineros;
+	t_list* cocineros;//char comida[L_PLATO](sin afinidad: "N")
+	uint32_t cantPlatos;
+	t_list* platos;//t_plato
+}t_restaurante;
 
 //void *crearServidor(); TODO: crearServidor
 //void *atenderConexion();TODO:
