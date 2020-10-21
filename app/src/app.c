@@ -40,8 +40,8 @@ int main(int argc, char **argv)  {
 void inicializar() {
 
 	iniciarListas();
-	inicializar_lista_clientes_rest();
-	incializar_resto_default();
+	inicializarListaClientesRest();
+	incializarRestoDefault();
 	iniciarSemaforos();
 //	iniciarRestauranteDefault();
 	iniciarRepartidores();
@@ -53,7 +53,7 @@ void iniciarListas() {
 
 void iniciarSemaforos() {
 
-	pthread_mutex_init(&mutex_restaurantes, 0);
+	pthread_mutex_init(&mutexClientesRestaurantes, 0);
 }
 
 //void iniciarRestauranteDefault() {

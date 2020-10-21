@@ -31,170 +31,274 @@ void *crearServidor() {
 		pthread_detach(hilo_conexion);
 	}
 }
-t_rta_consultar_restaurantes* obtener_restaurantes(){
-	t_rta_consultar_restaurantes* restaurantes_conectados = malloc(sizeof(t_rta_consultar_restaurantes));
+t_rta_consultar_restaurantes* obtenerRestaurantes(){
+	t_rta_consultar_restaurantes* restaurantesConectados = malloc(sizeof(t_rta_consultar_restaurantes));
 
 	/*FILTRO LOS RESTAURANTES DE lista_sockets_escucha*/
-	int es_restaurante(t_info_cliente* info_cliente){
+	int esRestaurante(t_info_cliente* info_cliente){
 		return info_cliente->tipoProceso == RESTAURANTE;
 	}
-	t_list* lista_restaurantes_conectados = list_filter(lista_clientes_restaurantes,(void*)es_restaurante);
+	t_list* lista_restaurantes_conectados = list_filter(listaClientesRestaurantes,(void*)esRestaurante);
 
-	void* obtener_id_char(t_info_cliente* info_cliente){
+	void* obtenerIdChar(t_info_cliente* info_cliente){
 		return info_cliente->id;
 	}
 	/*MAPPING  t_info_cliente -> char[L_ID] */
-	t_list* nombres_restaurantes_conectados = list_map(lista_restaurantes_conectados,(void*)obtener_id_char);
-	restaurantes_conectados->restaurantes = nombres_restaurantes_conectados;
-	restaurantes_conectados->cantRestaurantes = list_size(restaurantes_conectados->restaurantes);
+	t_list* nombresRestaurantesConectados = list_map(lista_restaurantes_conectados,(void*)obtenerIdChar);
+	restaurantesConectados->restaurantes = nombresRestaurantesConectados;
+	restaurantesConectados->cantRestaurantes = list_size(restaurantesConectados->restaurantes);
 
-	return restaurantes_conectados;
+	return restaurantesConectados;
 }
-int obtener_socket_escucha(t_socket_envio* info_socket_envio){
+int obtenerSocketEscucha(t_socket_envio* infoSocketEnvio){
 	int id_cliente_es_igual(t_info_cliente* info_cliente){
-		return string_equals_ignore_case(info_cliente->id,info_socket_envio->id);
+		return string_equals_ignore_case(info_cliente->id,infoSocketEnvio->id);
 	}
-	t_info_cliente* info_cliente = list_find(lista_clientes_restaurantes,(void*)id_cliente_es_igual);
-	return info_cliente->socket;
+	t_info_cliente* info_cliente = list_find(listaClientesRestaurantes,(void*)id_cliente_es_igual);
+	return info_cliente->socketEscucha;
 }
-void procesar_mensaje(int socket_envio,t_socket_envio* info_socket_envio){
-	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_envio, logger);
-	log_info(logger, "Se recibe tipo de mensaje: %s", get_nombre_mensaje(tipo_mensaje));
+int obtenerSocketEnvio(t_socket_envio* infoSocketEnvio){
+	int id_cliente_es_igual(t_info_cliente* info_cliente){
+		return string_equals_ignore_case(info_cliente->id,infoSocketEnvio->id);
+	}
+	t_info_cliente* info_cliente = list_find(listaClientesRestaurantes,(void*)id_cliente_es_igual);
+	return info_cliente->socketEnvio;
+}
+void procesarMensaje(int* socketEnvio){
 
-	switch(tipo_mensaje){
-	case CONSULTAR_RESTAURANTES:;
-		recibir_mensaje_vacio(socket_envio,logger);
-		int socket_escucha = obtener_socket_escucha(info_socket_envio);
-		t_rta_consultar_restaurantes* rta_consultar_restaurantes = obtener_restaurantes();
-		enviar_rta_consultar_restaurantes(rta_consultar_restaurantes,socket_escucha,logger);
-		free(rta_consultar_restaurantes);
+	while(1){
+		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socketEnvio, logger);
+		log_info(logger, "Se recibe tipo de mensaje: %s", get_nombre_mensaje(tipo_mensaje));
 
-		break;
-	case SELECCIONAR_RESTAURANTE:
-		;
-//		TODO:
-		break;
+		switch(tipo_mensaje){
+		case CONSULTAR_RESTAURANTES:;
+			recibir_mensaje_vacio(*socketEnvio,logger);
+			t_rta_consultar_restaurantes* rta_consultar_restaurantes = obtenerRestaurantes();
+			if(rta_consultar_restaurantes == NULL)
+				log_info(logger,"PRUEBAAA");
+			else{
+				imprimir_lista_strings(rta_consultar_restaurantes->restaurantes,"LISTA RESTAURANTES A ENVIAR");
+				log_info(logger,"CANTIDAD RESTOS:%d",rta_consultar_restaurantes->cantRestaurantes);
+			}
 
-	case CONSULTAR_PLATOS:
-		;
-//		TODO:
-		break;
+			enviar_rta_consultar_restaurantes(rta_consultar_restaurantes,*socketEnvio,logger);
+			free(rta_consultar_restaurantes);
 
-	case CREAR_PEDIDO:
-		;
-//		TODO:
-		break;
+			break;
+		case SELECCIONAR_RESTAURANTE:;
+			char* restauranteSeleccionado = recibir_seleccionar_restaurante(*socketEnvio,logger);
+			log_info(logger,"RESTAURANTE SELECCIONADO:%s",restauranteSeleccionado);
+			uint32_t resultadoSeleccionar = 1;//CAMBIAR HARDCODEADO DESPUES
+			enviar_entero(RTA_SELECCIONAR_RESTAURANTE,resultadoSeleccionar,*socketEnvio,logger);
 
-	case ANADIR_PLATO:
-		;
-//		TODO:
-		break;
+			free(restauranteSeleccionado);
 
-	case PLATO_LISTO:
-		;
-//		TODO:
-		break;
+			break;
 
-	case CONFIRMAR_PEDIDO:
-		;
-//		TODO:
-		break;
-	case CONSULTAR_PEDIDO:
-		;
-//		TODO:
-		break;
-	default:
-		break;
+		case CONSULTAR_PLATOS:;
+			char* restaurante = recibir_consultar_platos(*socketEnvio,logger);
+			log_info(logger,"RESTAURANTE:%s CONSULTA_PLATOS",restaurante);
+			t_rta_consultar_platos* rta_consultar_platos = malloc(sizeof(t_rta_consultar_platos));
+			rta_consultar_platos->cantPlatos = 1;
+			t_list* listaPlatos = list_create();
+			t_plato* plato = malloc(sizeof(t_plato));
+			strcpy(plato->nombre,"Asado");
+			plato->precio = 1000;
+			list_add(listaPlatos,plato);
+			rta_consultar_platos->platos = listaPlatos;
+			enviar_rta_consultar_platos(rta_consultar_platos,*socketEnvio,logger);
+
+			free(restaurante);
+
+			break;
+
+		case CREAR_PEDIDO:;
+			recibir_mensaje_vacio(*socketEnvio, logger);
+			uint32_t id_pedido = 10;
+			enviar_entero(RTA_CREAR_PEDIDO,id_pedido,*socketEnvio,logger);
+
+			break;
+
+		case ANADIR_PLATO:;
+			t_anadir_plato* anadirPlato = recibir_anadir_plato(*socketEnvio,logger);
+			log_info(logger,"PLATO:%s",anadirPlato->plato);
+			log_info(logger,"ID_PEDIDO:%d",anadirPlato->id_pedido);
+			uint32_t resultado_anadir_plato = 0;
+			enviar_entero(RTA_ANADIR_PLATO,resultado_anadir_plato,*socketEnvio,logger);
+
+			free(anadirPlato);
+
+			break;
+
+		case PLATO_LISTO:;
+			t_plato_listo* platoListo = recibir_plato_listo(*socketEnvio,logger);
+			log_info(logger,"RESTAURANTE:%s",platoListo->restaurante);
+			log_info(logger,"PLATO:%s",platoListo->plato);
+			log_info(logger,"ID_PEDIDO:%d",platoListo->id_pedido);
+			uint32_t resultado_plato_listo = 0;
+			enviar_entero(RTA_PLATO_LISTO,resultado_plato_listo,*socketEnvio,logger);
+
+			free(platoListo);
+
+			break;
+
+		case CONFIRMAR_PEDIDO:;
+			t_confirmar_pedido* confirmarPedido = recibir_confirmar_pedido(*socketEnvio,logger);
+			log_info(logger,"RESTAURANTE:%s",confirmarPedido->restaurante);
+			log_info(logger,"ID_PEDIDO:%d",confirmarPedido->id_pedido);
+			uint32_t resultado_confirmar_pedido = 0;
+			enviar_entero(RTA_CONFIRMAR_PEDIDO,resultado_confirmar_pedido,*socketEnvio,logger);
+
+			free(confirmarPedido);
+
+			break;
+		case CONSULTAR_PEDIDO:;
+			uint32_t idPedido = recibir_entero(*socketEnvio,logger);
+			log_info(logger,"ID_PEDIDO:%d",idPedido);
+			t_rta_consultar_pedido* rta_consultar_pedido = malloc(sizeof(t_rta_consultar_pedido));
+			rta_consultar_pedido->cantComidas = 1;
+			t_list* listaComidas = list_create();
+			t_comida* comida = malloc(sizeof(t_comida));
+			strcpy(comida->nombre,"polloConPapas");
+			comida->cantLista = 1;
+			comida->cantTotal = 1;
+			list_add(listaComidas,comida);
+			rta_consultar_pedido->comidas = listaComidas;
+			rta_consultar_pedido->estado = CONFIRMADO;
+			strcpy(rta_consultar_pedido->restaurante,"LoDeCarlitos");
+			enviar_rta_consultar_pedido(rta_consultar_pedido,*socketEnvio,logger);
+
+			free(rta_consultar_pedido);
+
+			break;
+		default:
+			break;
+		}
 	}
 }
-void guardar_socket_escucha(t_socket_escucha* info_socket_escucha,int socket_cliente){
-	int cliente_igual(t_info_cliente* info_cliente) {
-		return string_equals_ignore_case(info_socket_escucha->id,
-				info_cliente->id) && info_socket_escucha->tipoProceso == info_cliente->tipoProceso;
+void mostrar_lista_clientes_restaurantes(){
+	void mostrarClienteRestaurante(t_info_cliente* infoCliente){
+		log_info(logger,"ID:%s",infoCliente->id);
+		log_info(logger,"SOCKET_ESCUCHA:%d",infoCliente->socketEscucha);
+		log_info(logger,"SOCKET_ENVIO:%d",infoCliente->socketEnvio);
+		log_info(logger,"TIPO_PROCESO:%d",infoCliente->tipoProceso);
+		log_info(logger,"POS_X:%d",infoCliente->pos_x);
+		log_info(logger,"POS_Y:%d",infoCliente->pos_y);
 	}
-	t_info_cliente* cliente = list_find(lista_clientes_restaurantes,(void*)cliente_igual);
 
+	list_iterate(listaClientesRestaurantes,(void*)mostrarClienteRestaurante);
+}
+void guardarSocketEscucha(t_socket_escucha* infoSocketEscucha,int socketCliente){
+	int clienteIgual(t_info_cliente* infoCliente) {
+		return (string_equals_ignore_case(infoSocketEscucha->id,
+				infoCliente->id) && (infoSocketEscucha->tipoProceso == infoCliente->tipoProceso));
+	}
+	t_info_cliente* cliente = list_find(listaClientesRestaurantes,(void*)clienteIgual);
 	if(cliente != NULL){
-		cliente->socket = socket_cliente;
+		cliente->socketEscucha = socketCliente;
+	}
+	else{
+		t_info_cliente* infoCliente = malloc(sizeof(t_info_cliente));
+		strcpy(infoCliente->id,infoSocketEscucha->id);
+		infoCliente->tipoProceso = infoSocketEscucha->tipoProceso;
+		infoCliente->socketEscucha = socketCliente;
+		list_add(listaClientesRestaurantes, infoCliente);
 	}
 //	log_info(logger,"CANTIDAD DE CLIENTES LUEGO DE GUARDAR SOCKET_ESCUCHA:%d",list_size(lista_clientes_restaurantes));
 }
-void agregar_info_cliente(char id_cliente[L_ID], int pos_x, int pos_y,
-		uint32_t tipo_proceso) {
-
+void guardarSocketEnvio(t_socket_envio* infoSocketEnvio,int socketEnvio) {
 	int cliente_igual(t_info_cliente* info_cliente){
-		return string_equals_ignore_case(id_cliente,info_cliente->id);
+		return string_equals_ignore_case(infoSocketEnvio->id,info_cliente->id);
 	}
-
-	t_info_cliente* cliente = list_find(lista_clientes_restaurantes,(void*)cliente_igual);
+	t_info_cliente* cliente = list_find(listaClientesRestaurantes,(void*)cliente_igual);
 	if(cliente != NULL){
-		cliente->pos_x = pos_x;
-		cliente->pos_y = pos_y;
-		cliente->tipoProceso = tipo_proceso;
+		cliente->pos_x = infoSocketEnvio->posX;
+		cliente->pos_y = infoSocketEnvio->posY;
+		cliente->tipoProceso = infoSocketEnvio->tipoProceso;
+		cliente->socketEnvio = socketEnvio;
 	}
 	else{
-		t_info_cliente* info_cliente = malloc(sizeof(t_info_cliente));
-		strcpy(info_cliente->id, id_cliente);
-		info_cliente->pos_x = pos_x;
-		info_cliente->pos_y = pos_y;
-		info_cliente->tipoProceso = tipo_proceso;
-		list_add(lista_clientes_restaurantes, info_cliente);
+		t_info_cliente* infoCliente = malloc(sizeof(t_info_cliente));
+		strcpy(infoCliente->id, infoSocketEnvio->id);
+		infoCliente->pos_x = infoSocketEnvio->posX;
+		infoCliente->pos_y = infoSocketEnvio->posY;
+		infoCliente->tipoProceso = infoSocketEnvio->tipoProceso;
+		infoCliente->socketEnvio = socketEnvio;
+
+		list_add(listaClientesRestaurantes, infoCliente);
 	}
-	log_info(logger,"CANTIDAD LISTA_CLIENTES_RESTAURANTES DESPUES DE AGREGAR:%d",list_size(lista_clientes_restaurantes));
+//	log_info(logger,"CANTIDAD LISTA_CLIENTES_RESTAURANTES DESPUES DE AGREGAR:%d",list_size(lista_clientes_restaurantes));
 }
-void* atenderConexion(int* socket_cliente) {
+void crearHiloProcesarMensajes(int* socketCliente){
+	pthread_t hiloProcesarMensajes;
+	pthread_create(&hiloProcesarMensajes,NULL,(void*)procesarMensaje,socketCliente);
+	pthread_detach(hiloProcesarMensajes);
+}
+void* atenderConexion(int* socketCliente) {
 
-	log_info(logger, "Hilo creado para el socket: %d", *socket_cliente);
+//	log_info(logger, "Hilo creado para el socket: %d", *socket_cliente);
 
-	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_cliente, logger);
-	log_info(logger, "Se recibe tipo de mensaje: %s", get_nombre_mensaje(tipo_mensaje));
+	t_tipoMensaje tipoMensaje = recibir_tipo_mensaje(*socketCliente, logger);
+	log_info(logger, "Se recibe tipo de mensaje: %s", get_nombre_mensaje(tipoMensaje));
 
-	switch(tipo_mensaje) {
+	switch(tipoMensaje) {
 
 	case HANDSHAKE:
 		;
-		recibir_mensaje_vacio(*socket_cliente, logger);
+		recibir_mensaje_vacio(*socketCliente, logger);
 		uint32_t miTipoProceso = APP;
-		enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_cliente, logger);
+		enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socketCliente, logger);
+		close(*socketCliente);
 		break;
 
 	case SOCKET_ENVIO:
 		;
-		t_socket_envio* info_socket_envio = recibir_socket_envio(*socket_cliente,logger);
-		agregar_info_cliente(info_socket_envio->id, info_socket_envio->posX,
-				info_socket_envio->posY, info_socket_envio->tipoProceso);
-		procesar_mensaje(*socket_cliente, info_socket_envio);
-		free(info_socket_envio);
+		t_socket_envio* infoSocketEnvio = recibir_socket_envio(*socketCliente,logger);
+		pthread_mutex_lock(&mutexClientesRestaurantes);
+		guardarSocketEnvio(infoSocketEnvio,*socketCliente);
+//		log_info(logger,"PRUEBA LISTA_CLIENTES_RESTAURANTES:");
+//		mostrar_lista_clientes_restaurantes();
+		pthread_mutex_unlock(&mutexClientesRestaurantes);
+
+		crearHiloProcesarMensajes(socketCliente);
+
+		free(infoSocketEnvio);
 
 		break;
 
 	case SOCKET_ESCUCHA:
 		;
-		t_socket_escucha* info_socket_escucha = recibir_socket_escucha(*socket_cliente,logger);
-		guardar_socket_escucha(info_socket_escucha, *socket_cliente);
+		t_socket_escucha* info_socket_escucha = recibir_socket_escucha(*socketCliente,logger);
+//		log_info(logger,"ID:%s",info_socket_escucha->id);
+//		log_info(logger,"TIPO_PROCESO:%d",info_socket_escucha->tipoProceso);
+//		log_info(logger,"SOCKET:%d",*socketCliente);
+		pthread_mutex_lock(&mutexClientesRestaurantes);
+		guardarSocketEscucha(info_socket_escucha, *socketCliente);
+		pthread_mutex_unlock(&mutexClientesRestaurantes);
 		free(info_socket_escucha);
 
 		break;
 
 	default:
 		;
-		log_error(logger, "El tipo de mensaje %s no es admitido por APP", get_nombre_mensaje(tipo_mensaje));
+		log_error(logger, "El tipo de mensaje %s no es admitido por APP", get_nombre_mensaje(tipoMensaje));
 		break;
 
 	}
 	return NULL;
 }
-void incializar_resto_default(){
-	t_info_cliente* info_cliente = malloc(sizeof(t_info_cliente));
-	strcpy(info_cliente->id,"RESTO_DEFAULT");
-	info_cliente->tipoProceso = RESTAURANTE;
-	info_cliente->pos_x = app_conf.pos_rest_default_x;
-	info_cliente->pos_y = app_conf.pos_rest_default_y;
-	info_cliente->socket = -1;
-	list_add(lista_clientes_restaurantes,info_cliente);
+void incializarRestoDefault(){
+	t_info_cliente* infoCliente = malloc(sizeof(t_info_cliente));
+	strcpy(infoCliente->id,"RESTO_DEFAULT");
+	infoCliente->tipoProceso = RESTAURANTE;
+	infoCliente->pos_x = app_conf.pos_rest_default_x;
+	infoCliente->pos_y = app_conf.pos_rest_default_y;
+	infoCliente->socketEnvio = -1;
+	infoCliente->socketEscucha = -1;
+	list_add(listaClientesRestaurantes,infoCliente);
 }
-void inicializar_lista_clientes_rest(){
-	lista_clientes_restaurantes = list_create();
+void inicializarListaClientesRest(){
+	listaClientesRestaurantes = list_create();
 }
 //void imprimir_restaurante(t_restaurante* restaurante) {
 //

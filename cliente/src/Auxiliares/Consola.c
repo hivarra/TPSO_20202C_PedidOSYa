@@ -47,7 +47,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		break;
 		case SELECCIONAR_RESTAURANTE:{
 			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			char* nombre_restaurante = malloc(L_ID);
@@ -89,7 +89,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		break;
 		case ANADIR_PLATO:{
 			if (parametros[1]==NULL || parametros[2]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_anadir_plato* msg_anadir_plato = calloc(1,sizeof(t_anadir_plato));
@@ -107,7 +107,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		break;
 		case CONFIRMAR_PEDIDO:{
 			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_confirmar_pedido* msg_confirmar_pedido = calloc(1,sizeof(t_confirmar_pedido));
@@ -125,7 +125,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		break;
 		case PLATO_LISTO:{
 			if (parametros[1]==NULL || parametros[2]==NULL || parametros[3]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_plato_listo* msg_plato_listo = calloc(1,sizeof(t_plato_listo));
@@ -144,7 +144,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		break;
 		case CONSULTAR_PEDIDO:{
 			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			uint32_t id_pedido = atoi(parametros[1]);
@@ -164,7 +164,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		default:
-			puts("No se reconoce el mensaje.\n");
+			puts("No se reconoce el mensaje.");
 			break;
 	}
 }
@@ -179,7 +179,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 	switch(tipo_mensaje) {
 		case OBTENER_RESTAURANTE:{
 			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			char* msg_obtener_restaurante = malloc(L_ID);
@@ -207,7 +207,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		break;
 		case CONSULTAR_PLATOS:{
 			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			char* msg_consultar_platos = malloc(L_ID);
@@ -228,7 +228,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		break;
 		case GUARDAR_PEDIDO:{
 			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_guardar_pedido* msg_guardar_pedido = calloc(1,sizeof(t_guardar_pedido));
@@ -246,7 +246,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		break;
 		case GUARDAR_PLATO:{
 			if (parametros[1]==NULL || parametros [2]==NULL || parametros[3]==NULL || parametros [4]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_guardar_plato* msg_guardar_plato = calloc(1,sizeof(t_guardar_plato));
@@ -266,7 +266,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		break;
 		case CONFIRMAR_PEDIDO:{
 			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_confirmar_pedido* msg_confirmar_pedido = calloc(1,sizeof(t_confirmar_pedido));
@@ -284,7 +284,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		break;
 		case PLATO_LISTO:{
 			if (parametros[1]==NULL || parametros [2]==NULL || parametros [3]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_plato_listo* msg_plato_listo = calloc(1,sizeof(t_plato_listo));
@@ -303,7 +303,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		break;
 		case OBTENER_PEDIDO:{
 			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_obtener_pedido* msg_obtener_pedido = calloc(1,sizeof(t_obtener_pedido));
@@ -327,7 +327,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		break;
 		case FINALIZAR_PEDIDO:{
 			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_finalizar_pedido* msg_finalizar_pedido = calloc(1,sizeof(t_finalizar_pedido));
@@ -345,7 +345,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		break;
 		case TERMINAR_PEDIDO:{
 			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			t_terminar_pedido* msg_terminar_pedido = calloc(1,sizeof(t_terminar_pedido));
@@ -363,7 +363,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		break;
 		case OBTENER_RECETA:{
 			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje\n");
+				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
 			char* msg_obtener_receta = malloc(L_PLATO);
@@ -385,7 +385,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		default:
-			puts("No se reconoce el mensaje.\n");
+			puts("No se reconoce el mensaje.");
 			break;
 	}
 	close(socket_bidireccional);

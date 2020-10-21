@@ -13,7 +13,7 @@ void iniciar_conexion_escucha(){
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_escucha, logger);
 		if (tipo_mensaje == -1){
 			log_warning(logger, "Se desconecto del proceso server");
-			puts("Se desconecto del proceso server\n");
+			puts("Se desconecto del proceso server");
 			close(socket_escucha);
 			pthread_exit(NULL);
 		}
@@ -37,7 +37,7 @@ void iniciar_conexion_escucha(){
 			}
 			break;
 			default:
-				puts("No se reconoce el tipo de mensaje recibido\n");
+				puts("No se reconoce el tipo de mensaje recibido");
 				break;
 		}
 	}

@@ -17,21 +17,22 @@
 typedef struct{
 	char id[L_ID];
 	uint32_t tipoProceso;
-	int socket;
+	int socketEscucha;
+	int socketEnvio;
 	int pos_x;
 	int pos_y;
 } t_info_cliente;
 
 int socket_app;
 t_list* restaurantes;
-pthread_mutex_t mutex_restaurantes;
+pthread_mutex_t mutexClientesRestaurantes;
 
-t_list* lista_clientes_restaurantes;
+t_list* listaClientesRestaurantes;
 
 void *crearServidor();
 void* atenderConexion();
-void inicializar_lista_clientes_rest();
-void incializar_resto_default();
+void inicializarListaClientesRest();
+void incializarRestoDefault();
 //void imprimir_restaurante(t_restaurante* restaurante);
 //void agregarRestaurante(t_restaurante* restaurante);
 
