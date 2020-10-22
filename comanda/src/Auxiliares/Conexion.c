@@ -33,19 +33,18 @@ void connection_handler(int* socket_emisor){
 
 			t_guardar_pedido* msg_guardar_pedido = recibir_guardar_pedido(*socket_emisor, logger);
 			log_info(logger, "Restaurante: %s, ID_Pedido: %d", msg_guardar_pedido->restaurante, msg_guardar_pedido->id_pedido);
-			//uint32_t resultado = procesar_guardar_pedido(recibido);
+			uint32_t resultado_guardar_pedido = procesar_guardar_pedido(msg_guardar_pedido);
 			free(msg_guardar_pedido);
-			uint32_t resultado = 0;//PARA PRUEBA, DESPUES QUITAAAAR
-			enviar_entero(RTA_GUARDAR_PEDIDO, resultado, *socket_emisor, logger);
+			enviar_entero(RTA_GUARDAR_PEDIDO, resultado_guardar_pedido, *socket_emisor, logger);
 			break;
 		}
 
 		case GUARDAR_PLATO:{
 
 			t_guardar_plato* recibido = recibir_guardar_plato(*socket_emisor, logger);
-			//uint32_t resultado = procesar_guardar_plato(recibido);
+			uint32_t resultado_guardar_plato = procesar_guardar_plato(recibido);
 			free(recibido);
-			//enviar_entero(RTA_GUARDAR_PLATO, resultado, *socket_emisor, logger);
+			enviar_entero(RTA_GUARDAR_PLATO, resultado_guardar_plato, *socket_emisor, logger);
 			break;
 		}
 
