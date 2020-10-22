@@ -11,36 +11,36 @@
 void cargar_configuracion_comanda(char * path_config) {
 	config = config_create(path_config);
 	if (config == NULL){
-		puts("Archivo de configuracion no valido\n");
+		puts("Archivo de configuracion no valido");
 		exit(-1);
 	}
 
 	if (!config_has_property(config, "TAMANIO_MEMORIA")) {
-		puts("Error al leer TAMANIO_MEMORIA de archivo de configuracion\n");
+		puts("Error al leer TAMANIO_MEMORIA de archivo de configuracion");
 		exit(2);
 	}
 
 	if (!config_has_property(config, "TAMANIO_SWAP")) {
-		puts("Error al leer TAMANIO_SWAP de archivo de configuracion\n");
+		puts("Error al leer TAMANIO_SWAP de archivo de configuracion");
 		exit(2);
 	}
 
 	if (!config_has_property(config, "ALGORITMO_REEMPLAZO")){
-		puts("Error al leer ALGORITMO_REEMPLAZO de archivo de configuracion\n");
+		puts("Error al leer ALGORITMO_REEMPLAZO de archivo de configuracion");
 		exit(2);
 	}
 	else if (strcmp(config_get_string_value(config, "ALGORITMO_REEMPLAZO"), "LRU")!= 0
 			&& strcmp(config_get_string_value(config, "ALGORITMO_REEMPLAZO"), "CLOCK_MEJ")!= 0){
-		puts("ALGORITMO_REEMPLAZO no valido\n");
+		puts("ALGORITMO_REEMPLAZO no valido");
 		exit(2);
 	}
 
 	if (!config_has_property(config, "PUERTO_ESCUCHA")) {
-		puts("Error al leer PUERTO_ESCUCHA de archivo de configuracion\n");
+		puts("Error al leer PUERTO_ESCUCHA de archivo de configuracion");
 		exit(2);
 	}
 	if (!config_has_property(config, "ARCHIVO_LOG")) {
-		puts("Error al leer ARCHIVO_LOG de archivo de configuracion\n");
+		puts("Error al leer ARCHIVO_LOG de archivo de configuracion");
 		exit(2);
 	}
 }
@@ -55,7 +55,7 @@ void cargar_logger_comanda() {
 		log_info(logger, "*************** NUEVO LOG ***************");
 	}
 	else{
-		puts("Error al crear la carpera del log\n");
+		puts("Error al crear la carpera del log");
 		exit(2);
 	}
 }

@@ -34,15 +34,3 @@ int main(int argc, char *argv[]) {
 
 	return EXIT_FAILURE;
 }
-
-void signalHandler(int sig){
-
-	liberar_memoria();
-
-	destruir_logger(logger);
-	destruir_config(config);
-
-	puts("Fin COMANDA\n");
-
-	exit(EXIT_SUCCESS);
-}
