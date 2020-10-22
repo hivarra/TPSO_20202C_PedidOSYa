@@ -10,79 +10,30 @@
 
 #include "restaurante.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
 	puts("Inicio RESTAURANTE");
-	/* 0. Setear config path */
-	char* path_config = getConfigPath(argv[1]);
+
 	/* 1. Configuración */
+	char* path_config = getConfigPath(argv[1]);
 	cargar_configuracion_restaurante(path_config);
+	free(path_config);
+
 	/* 2. Log */
-	char* path_log = getLogPath(restaurante_conf.archivo_log);
-	logger = configurar_logger(path_log, "restaurante");
+	cargar_logger_restaurante();
 	mostrar_propiedades();
+
 	/* 3. Conexion*/
-	/*TODO:Conectarse a app ysindicato*/
+	conectar_a_sindicato();
 	conectar_a_app();
 
-	/*TODO:Quedarse escuchando peticiones de clientes y APP*/
-	//pthread_create(&hilo_servidor, NULL,(void*)conectar_a_app, NULL);
+	/* 4. Planificador*/
+	//incializar_planificador();
 
-	incializar();
+	/*Extra. Liberar bien con ctrl+c*/
+	signal(SIGINT, &signalHandler);
 
-	sleep(20);
-	destruir_logger(logger);
-	puts("Fin RESTAURANTE");
-	return EXIT_SUCCESS;
+	/* 5. Servidor*/
+	escuchar_clientes();
+
+	return EXIT_FAILURE;
 }
-
-void incializar(){
-
-	iniciarListas();
-	iniciarCocinerosDefault();
-	//iniciarRecetasDefault();
-	//iniciarPlatosDefault();
-}
-
-void iniciarListas (){
-
-	cocineros = list_create();
-	recetas = list_create();
-	platos = list_create();
-}
-
-void iniciarCocinerosDefault(){
-
-		t_cocinero* cocinero= malloc(sizeof(t_cocinero));
-		cocinero-> id = 1;
-		strcpy(cocinero->afinidad, restaurante_conf.afinidad_cocineros[0]);
-
-		imprimirCocinero(cocinero);
-}
-
-
-void imprimirCocinero(t_cocinero* cocinero){
-
-	log_info(logger, "Cocinero id %d | Afinidad %s",cocinero-> id , cocinero-> afinidad );
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
