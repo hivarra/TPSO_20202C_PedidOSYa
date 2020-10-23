@@ -20,13 +20,15 @@ int main(int argc, char **argv)  {
 	char* path_log = getLogPath(app_conf.archivo_log);
 	logger = configurar_logger(path_log, "app");
 	mostrar_propiedades();
+
+	inicializar();
 	/* 3. Conexion*/
 	/*TODO:Conectarse a comanda*/
 
 	/*TODO:Quedarse escuchando peticiones de cliente y repartidores*/
 	pthread_create(&hilo_servidor,NULL,(void*)crearServidor,NULL);
 
-	inicializar();
+//	inicializar();
 
 	pthread_join(hilo_servidor, NULL);
 	destruir_logger(logger);
@@ -38,28 +40,29 @@ int main(int argc, char **argv)  {
 void inicializar() {
 
 	iniciarListas();
+	inicializarListaClientesRest();
+	incializarRestoDefault();
 	iniciarSemaforos();
-	iniciarRestauranteDefault();
+//	iniciarRestauranteDefault();
 	iniciarRepartidores();
 }
 
 void iniciarListas() {
-
 	restaurantes = list_create();
 }
 
 void iniciarSemaforos() {
 
-	pthread_mutex_init(&mutex_restaurantes, 0);
+	pthread_mutex_init(&mutexClientesRestaurantes, 0);
 }
 
-void iniciarRestauranteDefault() {
-
-	restaurante_default = malloc(sizeof(t_restaurante));
-	strcpy(restaurante_default->nombre, "DEFAULT");
-	restaurante_default->posX = app_conf.pos_rest_default_x;
-	restaurante_default->posY = app_conf.pos_rest_default_y;
-}
+//void iniciarRestauranteDefault() {
+//
+//	restaurante_default = malloc(sizeof(t_restaurante));
+//	strcpy(restaurante_default->nombre, "DEFAULT");
+//	restaurante_default->posX = app_conf.pos_rest_default_x;
+//	restaurante_default->posY = app_conf.pos_rest_default_y;
+//}
 
 void iniciarRepartidores() {
 

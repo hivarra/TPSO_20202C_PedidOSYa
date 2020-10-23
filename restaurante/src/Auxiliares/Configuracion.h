@@ -8,28 +8,39 @@
 #ifndef AUXILIARES_CONFIGURACION_H_
 #define AUXILIARES_CONFIGURACION_H_
 
+#include <protocolo.h>
 #include <shared.h>
-#include "Logueo.h"
 
 // Definición de tipos
-typedef struct {
-	uint32_t puerto_escucha;
+typedef struct{
 	char* ip_sindicato;
-	uint32_t puerto_sindicato;
-	char* ip_app;
-	uint32_t puerto_app;
-	uint32_t quantum;
-	char* archivo_log;
-	char* algoritmo_planificacion;
+	char* puerto_sindicato;
+	int quantum;
+	int cantidad_hornos;
 	char* nombre_restaurante;
-} t_restaurante_conf;
+	uint32_t posX;
+	uint32_t posY;
+}t_restaurante_conf;
+
+typedef struct{
+	char nombre[L_ID];
+	int* socket_envio;//para recibir solicitudes y responderlas
+	int* socket_escucha;//para enviarle al cliente actualizaciones
+	//t_list* pedidos;
+}t_cliente;
 
 // Variables globales
 t_config* config;
 t_restaurante_conf restaurante_conf;
+t_log* logger;
 
+uint32_t id_pedido_actual;//Manipularlo con un semaforo
+t_list* cocineros_restaurante;
+t_list* platos_restaurante;
+t_list* clientes_conectados;//t_cliente
 
 void cargar_configuracion_restaurante(char *path_config);
+void cargar_logger_restaurante();
 void mostrar_propiedades();
 
 #endif /* AUXILIARES_CONFIGURACION_H_ */

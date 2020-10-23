@@ -11,29 +11,11 @@ void cargarConfigCliente() {
 
 	config = config_create(PATH);
 
-	if (config_has_property(config, "IP_COMANDA"))
-		cliente_config.ip_comanda = config_get_string_value(config, "IP_COMANDA");
+	if (config_has_property(config, "IP"))
+		cliente_config.ip = config_get_string_value(config, "IP");
 
-	if (config_has_property(config, "PUERTO_COMANDA"))
-		cliente_config.puerto_comanda = config_get_int_value(config, "PUERTO_COMANDA");
-
-	if (config_has_property(config, "IP_RESTAURANTE"))
-		cliente_config.ip_restaurante = config_get_string_value(config, "IP_RESTAURANTE");
-
-	if (config_has_property(config, "PUERTO_RESTAURANTE"))
-		cliente_config.puerto_restaurante = config_get_int_value(config, "PUERTO_RESTAURANTE");
-
-	if (config_has_property(config, "IP_SINDICATO"))
-		cliente_config.ip_sindicato = config_get_string_value(config, "IP_SINDICATO");
-
-	if (config_has_property(config, "PUERTO_SINDICATO"))
-		cliente_config.puerto_sindicato = config_get_int_value(config, "PUERTO_SINDICATO");
-
-	if (config_has_property(config, "IP_APP"))
-		cliente_config.ip_app = config_get_string_value(config, "IP_APP");
-
-	if (config_has_property(config, "PUERTO_APP"))
-		cliente_config.puerto_app = config_get_int_value(config, "PUERTO_APP");
+	if (config_has_property(config, "PUERTO"))
+		cliente_config.puerto = config_get_string_value(config, "PUERTO");
 
 	if (config_has_property(config, "ARCHIVO_LOG"))
 		cliente_config.archivo_log = config_get_string_value(config,"ARCHIVO_LOG");
@@ -44,8 +26,20 @@ void cargarConfigCliente() {
 	if (config_has_property(config, "POSICION_Y"))
 		cliente_config.posicion_y = config_get_int_value(config, "POSICION_Y");
 
-	if (config_has_property(config, "PROCESO_SERVER"))
-			cliente_config.proceso_server = config_get_string_value(config,"PROCESO_SERVER");
+	if (config_has_property(config, "ID_CLIENTE"))
+			cliente_config.id_cliente = config_get_string_value(config, "ID_CLIENTE");
+}
 
+void cargar_logger_cliente() {
+	int carpeta_creada;
 
+	carpeta_creada = crear_carpeta_log(cliente_config.archivo_log);
+	if (carpeta_creada){
+		logger = log_create(cliente_config.archivo_log, "Cliente", 1, LOG_LEVEL_TRACE);
+		log_info(logger, "*************** NUEVO LOG ***************");
+	}
+	else{
+		puts("Error al crear la carpera del log");
+		exit(2);
+	}
 }

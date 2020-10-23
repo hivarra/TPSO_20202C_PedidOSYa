@@ -9,6 +9,7 @@
 #define CONEXIONES_MAXIMAS 10
 
 pthread_mutex_t lock_logger;
+extern int errno;
 
 char* procesos_str[] = {
 		"APP",
@@ -19,6 +20,8 @@ char* procesos_str[] = {
 
 char* mensajes_str[] = {
 		"HANDSHAKE",
+		"SOCKET_ENVIO",
+		"SOCKET_ESCUCHA",
 		"CONSULTAR_RESTAURANTES",
 		"SELECCIONAR_RESTAURANTE",
 		"OBTENER_RESTAURANTE",
@@ -34,9 +37,22 @@ char* mensajes_str[] = {
 		"FINALIZAR_PEDIDO",
 		"TERMINAR_PEDIDO",
 		"OBTENER_RECETA",
-		"RESPUESTA_OK_FAIL",
-		"CLIENTE_RECIBE_INFO",
-		"SALIR"};
+		"RTA_HANDSHAKE",
+		"RTA_CONSULTAR_RESTAURANTES",
+		"RTA_SELECCIONAR_RESTAURANTE",
+		"RTA_OBTENER_RESTAURANTE",
+		"RTA_CONSULTAR_PLATOS",
+		"RTA_CREAR_PEDIDO",
+		"RTA_GUARDAR_PEDIDO",
+		"RTA_ANADIR_PLATO",
+		"RTA_GUARDAR_PLATO",
+		"RTA_CONFIRMAR_PEDIDO",
+		"RTA_PLATO_LISTO",
+		"RTA_CONSULTAR_PEDIDO",
+		"RTA_OBTENER_PEDIDO",
+		"RTA_FINALIZAR_PEDIDO",
+		"RTA_TERMINAR_PEDIDO",
+		"RTA_OBTENER_RECETA"};
 
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso) {
@@ -128,27 +144,22 @@ int aceptarConexiones(int socket, t_log* logger) {
 	return client_socket;
 }
 
-int conectar_a_servidor(char* ip, int puerto, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger) {
+int conectar_a_servidor(char* ip, int puerto, t_log* logger) {
 
 	int socket_cliente;
 
 	if((socket_cliente = definirSocket(logger))<= 0)
 	{
-//		log_error(logger, "CONEXION | No se pudo definir socket.");
+		log_error(logger, "CONEXION | No se pudo definir socket.");
 		return -1;
 	}
 
 	if(conectarseAServidor(socket_cliente, ip, puerto, logger)<=0)
 	{
-//		log_error(logger, "CONEXION | No se pudo conectar a servidor %s", get_nombre_proceso(tipoProcesoReceptor));
+		log_error(logger, "CONEXION | No se pudo conectar a servidor");
 		return -1;
 	}
 
-//	loggear(logger,LOG_LEVEL_INFO, "INICIO Handshake(%d)...", tipoProcesoReceptor);
-	enviarMensaje(tipoProcesoEmisor, HANDSHAKE, 0, NULL, socket_cliente, tipoProcesoReceptor, logger);
-	t_mensaje* msg = recibirMensaje(socket_cliente, logger);
-	destruirMensaje(msg);
-//	loggear(logger,LOG_LEVEL_INFO, "FIN Handshake(%d)", tipoProcesoReceptor);
 	return socket_cliente;
 }
 
@@ -166,90 +177,6 @@ int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger) {
 	}
 //	log_info(logger, "Conectado al Servidor correctamente.");
 	return 1;
-}
-
-int enviarMensaje(int tipoProcesoEmisor, int tipoMensaje, int len, void* content,
-		int socketReceptor, int tipoProcesoReceptor, t_log* logger) {
-
-	void* buffer = serializar(tipoProcesoEmisor, tipoMensaje, len, content);
-
-	if (len > 0 && content != NULL)
-		if (buffer == NULL) {
-			log_error(logger, "No se pudo serializar mensaje (proceso emisor %s).", get_nombre_proceso(tipoProcesoEmisor));
-			return -1;
-		}
-
-	if (send(socketReceptor, buffer, sizeof(t_header) + len, 0) <= 0) {
-		free(buffer);
-		log_info(logger, "No se pudo enviar mensaje (proceso emisor %s - proceso receptor %s).",
-				get_nombre_proceso(tipoProcesoEmisor), get_nombre_proceso(tipoProcesoReceptor));
-		return 0;
-	}
-	/* Cambiar esto porque no está bien */
-//	log_info(logger, "Se envió mensaje (proceso emisor %s - proceso receptor %s).",
-//			get_nombre_proceso(tipoProcesoEmisor), get_nombre_proceso(tipoProcesoReceptor));
-
-	free(buffer); // Sirver para t_mensaje
-	return 1;
-}
-
-t_mensaje* recibirMensaje(int socketEmisor, t_log* logger) {
-
-	void* buffer = malloc(sizeof(t_header));
-
-	if (recv(socketEmisor, buffer, sizeof(t_header), 0) <= 0) {
-		free(buffer);
-		log_error(logger, "Se desconecto o ocurrio un error con el socket (sock_id: %d).", socketEmisor);
-		return NULL;
-	}
-
-	t_mensaje* msg = deserializar(buffer);
-
-	msg->content = NULL;
-
-	if (msg->header.longitud > 0) {
-		//buffer = calloc(sizeof(char), msg->header.longitud + 1);
-		void* c_buffer = malloc(msg->header.longitud + 1);
-		if (recv(socketEmisor, c_buffer, msg->header.longitud, MSG_WAITALL) <= 0) {
-			free(c_buffer);
-			log_error(logger, "Se desconecto o ocurrio un error con el socket (sock_id: %d).", socketEmisor);
-			return NULL;
-		}
-		msg->content = c_buffer;
-	}
-	return msg;
-}
-
-void* serializar(int tipoProceso, int tipoMensaje, int len, void* content) {
-
-	t_mensaje mensaje;
-	mensaje.header.tipoProceso = tipoProceso;
-	mensaje.header.tipoMensaje = tipoMensaje;
-	mensaje.header.longitud = len;
-	mensaje.content = content;
-
-	void* buffer = malloc(sizeof(t_header) + len);
-	memcpy(buffer, &(mensaje.header), sizeof(t_header));
-	memcpy(buffer + sizeof(t_header), mensaje.content, len);
-
-	return buffer;
-}
-
-t_mensaje* deserializar(void* buffer) {
-	t_mensaje* mensaje = malloc(sizeof(t_mensaje));
-	memcpy(&(mensaje->header), buffer, sizeof(t_header));
-	free(buffer);
-	return mensaje;
-}
-
-void destruirMensaje(t_mensaje* msg) {
-
-	if(msg == NULL)
-		return;
-	if (msg != NULL && msg->header.longitud > 0 && msg->content != NULL)
-		free(msg->content);
-	if(msg != NULL)
-		free(msg);
 }
 
 /* ---------- Exit ---------- */
@@ -283,7 +210,7 @@ char* get_nombre_mensaje(int enum_mensaje) {
 }
 
 t_tipoProceso tipo_proceso_string_to_enum(char *sval) {
-	t_tipoProceso result;
+	t_tipoProceso result = APP;
 	for (int i = 0; procesos_str[i] != NULL; ++i, ++result)
 		if (0 == strcmp(sval, procesos_str[i]))
 			return result;
@@ -291,7 +218,7 @@ t_tipoProceso tipo_proceso_string_to_enum(char *sval) {
 }
 
 t_tipoMensaje tipo_mensaje_string_to_enum(char *sval) {
-	t_tipoMensaje result;
+	t_tipoMensaje result = HANDSHAKE;
 	for (int i = 0; mensajes_str[i] != NULL; ++i, ++result)
 		if (0 == strcmp(sval, mensajes_str[i]))
 			return result;
@@ -335,12 +262,42 @@ uint64_t timestamp() {
 void liberar_lista(char** lista){
 	int contador = 0;
 	while(lista[contador] != NULL){
-	        free(lista[contador]);
-	        contador++;
+		free(lista[contador]);
+		contador++;
 	}
 	free(lista);
 }
 
+int crear_carpeta_log(char* path_log){
+
+	int carpeta_creada = -1;
+
+	char** path_dividida = string_split(path_log, "/");
+
+	char* carpeta = string_new();
+	int counter = 0;
+
+	while(path_dividida[counter] != NULL){
+
+		if (path_dividida[counter+1] != NULL){
+			string_append(&carpeta, "/");
+			string_append(&carpeta, path_dividida[counter]);
+		}
+		counter++;
+	}
+
+	liberar_lista(path_dividida);
+
+	if (strlen(carpeta) > 0)
+		carpeta_creada = mkdir(carpeta, 0777);
+
+	free(carpeta);
+
+	if (carpeta_creada == 0 || errno == EEXIST)
+		return 1;
+	else
+		return 0;
+}
 
 /* ---------- Posiblemente no usados ---------- */
 char* getLogPath(char* nombre_archivo) {

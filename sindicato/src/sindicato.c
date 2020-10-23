@@ -25,12 +25,17 @@ int main(int argc, char **argv) {
 	logger = configurar_logger(path_log, "sindicato");
 	mostrar_propiedades();
 	/* 3. File System */
-	/*TODO:montarFileSystem();*/
-	/* 4. Inicializar conexiones*/
-	/*TODO: levantar server para recibir peticiones de restaurantes y clientes*/
+	montarFileSystem();
 
-	destruir_config(config);
-	destruir_logger(logger);
+	/* 4. Hilos */
+	/* 4. Escuchando conexiones*/
+	//escuchar_conexiones_sindicato();
+	crearHiloConsola();
+
+//	destruir_config(config);
+//	destruir_logger(logger);
+
+	sleep(30);
 
 	puts("Fin Proceso SINDICATO");
 	return EXIT_SUCCESS;

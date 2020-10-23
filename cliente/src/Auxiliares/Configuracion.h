@@ -7,28 +7,24 @@
 
 #ifndef AUXILIARES_CONFIGURACION_H_
 #define AUXILIARES_CONFIGURACION_H_
-#define PATH  "../config/cliente.config"
+#define PATH  "/home/utnso/Repositorios/tp-2020-2c-Thread-Away/cliente/config/cliente.config"
 
 #include <shared.h>
 
 typedef struct {
-	char* ip_comanda;
-	int puerto_comanda;
-	char* ip_restaurante;
-	int puerto_restaurante;
-	char* ip_sindicato;
-	int puerto_sindicato;
-	char* ip_app;
-	int puerto_app;
+	char* ip;
+	char* puerto;
 	char* archivo_log;
 	int posicion_x;
 	int posicion_y;
-	char* proceso_server;
+	char* id_cliente;
 } t_cliente_config;
 
 t_config* config;
 t_cliente_config cliente_config;
+t_log *logger;
 
 void cargarConfigCliente();
+void cargar_logger_cliente();
 
 #endif /* AUXILIARES_CONFIGURACION_H_ */

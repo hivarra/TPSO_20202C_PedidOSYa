@@ -28,6 +28,9 @@
 #include "Auxiliares/Configuracion.h"
 #include "Auxiliares/Logueo.h"
 #include "Auxiliares/Conexion.h"
+#include "Auxiliares/Filesystem.h"
+#include "Auxiliares/Hilos.h"
+#include "Auxiliares/Consola.h"
 
 
 

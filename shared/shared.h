@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <pthread.h>
@@ -23,12 +24,12 @@
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/string.h>
-#include <commons/bitarray.h>
 #include <commons/collections/list.h>
 #include <commons/error.h>
+#include <errno.h>
 
 /* ---------- Definición de tipos ---------- */
-typedef enum tipoProceso {
+typedef enum{
 	APP,
 	CLIENTE,
 	COMANDA,
@@ -36,8 +37,10 @@ typedef enum tipoProceso {
 	SINDICATO
 } t_tipoProceso;
 
-typedef enum tipoMensaje {
+typedef enum{
 	HANDSHAKE,
+	SOCKET_ENVIO,
+	SOCKET_ESCUCHA,
 	CONSULTAR_RESTAURANTES,
 	SELECCIONAR_RESTAURANTE,
 	OBTENER_RESTAURANTE,
@@ -53,70 +56,23 @@ typedef enum tipoMensaje {
 	FINALIZAR_PEDIDO,
 	TERMINAR_PEDIDO,
 	OBTENER_RECETA,
-	RESULTADO_GUARDAR,
-	RESPUESTA_OK_FAIL,
-	SALIR
-	// Agregar los que falten
-	// Para la consola
+	RTA_HANDSHAKE,
+	RTA_CONSULTAR_RESTAURANTES,
+	RTA_SELECCIONAR_RESTAURANTE,
+	RTA_OBTENER_RESTAURANTE,
+	RTA_CONSULTAR_PLATOS,
+	RTA_CREAR_PEDIDO,
+	RTA_GUARDAR_PEDIDO,
+	RTA_ANADIR_PLATO,
+	RTA_GUARDAR_PLATO,
+	RTA_CONFIRMAR_PEDIDO,
+	RTA_PLATO_LISTO,
+	RTA_CONSULTAR_PEDIDO,
+	RTA_OBTENER_PEDIDO,
+	RTA_FINALIZAR_PEDIDO,
+	RTA_TERMINAR_PEDIDO,
+	RTA_OBTENER_RECETA
 }t_tipoMensaje;
-
-typedef struct {
-	t_tipoProceso 	tipoProceso;
-	uint32_t			idProceso;
-	t_tipoMensaje 	tipoMensaje;
-	uint32_t 		longitud;
-}__attribute__((packed)) t_header;
-
-
-typedef struct {
-	t_header 		header;
-	void* 			content;
-}__attribute__((packed)) t_mensaje;
-
-/*Protocolos*/
-
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-}__attribute__((packed)) t_guardar_pedido;
-
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-	char comida[32];
-	uint32_t cantidad_comida;
-}__attribute__((packed)) t_guardar_plato;
-
-typedef struct {
-	uint32_t id_pedido;
-}__attribute__((packed)) t_confirmar_pedido;
-
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-	char* comida[32];
-}__attribute__((packed)) t_plato_listo;
-
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-}__attribute__((packed)) t_finalizar_pedido;
-
-typedef struct {
-	char nombre_restaurante[32];
-	uint32_t id_pedido;
-}__attribute__((packed)) t_obtener_pedido;
-
-typedef struct {
-	uint32_t respuesta_ok_fail;
-}__attribute__((packed)) t_respuesta_ok_fail;
-
-typedef struct {
-	char nombre[100];
-	uint32_t posX;
-	uint32_t posY;
-}__attribute__((packed)) t_restaurante;
-
 
 /* ---------- Logger ---------- */
 t_log* configurar_logger(char* nombreLog, char* nombreProceso);
@@ -131,13 +87,8 @@ int crear_conexion(char*, char*);//Recibe char* ip, char* puerto, y se conecta a
 int definirSocket(t_log* logger);
 int bindearSocketYEscuchar(int socket, char *ip, int puerto, t_log* logger);
 int aceptarConexiones(int socket, t_log* logger);
-int conectar_a_servidor(char* ip, int puerto, int tipoProcesoEmisor, int tipoProcesoReceptor, t_log* logger);
+int conectar_a_servidor(char* ip, int puerto, t_log* logger);
 int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
-int enviarMensaje(int tipoProcesoEmisor, int tipoMensaje, int len, void* content, int socketReceptor, int tipoProcesoReceptor, t_log* logger);
-t_mensaje* recibirMensaje(int socketEmisor, t_log* logger);
-void* serializar(int tipoProceso, int tipoMensaje, int len, void* content);
-t_mensaje* deserializar(void* buffer);
-void destruirMensaje(t_mensaje* msg);
 
 /* ---------- Exit ---------- */
 void exit_gracefully(int return_nr, t_log* logger);
@@ -158,6 +109,7 @@ char* getConfigPath(char*);//ATENCION: Liberar el string devuelto. Recibe un "co
 /* ---------- Extras ---------- */
 uint64_t timestamp(void);
 void liberar_lista(char**);//Recibe una lista de strings, generalmente devuelta por las commons, y libera la memoria usada
+int crear_carpeta_log(char* path_log);//recibe el path completo del log y crea una carpeta para poder guardar el log. Devuelve 1 si se creo o si estaba creada, 0 si no se creo
 
 
 /**************************************************/
