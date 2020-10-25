@@ -10,6 +10,7 @@
 
 void inicializar_memoria(){
 	setear_params_global_mem_principal();
+	tablas_segmentos = dictionary_create();
 	inicializar_memoria_principal();
 }
 
@@ -17,15 +18,16 @@ void inicializar_tablas_segmentos(){
 	tablas_segmentos = dictionary_create();
 }
 
-void inicializar_tabla_segmentos(char nombre_restaurante[L_ID]){
+t_list* inicializar_tabla_segmentos(char* nombre_restaurante){
 	t_list* tabla_segmentos = list_create();
 	dictionary_put(tablas_segmentos, nombre_restaurante, tabla_segmentos);
+	return tabla_segmentos;
 }
 
-void inicializar_segmento_pedido(char nombre_restaurante[L_ID], int id_pedido){
-	t_list* tabla_segmentos = dictionary_get(tablas_segmentos, nombre_restaurante);
+t_segmento* inicializar_segmento_pedido(t_list* tabla_segmentos,int id_pedido){
 	t_segmento* segmento = inicializar_segmento(id_pedido);
 	list_add(tabla_segmentos, segmento);
+	return segmento;
 }
 
 t_segmento* inicializar_segmento(int id_pedido){
@@ -38,26 +40,50 @@ t_segmento* inicializar_segmento(int id_pedido){
 	return segmento;
 }
 
-int existe_tabla_de_segmentos_de_restaurante(char restaurante[L_ID]){
+int existe_tabla_de_segmentos_de_restaurante(char* restaurante){
 	return dictionary_has_key(tablas_segmentos,restaurante);
 }
-uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
-	uint32_t ret = false;
-	char nombre_restaurante[L_ID];
-	strcpy(nombre_restaurante,info_guardar_pedido->restaurante);
-	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
-	/*SI NO EXISTE, SE CREA Y GUARDO EL PEDIDO */
-	/*SI EXISTE, SE INFORMA */
-	if(!existe_tabla_de_segmentos_de_restaurante(nombre_restaurante)){
-		inicializar_tabla_segmentos(nombre_restaurante);
-		inicializar_segmento_pedido(nombre_restaurante,info_guardar_pedido->id_pedido);
-		ret = true;
-	}
-	else{
-		log_info(logger,"La tabla de segmentos del restaurante:% ya existe.",info_guardar_pedido->restaurante);
-		ret = false;
+int existe_pedido_en_restaurante(char* nombre_restaurante,int id_pedido){
+	t_list* tabla_segmentos = dictionary_get(tablas_segmentos, nombre_restaurante);
+
+	int existe_pedido(t_segmento* segmento){
+		return segmento->id_pedido == id_pedido;
 	}
 
+	return list_any_satisfy(tabla_segmentos,(void*)existe_pedido);
+}
+int crear_tabla_de_paginas_de_pedido(t_segmento* segmento_pedido){
+	segmento_pedido->tabla_paginas = list_create();
+	return segmento_pedido->tabla_paginas != NULL;
+}
+
+uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
+	uint32_t ret = false;
+	char* nombre_restaurante = &info_guardar_pedido->restaurante[0];
+	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
+	if(!existe_tabla_de_segmentos_de_restaurante(nombre_restaurante)){
+		/*SI NO EXISTE, SE CREA TABLA DE SEGMENTOS */
+		t_list* tabla_segmentos = inicializar_tabla_segmentos(nombre_restaurante);
+		/*SE CREA SEGMENTO*/
+		t_segmento* segmento_pedido = inicializar_segmento_pedido(tabla_segmentos,info_guardar_pedido->id_pedido);
+		/*SE CREA TABLA DE PAGINAS*/
+		ret = crear_tabla_de_paginas_de_pedido(segmento_pedido);
+	}
+	else{
+		/*SI EXISTE, SE INFORMA */
+		log_info(logger,"La tabla de segmentos del restaurante:%s ya existe por lo que no fue creada",info_guardar_pedido->restaurante);
+		/*SE VALIDA SI EL PEDIDO YA TENIA UN SEGMENTO ASOCIADO*/
+		if(!existe_pedido_en_restaurante(nombre_restaurante, info_guardar_pedido->id_pedido)){
+			/*SE BUSCA LA TABLA DE SEGMENTO*/
+			t_list* tabla_segmentos = dictionary_get(tablas_segmentos,nombre_restaurante);
+			/*SE CREA SEGMENTO*/
+			t_segmento* segmento = inicializar_segmento_pedido(tabla_segmentos,info_guardar_pedido->id_pedido);
+			/*SE CREA TABLA DE PAGINAS*/
+			ret = crear_tabla_de_paginas_de_pedido(segmento);
+		}
+		else
+			log_info(logger,"El pedido:%d ya existia en la tabla de segmentos del restaurante:%s",info_guardar_pedido->id_pedido,nombre_restaurante);
+	}
 	return ret;
 }
 t_segmento* obtener_segmento_del_pedido(uint32_t id_pedido, char nombre_restaurante[L_ID]){

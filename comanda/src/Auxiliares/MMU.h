@@ -31,8 +31,6 @@ t_dictionary *tablas_segmentos;//key:nombre_restaurante
 
 void inicializar_memoria();
 void inicializar_tablas_segmentos();
-void inicializar_tabla_segmentos(char* nombre_restaurante);
-void inicializar_segmento_pedido(char* nombre_restaurante, int id_pedido);
 t_segmento* inicializar_segmento(int id_pedido);
 void agregar_pagina_a_segmento(char* nombre_restaurante, int id_pedido, char* nombre_comida);
 t_entrada_pagina* inicializar_entrada_pagina(char* nombre_comida);
