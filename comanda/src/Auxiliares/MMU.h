@@ -13,20 +13,29 @@
 #include "protocolo.h"
 
 typedef struct{
-	u_int32_t nro_segmento;
+	char nombre_comida[L_PLATO_MEM];
+	u_int32_t cant_total;
+	u_int32_t cant_lista;
+}__attribute__((packed)) t_pagina;
+
+typedef struct{
+//	u_int32_t nro_segmento;
 	u_int32_t id_pedido;
+	u_int32_t estado_pedido;
 	t_list* tabla_paginas;
-	u_int32_t nro_pagina;
 } t_segmento;
 
 typedef struct{
-	u_int32_t nro_pagina;
-	u_int32_t nro_frame;
+//	u_int32_t nro_pagina;
+	u_int32_t nro_frame_mp;
+	u_int32_t nro_frame_ms;
 	bool uso;
 	bool modificado;
+	bool presencia;
 	uint64_t ultimo_uso;
 } t_entrada_pagina;
 
+t_list* lista_entradas_paginas;
 t_dictionary *tablas_segmentos;//key:nombre_restaurante
 
 void inicializar_memoria();

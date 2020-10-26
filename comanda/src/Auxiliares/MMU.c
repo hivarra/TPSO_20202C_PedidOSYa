@@ -33,8 +33,6 @@ t_segmento* inicializar_segmento_pedido(t_list* tabla_segmentos,int id_pedido){
 t_segmento* inicializar_segmento(int id_pedido){
 	t_segmento* segmento = malloc(sizeof(t_segmento));
 	segmento->id_pedido = id_pedido;
-	segmento->nro_pagina = 0;
-	segmento->nro_segmento = 0;
 	segmento->tabla_paginas = list_create();
 
 	return segmento;
@@ -94,12 +92,41 @@ t_segmento* obtener_segmento_del_pedido(uint32_t id_pedido, char nombre_restaura
 	}
 	return list_find(tabla_segmentos,(void*)existe_pedido_en_segmento);
 }
-t_entrada_pagina* obtener_entrada_pagina(t_segmento* segmento, char plato[L_PLATO_MEM]){
-	/*TODO: RECORRER LAS PAGINA DEL SEGMENTO Y LEER DE memoria_fisica CON EL nro_frame de la entrada_pagina*/
+t_entrada_pagina* buscar_plato_en_memoria(t_list* lista_paginas_mem,char* plato){
+	t_entrada_pagina* pagina_encontrada;
+
+	int plato_buscado(t_entrada_pagina* entrada_pagina){
+		t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
+		return strcmp(pagina->nombre_comida,plato) == 0;
+	}
+	pagina_encontrada = list_find(lista_paginas_mem,(void*)plato_buscado);
+	return pagina_encontrada;
+}
+t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){
+	t_entrada_pagina* entrada_pagina;
+
+	/*SE RECORRE LAS PAGINAS QUE ESTAN EN MP*/
+	int obtener_pag_en_mem(t_entrada_pagina* entrada_pag){
+		return entrada_pag->presencia;
+	}
+	int obtener_pag_en_swap(t_entrada_pagina* entrada_pag){
+		return !entrada_pag->presencia;
+	}
+	t_list* lista_pag_mem = list_filter(lista_paginas,(void*)obtener_pag_en_mem);
+	entrada_pagina = buscar_plato_en_memoria(lista_pag_mem,plato);
+	list_destroy(lista_pag_mem);
+	/*SI NO ESTÁ EN MP, LUEGO SE RECORREN LAS PAGINAS QUE ESTAN EN SWAP*/
+	if(entrada_pagina == NULL){
+		t_list* lista_pag_swap = list_filter(lista_paginas,(void*)obtener_pag_en_swap);
+		/*TODO: EN SWAP AGREGAR FUNCIONES DE ABAJO*/
+//		u_int32_t nro_frame_ms = buscar_plato_en_SWAP(lista_paginas,plato);
+//		entrada_pagina = cargar_pagina_en_memoria(nro_frame_ms);
+		list_destroy(lista_pag_swap);
+	}
+	return entrada_pagina;
 }
 uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
-	char nombre_restaurante[L_ID];
-	strcpy(nombre_restaurante,info_guardar_plato->restaurante);
+	char* nombre_restaurante = &info_guardar_plato->restaurante[0];
 	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
 	if(!existe_tabla_de_segmentos_de_restaurante(nombre_restaurante)){
 		log_info(logger,"La tabla de segmentos del restaurante:%s no existe.",info_guardar_plato->restaurante);
@@ -109,13 +136,15 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 		t_segmento* segmento = obtener_segmento_del_pedido(info_guardar_plato->id_pedido,nombre_restaurante);
 		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
 		if(segmento!=NULL){
-			t_entrada_pagina* entrada_pagina = obtener_entrada_pagina(segmento,info_guardar_plato->plato);
-			/*SE VALIDA SI EXISTE EL PLATO PARA EL PEDIDO DEL RESTAURANTE*/
+			t_entrada_pagina* entrada_pagina = obtener_pagina_de_plato(segmento->tabla_paginas, info_guardar_plato->plato);
+			/*SE VALIDA SI EL PLATO YA TIENE ASIGNADO UN FRAME*/
 			if(entrada_pagina != NULL){
-				/*TODO:Agregar cantidades al plato*/
+				t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
+				pagina->cant_total += info_guardar_plato->cantPlato;
 			}
 			else{
 				/*TODO:Asignar nueva pagina, nro_frame y grabar en memoria_fisica*/
+//				t_entrada_pagina* pagina = malloc(sizeof(t_entrada_pagina));
 			}
 		}
 		else{
@@ -137,8 +166,6 @@ void agregar_pagina_a_segmento(char* nombre_restaurante, int id_pedido, char* no
 
 t_entrada_pagina* inicializar_entrada_pagina(char* nombre_comida){
 	t_entrada_pagina* entrada_pagina = malloc(sizeof(t_entrada_pagina));
-	entrada_pagina->nro_pagina = 0;
-	entrada_pagina->nro_frame = 0;
 	entrada_pagina->ultimo_uso = 0;
 	entrada_pagina->uso = 0;
 	entrada_pagina->modificado = 0;
