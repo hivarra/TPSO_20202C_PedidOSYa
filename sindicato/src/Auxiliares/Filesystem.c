@@ -111,8 +111,6 @@ void crearDirectorio(char *path) {
 		if (mkdir(path, 0777) == -1) {
 			perror("mkdir");
 			log_error(logger, "CREAR_DIR: ERROR. PERMISOS %s", path);
-		} else {
-			crearMetadataDirectorio(path);
 		}
 	} else {
 //		log_info(logger, "CREAR_DIR: WARNING. YA EXISTE %s", path);
@@ -180,7 +178,7 @@ int existeRestaurante(char* nombreRestaurante){
 		return 0;
 	}
 }
-char* generarLineaDato(t_crear_restaurante* argsCrearRestaurante) {
+char* generarContenidoRestauranteEnBloques(t_crear_restaurante* argsCrearRestaurante) {
 	char* buffer = string_from_format("CANTIDAD_COCINEROS=%s\nPOSICION=%s\nAFINIDAD_COCINEROS=%s\nRECETAS=%s\nPRECIO_RECETAS=%s\nCANTIDAD_HORNOS=%s",
 			argsCrearRestaurante->cantidadCocineros,
 			argsCrearRestaurante->posicion,
@@ -188,6 +186,12 @@ char* generarLineaDato(t_crear_restaurante* argsCrearRestaurante) {
 			argsCrearRestaurante->platos,
 			argsCrearRestaurante->preciosPlatos,
 			argsCrearRestaurante->cantidadHornos);
+	return buffer;
+}
+char* generarContenidoRecetaEnBloques(t_crear_receta* argsCrearReceta) {
+	char* buffer = string_from_format("PASOS=%s\nTIEMPO_PASOS=%s",
+			argsCrearReceta->pasos,
+			argsCrearReceta->tiempoPasos);
 	return buffer;
 }
 int calcularBloquesNecesarios(int bytes) {
@@ -242,11 +246,9 @@ void persistirDatos(char* contenido, char* str_bloques, int cant_bloques) {
 	}
 	free(arr_bloques);
 }
-void crearInfoaArchivo(char* ruta, t_metadata* metadata) {
-
-	char* ruta_archivo = string_from_format("%s/info.bin", ruta );
+void crearMetadataArchivo(char* ruta, t_metadata* metadata) {
 //	log_info(logger, "%s", ruta_archivo);
-	FILE* fp = fopen(ruta_archivo, "w");
+	FILE* fp = fopen(ruta, "w");
 	char* contenido = string_new();
 	string_append(&contenido, "SIZE=");
 	string_append(&contenido, string_itoa(metadata->size));
@@ -258,7 +260,6 @@ void crearInfoaArchivo(char* ruta, t_metadata* metadata) {
 
 	fputs(contenido, fp);
 	free(contenido);
-	free(ruta_archivo);
 	fclose(fp);
 }
 void crearRestaurante(t_crear_restaurante* argsCrearRestaurante) {
@@ -274,7 +275,7 @@ void crearRestaurante(t_crear_restaurante* argsCrearRestaurante) {
 		log_info(logger, "RUTA: %s", ruta_restaurante);
 		crearDirectorio(ruta_restaurante);
 		// 2. Armar buffer a escribir
-		char* linea = generarLineaDato(argsCrearRestaurante);
+		char* linea = generarContenidoRestauranteEnBloques(argsCrearRestaurante);
 		log_info(logger, "Linea a escribir: %s", linea);
 		// 3. Calcular size buffer/archivo
 		int tamanio = string_length(linea);
@@ -303,7 +304,8 @@ void crearRestaurante(t_crear_restaurante* argsCrearRestaurante) {
 		metadata->initial_block = bloqueInicial;
 		metadata->size = tamanio;
 
-		crearInfoaArchivo(ruta_restaurante, metadata);
+		string_append(&ruta_restaurante,"/info.bin");
+		crearMetadataArchivo(ruta_restaurante, metadata);
 //			aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
 
 		free(metadata);
@@ -311,6 +313,60 @@ void crearRestaurante(t_crear_restaurante* argsCrearRestaurante) {
 		free(ruta_restaurante);
 
 		log_info(logger, "Restaurante:%s creado", argsCrearRestaurante->nombreRestaurante);
+	}
+}
+void crearReceta(t_crear_receta* argsCrearReceta){
+	/*0.Se valida si ya existe la receta*/
+	if(existeRestaurante(argsCrearReceta->nombre))
+		log_info(logger, "La receta:%s ya existe en el FileSystem Sindicato",argsCrearReceta->nombre);
+	else{
+		// 1. Creo directorio con nombre de la receta
+		char* ruta_receta = string_new();
+		string_append(&ruta_receta, ruta_files);
+		string_append(&ruta_receta, "Recetas/");
+		string_append(&ruta_receta, argsCrearReceta->nombre);
+		log_info(logger, "RUTA: %s", ruta_receta);
+		crearDirectorio(ruta_receta);
+		// 2. Armar buffer a escribir
+		char* linea = generarContenidoRecetaEnBloques(argsCrearReceta);
+		log_info(logger, "Linea a escribir: %s", linea);
+		// 3. Calcular size buffer/archivo
+		int tamanio = string_length(linea);
+		log_info(logger, "Tamanio info: %d", tamanio);
+		// 4. Calcular cantidad de bloques necesarios
+		int bloques_necesarios = calcularBloquesNecesarios(tamanio);
+		log_info(logger, "Bloques necesarios: %d", bloques_necesarios);
+		// 5. Pido los bloques que necesito y genero el string de tipo [1,2,3]
+		char* str_bloques = string_new();
+		string_append(&str_bloques, "[");
+		int bloqueInicial;
+		for(int i=1; i <= bloques_necesarios; i++) {
+			int bloque = asignarBloqueLibre();
+			if(i==1)
+				bloqueInicial = bloque;
+			char* str_bloque = (i == bloques_necesarios) ? string_from_format("%d]", bloque) : string_from_format("%d,", bloque);
+			string_append(&str_bloques, str_bloque);
+		}
+		log_info(logger, "Bloques: %s", str_bloques);
+
+		// 6. Guardo la información en los bloques
+		persistirDatos(linea, str_bloques, bloques_necesarios);
+
+		// 7. Creo info.bin
+		t_metadata* metadata = malloc(sizeof(t_metadata));
+		metadata->initial_block = bloqueInicial;
+		metadata->size = tamanio;
+		string_append(&ruta_receta,"/");
+		string_append(&ruta_receta,argsCrearReceta->nombre);
+		string_append(&ruta_receta,".bin");
+		crearMetadataArchivo(ruta_receta, metadata);
+//			aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
+
+		free(metadata);
+		free(linea);
+		free(ruta_receta);
+
+		log_info(logger, "Receta:%s creada", argsCrearReceta->nombre);
 	}
 }
 

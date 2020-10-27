@@ -21,6 +21,12 @@ typedef struct{
 	char* cantidadHornos;
 }t_crear_restaurante;
 
+typedef struct{
+	char* nombre;
+	char* pasos;
+	char* tiempoPasos;
+}t_crear_receta;
+
 int tamanio_bloques;
 int cantidad_bloques;
 char* bmap;
@@ -40,7 +46,8 @@ void crearDirectorioRecetas();
 void crearDirectorioBloques();
 void crearMetadataDirectorio(char* ruta);
 void crearMetadataGlobal();
-void crearRestaurante();
+void crearRestaurante(t_crear_restaurante* argsCrearRestaurante);
+void crearReceta(t_crear_receta* argsCrearReceta);
 void generarBloques();
 int existeDirectorio(char *path);
 

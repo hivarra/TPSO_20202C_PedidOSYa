@@ -65,7 +65,12 @@ void *crear_consola() {
 			if(!validar_crear_receta(comando))
 				printf("Faltan ingresar datos para la creación de la receta\n");
 			else{
-				/*TODO: crearReceta();*/
+				t_crear_receta* argsCrearReceta = malloc(sizeof(t_crear_receta));
+				argsCrearReceta->nombre = comando[1];
+				argsCrearReceta->pasos = comando[2];
+				argsCrearReceta->tiempoPasos = comando[3];
+				crearReceta(argsCrearReceta);
+				free(argsCrearReceta);
 				printf("Se finalizó el comando CrearReceta \n");
 			}
 			break;
