@@ -7,11 +7,19 @@
 #include <commons/bitarray.h>
 
 typedef struct {
-	char directory[200];
-	int32_t size;
-	char blocks[100];
-	char open[10];
+	uint32_t initial_block;
+	uint32_t size;
 } t_metadata;
+
+typedef struct{
+	char* nombreRestaurante;
+	char* cantidadCocineros;
+	char* posicion;
+	char* afinidadCocineros;
+	char* platos;
+	char* preciosPlatos;
+	char* cantidadHornos;
+}t_crear_restaurante;
 
 int tamanio_bloques;
 int cantidad_bloques;

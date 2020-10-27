@@ -145,6 +145,7 @@ void crearMetadataGlobal() {
 
 	FILE *file = fopen(rutaMetadata, "w");
 	char* buffer = string_new();
+
 	string_append(&buffer, "BLOCK_SIZE=");
 	string_append(&buffer, string_itoa(sindicato_conf.block_size));
 	tamanio_bloques = sindicato_conf.block_size;
@@ -155,6 +156,10 @@ void crearMetadataGlobal() {
 	cantidad_bloques = sindicato_conf.blocks;
 	string_append(&buffer, "\n");
 
+	string_append(&buffer, "MAGIC_NUMBER=");
+	string_append(&buffer, sindicato_conf.magic_number);
+	string_append(&buffer, "\n");
+
 	fputs(buffer, file);
 	log_info(logger, "Metadata global cargada");
 
@@ -162,15 +167,151 @@ void crearMetadataGlobal() {
 	free(rutaMetadata);
 
 }
+int existeRestaurante(char* nombreRestaurante){
+	char *ruta_pokemon = string_from_format("%s%s", ruta_files, nombreRestaurante);
+	log_info(logger, "Ruta: %s", ruta_pokemon);
+	FILE *fp = fopen(ruta_pokemon, "r");
+	free(ruta_pokemon);
 
-void crearRestaurante() {
+	if (fp) {
+		fclose(fp);
+		return 1;
+	} else {
+		return 0;
+	}
+}
+char* generarLineaDato(t_crear_restaurante* argsCrearRestaurante) {
+	char* buffer = string_from_format("CANTIDAD_COCINEROS=%s\nPOSICION=%s\nAFINIDAD_COCINEROS=%s\nRECETAS=%s\nPRECIO_RECETAS=%s\nCANTIDAD_HORNOS=%s",
+			argsCrearRestaurante->cantidadCocineros,
+			argsCrearRestaurante->posicion,
+			argsCrearRestaurante->afinidadCocineros,
+			argsCrearRestaurante->platos,
+			argsCrearRestaurante->preciosPlatos,
+			argsCrearRestaurante->cantidadHornos);
+	return buffer;
+}
+int calcularBloquesNecesarios(int bytes) {
+	int aux = (bytes / tamanio_bloques);
+	return (bytes % tamanio_bloques == 0) ? aux : (aux + 1);
+}
+int asignarBloqueLibre() {
 
-	char* ruta_restaurante = string_new();
-	string_append(&ruta_restaurante, ruta_restaurantes);
-	string_append(&ruta_restaurante, "/Restaurante/");
-	log_info(logger, "RUTA: %s", ruta_restaurante);
+	size_t sizeBitmap = bitarray_get_max_bit(bitmap);
+	int bloque = 1;
+	int count = 0;
 
-	crearDirectorio(ruta_restaurante);
+	while(count < sizeBitmap && bloque != -1) {
+
+		if(bitarray_test_bit(bitmap, count ) == 0) {
+			bitarray_set_bit(bitmap, count);
+			log_info(logger,"Bloque asignado: %d", count);
+			bloque = count;
+			return bloque;
+		}
+		count ++;
+	}
+
+	return bloque;
+}
+void escribirBloque(int bloque, char* buff) {
+
+	log_info(logger, "Bloque a escribir: %d", bloque);
+	log_info(logger, "Contenido a escribir: %s", buff);
+	char* archivo = string_from_format("%s%d%s", ruta_bloques,bloque,".bin");
+	FILE* fp = fopen(archivo, "w");
+	fputs(buff, fp);
+	fclose(fp);
+
+}
+void persistirDatos(char* contenido, char* str_bloques, int cant_bloques) {
+
+	char* buffer;
+	int inicio_str = 0;
+	char** arr_bloques = string_get_string_as_array(str_bloques);
+
+	if(cant_bloques == 0){
+		cant_bloques = 1;
+	}
+	for(int i=1; i <= cant_bloques; i++) {
+
+		buffer = string_substring(contenido, inicio_str, tamanio_bloques-4);
+		int bloque = atoi(arr_bloques[i-1]);
+		escribirBloque(bloque, buffer);
+		inicio_str += tamanio_bloques-4;
+		free(arr_bloques[i-1]);
+	}
+	free(arr_bloques);
+}
+void crearInfoaArchivo(char* ruta, t_metadata* metadata) {
+
+	char* ruta_archivo = string_from_format("%s/info.bin", ruta );
+//	log_info(logger, "%s", ruta_archivo);
+	FILE* fp = fopen(ruta_archivo, "w");
+	char* contenido = string_new();
+	string_append(&contenido, "SIZE=");
+	string_append(&contenido, string_itoa(metadata->size));
+	string_append(&contenido, "\n");
+	string_append(&contenido, "INITIAL_BLOCK=");
+	string_append(&contenido, string_itoa(metadata->initial_block));
+
+//	log_info(logger, "Contenido Metadata: %s", contenido);
+
+	fputs(contenido, fp);
+	free(contenido);
+	free(ruta_archivo);
+	fclose(fp);
+}
+void crearRestaurante(t_crear_restaurante* argsCrearRestaurante) {
+	/*0.Se valida si ya existe el restaurante*/
+	if(existeRestaurante(argsCrearRestaurante->nombreRestaurante))
+		log_info(logger, "El restaurante:%s ya existe en el FileSystem Sindicato",argsCrearRestaurante->nombreRestaurante);
+	else{
+		// 1. Creo directorio con nombre restaurante
+		char* ruta_restaurante = string_new();
+		string_append(&ruta_restaurante, ruta_files);
+		string_append(&ruta_restaurante, "Restaurantes/");
+		string_append(&ruta_restaurante, argsCrearRestaurante->nombreRestaurante);
+		log_info(logger, "RUTA: %s", ruta_restaurante);
+		crearDirectorio(ruta_restaurante);
+		// 2. Armar buffer a escribir
+		char* linea = generarLineaDato(argsCrearRestaurante);
+		log_info(logger, "Linea a escribir: %s", linea);
+		// 3. Calcular size buffer/archivo
+		int tamanio = string_length(linea);
+		log_info(logger, "Tamanio info: %d", tamanio);
+		// 4. Calcular cantidad de bloques necesarios
+		int bloques_necesarios = calcularBloquesNecesarios(tamanio);
+		log_info(logger, "Bloques necesarios: %d", bloques_necesarios);
+		// 5. Pido los bloques que necesito y genero el string de tipo [1,2,3]
+		char* str_bloques = string_new();
+		string_append(&str_bloques, "[");
+		int bloqueInicial;
+		for(int i=1; i <= bloques_necesarios; i++) {
+			int bloque = asignarBloqueLibre();
+			if(i==1)
+				bloqueInicial = bloque;
+			char* str_bloque = (i == bloques_necesarios) ? string_from_format("%d]", bloque) : string_from_format("%d,", bloque);
+			string_append(&str_bloques, str_bloque);
+		}
+		log_info(logger, "Bloques: %s", str_bloques);
+
+		// 6. Guardo la información en los bloques
+		persistirDatos(linea, str_bloques, bloques_necesarios);
+
+		// 7. Creo info.bin
+		t_metadata* metadata = malloc(sizeof(t_metadata));
+		metadata->initial_block = bloqueInicial;
+		metadata->size = tamanio;
+
+		crearInfoaArchivo(ruta_restaurante, metadata);
+//			aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
+
+		free(metadata);
+		free(linea);
+		free(ruta_restaurante);
+
+		log_info(logger, "Restaurante:%s creado", argsCrearRestaurante->nombreRestaurante);
+	}
 }
 
 void generarBloques() {
