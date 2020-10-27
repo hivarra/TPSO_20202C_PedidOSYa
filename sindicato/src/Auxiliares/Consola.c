@@ -46,13 +46,13 @@ void *crear_consola() {
 				printf("Faltan ingresar datos para la creación del restaurante\n");
 			else{
 				t_crear_restaurante* argsCrearRestaurante = malloc(sizeof(t_crear_restaurante));
-				argsCrearRestaurante->nombreRestaurante = comando[0];
-				argsCrearRestaurante->cantidadCocineros = comando[1];
-				argsCrearRestaurante->posicion=comando[2];
-				argsCrearRestaurante->afinidadCocineros=comando[3];
-				argsCrearRestaurante->platos=comando[4];
-				argsCrearRestaurante->preciosPlatos=comando[5];
-				argsCrearRestaurante->cantidadHornos=comando[6];
+				argsCrearRestaurante->nombreRestaurante = comando[1];
+				argsCrearRestaurante->cantidadCocineros = comando[2];
+				argsCrearRestaurante->posicion=comando[3];
+				argsCrearRestaurante->afinidadCocineros=comando[4];
+				argsCrearRestaurante->platos=comando[5];
+				argsCrearRestaurante->preciosPlatos=comando[6];
+				argsCrearRestaurante->cantidadHornos=comando[7];
 				crearRestaurante(argsCrearRestaurante);
 				free(argsCrearRestaurante);
 				printf("Se finalizó el comando CrearRestaurante \n");
