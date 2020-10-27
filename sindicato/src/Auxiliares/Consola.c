@@ -1,6 +1,14 @@
 #include "Consola.h"
 #include "commons/string.h"
 
+int validar_crear_restaurante(char** comandos_crear_restaurante){
+	return comandos_crear_restaurante[1] != NULL && comandos_crear_restaurante[2] != NULL &&  comandos_crear_restaurante[3] != NULL &&
+			comandos_crear_restaurante[4] != NULL && comandos_crear_restaurante[5] != NULL && comandos_crear_restaurante[6] != NULL &&
+			comandos_crear_restaurante[7] != NULL;
+}
+int validar_crear_receta(char** comandos_crear_receta){
+	return comandos_crear_receta[1] != NULL && comandos_crear_receta[2] != NULL &&  comandos_crear_receta[3] != NULL;
+}
 void *crear_consola() {
 
 	char *line;
@@ -32,27 +40,36 @@ void *crear_consola() {
 
 		switch (comando_e) {
 
-		case crearRestaurante_:
-			printf("CONSOLA: Se ingresó comando CREAR_RESTAURANTE \n");
-				crearRestaurante();
-				printf("CONSOLA: Se finalizó el comando CREAR_RESTAURANTE \n");
+		case crearRestaurante_:;
+				printf("Se ingresó comando CrearRestaurante \n");
+				if(!validar_crear_restaurante(comando))
+					printf("Faltan ingresar datos para la creación del restaurante\n");
+				else{
+					crearRestaurante();
+					printf("Se finalizó el comando CrearRestaurante \n");
+				}
 
 				break;
 
 		case crearReceta_:;
-				printf("Creando Receta...\n");
+			printf("Se ingresó comando CrearReceta \n");
+			if(!validar_crear_receta(comando))
+				printf("Faltan ingresar datos para la creación de la receta\n");
+			else{
+				/*TODO: crearReceta();*/
+				printf("Se finalizó el comando CrearReceta \n");
+			}
 			break;
 
 		default:
 
 			printf("No se reconoce el comando %s .\n", comando[0]);
 		}
-//		for(i=0;comando[i]!=NULL;i++)
-//			free(comando[i]);
-//		if(comando) free(comando);
+		for(i=0;comando[i]!=NULL;i++)
+			free(comando[i]);
+		if(comando) free(comando);
 
-
-//		free(lineaCompleta);
+		free(lineaCompleta);
 	}
 	return 0;
 }
@@ -84,7 +101,7 @@ char *character_name_generator(const char *text, int state) {
 t_tipoComando buscar_enum_sfs(char *sval) {
 	t_tipoComando result = crearRestaurante_;
 	int i = 0;
-	char* comandos_str[] = { "CREAR_RESTAURANTE", "CREAR_RECETA", NULL };
+	char* comandos_str[] = { "CrearRestaurante", "CrearReceta", NULL };
 	if (sval == NULL)
 		return -2;
 	for (i = 0; comandos_str[i] != NULL; ++i, ++result)

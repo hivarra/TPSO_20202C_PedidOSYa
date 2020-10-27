@@ -24,18 +24,19 @@ int main(int argc, char **argv) {
 	char* path_log = getLogPath(PATH_LOG);
 	logger = configurar_logger(path_log, "sindicato");
 	mostrar_propiedades();
+
 	/* 3. File System */
 	montarFileSystem();
 
 	/* 4. Hilos */
-	/* 4. Escuchando conexiones*/
-	//escuchar_conexiones_sindicato();
 	crearHiloConsola();
+	/* 5. Escuchando conexiones*/
+	//escuchar_conexiones_sindicato();
 
-//	destruir_config(config);
-//	destruir_logger(logger);
+	pthread_join(thread_consola,NULL);
 
-	sleep(30);
+	destruir_config(config);
+	destruir_logger(logger);
 
 	puts("Fin Proceso SINDICATO");
 	return EXIT_SUCCESS;

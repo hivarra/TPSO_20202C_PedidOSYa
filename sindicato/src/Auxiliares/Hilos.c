@@ -7,8 +7,6 @@ void crearHiloConsola() {
 		log_error(logger, "No se pudo generar el hilo para la consola");
 	}
 
-	pthread_detach(thread_consola);
-
 	log_info(logger, "Se generó el hilo para la consola");
 }
 
