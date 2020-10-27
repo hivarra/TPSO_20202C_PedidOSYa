@@ -162,15 +162,82 @@ void crearMetadataGlobal() {
 	free(rutaMetadata);
 
 }
+int existeRestaurante(char* nombreRestaurante){
+	char *ruta_pokemon = string_from_format("%s%s", ruta_files, nombreRestaurante);
+	log_info(logger, "Ruta: %s", ruta_pokemon);
+	FILE *fp = fopen(ruta_pokemon, "r");
+	free(ruta_pokemon);
 
-void crearRestaurante() {
-
-	char* ruta_restaurante = string_new();
-	string_append(&ruta_restaurante, ruta_restaurantes);
-	string_append(&ruta_restaurante, "/Restaurante/");
-	log_info(logger, "RUTA: %s", ruta_restaurante);
-
-	crearDirectorio(ruta_restaurante);
+	if (fp) {
+		fclose(fp);
+		return 1;
+	} else {
+		return 0;
+	}
+}
+char* generarLineaDato(t_crear_restaurante* argsCrearRestaurante) {
+	char* buffer = string_from_format("%d%s%s%s%s%d",
+			"CANTIDAD_COCINEROS=",argsCrearRestaurante->cantidadCocineros,"/n",
+			"POSICION=",argsCrearRestaurante->posicion,"/n",
+			"AFINIDAD_COCINEROS=",argsCrearRestaurante->afinidadCocineros,"/n",
+			"RECETAS=",argsCrearRestaurante->platos,"/n",
+			"PRECIO_RECETAS=",argsCrearRestaurante->preciosPlatos,"/n",
+			"CANTIDAD_HORNOS=",argsCrearRestaurante->cantidadHornos);
+	return buffer;
+}
+int calcularBloquesNecesarios(int bytes) {
+	int aux = (bytes / tamanio_bloques);
+	return (bytes % tamanio_bloques == 0) ? aux : (aux + 1);
+}
+void crearRestaurante(t_crear_restaurante* argsCrearRestaurante) {
+	/*0.Se valida si ya existe el restaurante*/
+	if(existeRestaurante(argsCrearRestaurante->nombreRestaurante))
+		log_info(logger, "El restaurante:%s ya existe en el FileSystem Sindicato",argsCrearRestaurante->nombreRestaurante);
+	else{
+		// 1. Creo directorio con nombre restaurante
+		char* ruta_restaurante = string_new();
+		string_append(&ruta_restaurante, ruta_restaurantes);
+		string_append(&ruta_restaurante, "/Restaurante/");
+		log_info(logger, "RUTA: %s", ruta_restaurante);
+		crearDirectorio(ruta_restaurante);
+		// 2. Armar buffer a escribir
+		char* linea = generarLineaDato(argsCrearRestaurante);
+		log_info(logger, "Linea a escribir: %s", linea);
+		// 3. Calcular size buffer/archivo
+		int tamanio = string_length(linea);
+		log_info(logger, "Tamanio linea: %d", tamanio);
+		// 4. Calcular cantidad de bloques necesarios
+		int bloques_necesarios = calcularBloquesNecesarios(tamanio);
+		log_info(logger, "Bloques necesarios: %d", bloques_necesarios);
+		// 5. Pido los bloques que necesito y genero el string de tipo [1,2,3]
+//		char* str_bloques = string_new();
+//		string_append(&str_bloques, "[");
+//		for(int i=1; i <= bloques_necesarios; i++) {
+//			int bloque = asignarBloqueLibre();
+//			char* str_bloque = (i == bloques_necesarios) ? string_from_format("%d]", bloque) : string_from_format("%d,", bloque);
+//			string_append(&str_bloques, str_bloque);
+//		}
+//		log_info(logger, "Bloques: %s", str_bloques);
+		//
+		//	// 6. Guardo la información en los bloques
+		//	persistirDatos(linea, str_bloques, bloques_necesarios);
+		//
+		//	// 7. Creo metadata.bin
+		//	t_metadata* metadata = malloc(sizeof(t_metadata));
+		//	strcpy(metadata->blocks, str_bloques);
+		//	strcpy(metadata->directory, "N");
+		//	strcpy(metadata->open, "N");
+		//	metadata->size = tamanio;
+		//
+		//	crearMetadataArchivo(ruta_pokemon, metadata);
+		//	aplicar_retardo_fs("Creación de Pokemon");
+		//
+		//	free(metadata);
+		//	free(linea);
+		//	free(ruta_pokemon);
+		//
+		//	log_info(logger, "Pokemon %s creado", nuevoPokemon->nombre_pokemon);
+	}
 }
 
 void generarBloques() {

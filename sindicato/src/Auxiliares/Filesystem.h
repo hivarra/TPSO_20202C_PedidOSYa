@@ -13,6 +13,16 @@ typedef struct {
 	char open[10];
 } t_metadata;
 
+typedef struct{
+	char* nombreRestaurante;
+	int cantidadCocineros;
+	char* posicion;
+	char* afinidadCocineros;
+	char* platos;
+	char* preciosPlatos;
+	int cantidadHornos;
+}t_crear_restaurante;
+
 int tamanio_bloques;
 int cantidad_bloques;
 char* bmap;
