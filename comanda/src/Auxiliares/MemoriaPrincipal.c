@@ -9,22 +9,30 @@
 #include "MemoriaPrincipal.h"
 
 void inicializar_memoria_principal(){
-	memoria_fisica = calloc(1,mem_principal_global->tamanio_memoria);//Inicializa con /0
-	//memset(memoria_fisica, '\0', mem_principal_global->tamanio_memoria);
+	memoria_fisica = calloc(1,mem_principal_global.tamanio_memoria);//Inicializa con /0
+	init_bitmap_mp();
 }
 
 void setear_params_global_mem_principal(){
-	mem_principal_global = malloc(sizeof(t_params_global_mem_principal));
-	mem_principal_global->tamanio_memoria = config_get_int_value(config, "TAMANIO_MEMORIA");
-	mem_principal_global->tamanio_swap = config_get_int_value(config, "TAMANIO_SWAP");
+	mem_principal_global.tamanio_memoria = config_get_int_value(config, "TAMANIO_MEMORIA");
+	mem_principal_global.tamanio_swap = config_get_int_value(config, "TAMANIO_SWAP");
 
 	if (strcmp(config_get_string_value(config, "ALGORITMO_REEMPLAZO"), "LRU")== 0)
-		mem_principal_global->algoritmo_reemplazo = LRU;
+		mem_principal_global.algoritmo_reemplazo = LRU;
 	else
-		mem_principal_global->algoritmo_reemplazo = CLOCK_MEJ;
+		mem_principal_global.algoritmo_reemplazo = CLOCK_MEJ;
 }
 
-void liberar_memoria_principal(){
+void liberar_memoria(){
 	free(memoria_fisica);
-	free(mem_principal_global);
+	//TODO:liberar_tablas();
+}
+
+void liberar_memoria_swap(){
+	remove(path_memoria_swap);
+	free(path_memoria_swap);
+	char* directorio_swap = getParentPath();
+	string_append(&directorio_swap, "/Swap");
+	rmdir(directorio_swap);
+	free(directorio_swap);
 }
