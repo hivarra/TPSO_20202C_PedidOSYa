@@ -12,6 +12,7 @@
 
 #include <protocolo.h>
 #include "Config_y_log.h"
+#include "MMU.h"
 
 int socket_comanda;
 

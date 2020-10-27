@@ -12,6 +12,7 @@ void inicializar_memoria(){
 	setear_params_global_mem_principal();
 	tablas_segmentos = dictionary_create();
 	inicializar_memoria_principal();
+	inicializar_memoria_swap();
 }
 
 void inicializar_tablas_segmentos(){
@@ -80,7 +81,7 @@ uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
 			ret = crear_tabla_de_paginas_de_pedido(segmento);
 		}
 		else
-			log_info(logger,"El pedido:%d ya existia en la tabla de segmentos del restaurante:%s",info_guardar_pedido->id_pedido,nombre_restaurante);
+			log_warning(logger,"El pedido %d ya existia en la tabla de segmentos del restaurante %s",info_guardar_pedido->id_pedido,nombre_restaurante);
 	}
 	return ret;
 }
@@ -119,8 +120,7 @@ t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){
 	if(entrada_pagina == NULL){
 		t_list* lista_pag_swap = list_filter(lista_paginas,(void*)obtener_pag_en_swap);
 		/*TODO: EN SWAP AGREGAR FUNCIONES DE ABAJO*/
-//		u_int32_t nro_frame_ms = buscar_plato_en_SWAP(lista_paginas,plato);
-//		entrada_pagina = cargar_pagina_en_memoria(nro_frame_ms);
+//		entrada_pagina = buscar_plato_en_swap(lista_pag_swap,plato);
 		list_destroy(lista_pag_swap);
 	}
 	return entrada_pagina;
@@ -129,7 +129,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 	char* nombre_restaurante = &info_guardar_plato->restaurante[0];
 	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
 	if(!existe_tabla_de_segmentos_de_restaurante(nombre_restaurante)){
-		log_info(logger,"La tabla de segmentos del restaurante:%s no existe.",info_guardar_plato->restaurante);
+		log_warning(logger,"La tabla de segmentos del restaurante:%s no existe.",info_guardar_plato->restaurante);
 		return false;
 	}
 	else{
@@ -148,7 +148,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 			}
 		}
 		else{
-			log_info(logger,"El segmento del pedido:%d para el restaurante:%s no existe.",info_guardar_plato->id_pedido,info_guardar_plato->restaurante);
+			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_guardar_plato->id_pedido,info_guardar_plato->restaurante);
 			return false;
 		}
 	}
@@ -171,13 +171,4 @@ t_entrada_pagina* inicializar_entrada_pagina(char* nombre_comida){
 	entrada_pagina->modificado = 0;
 
 	return entrada_pagina;
-}
-
-void liberar_tablas(){
-	/*TODO:*/
-}
-
-void liberar_memoria(){
-	liberar_memoria_principal();
-	liberar_tablas();
 }
