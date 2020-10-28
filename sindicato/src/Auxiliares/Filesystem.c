@@ -4,6 +4,28 @@
 #define BLOCKS 5192
 #define MAGIC_NUMBER "AFIP"
 
+void leerBitmap(){
+	char* rutaBitmap = string_new();
+	string_append(&rutaBitmap, sindicato_conf.punto_montaje);
+	string_append(&rutaBitmap, "/Metadata");
+	string_append(&rutaBitmap, "/Bitmap.bin");
+
+	int fd = open(rutaBitmap, O_RDWR);
+	bmap = mmap(NULL, cantidad_bloques / 8, PROT_WRITE | PROT_READ, MAP_SHARED,
+			fd, 0);
+	bitmap = (void*)&bmap;
+	msync(bmap,cantidad_bloques / 8, MS_SYNC); // Para sincronizar el bitmap con el archivo físico.
+
+	struct stat mystat;
+	if (fstat(fd, &mystat) < 0) {
+		log_error(logger, "Error al establecer fstat");
+	}
+	fstat(fd, &mystat);
+
+	log_info(logger, "Bitmap leido");
+	close(fd);
+	free(rutaBitmap);
+}
 void montarFileSystem() {
 
 	if (!existeDirectorio(sindicato_conf.punto_montaje)) {
@@ -20,15 +42,17 @@ void montarFileSystem() {
 		log_info(logger, "File System: Creación finalizada");
 
 	} else {
-
+		/*TODO:BUG:SI YA EXISTE, DEBE ASIGNAR EL BITMAP YA CREADO*/
 		ruta_files = string_new();
 		string_append(&ruta_files, sindicato_conf.punto_montaje);
 		string_append(&ruta_files, "/Files/");
 
-		char* rutaBitmap = string_new();
-		string_append(&rutaBitmap, sindicato_conf.punto_montaje);
-		string_append(&rutaBitmap, "/Metadata");
-		string_append(&rutaBitmap, "/Bitmap.bin");
+		leerBitmap();
+
+//		char* rutaBitmap = string_new();
+//		string_append(&rutaBitmap, sindicato_conf.punto_montaje);
+//		string_append(&rutaBitmap, "/Metadata");
+//		string_append(&rutaBitmap, "/Bitmap.bin");
 
 		ruta_bloques = string_new();
 		string_append(&ruta_bloques, sindicato_conf.punto_montaje);
@@ -41,7 +65,6 @@ void montarFileSystem() {
 	}
 
 }
-
 void crearBitmap() {
 
 	char* rutaBitmap = string_new();
@@ -56,7 +79,7 @@ void crearBitmap() {
 	bmap = mmap(NULL, cantidad_bloques / 8, PROT_WRITE | PROT_READ, MAP_SHARED,
 			fd, 0);
 	bitmap = bitarray_create_with_mode(bmap, cantidad_bloques / 8, MSB_FIRST);
-	msync(bmap, fd, MS_SYNC); // Para sincronizar el bitmap con el archivo físico.
+	msync(bmap, cantidad_bloques / 8, MS_SYNC); // Para sincronizar el bitmap con el archivo físico.
 
 	struct stat mystat;
 	if (fstat(fd, &mystat) < 0) {
@@ -117,7 +140,7 @@ void crearDirectorio(char *path) {
 	}
 
 }
-
+/*TODO: DEPRECATED FUNCTION?? SI NO ES NECESARIO ELIMINARLO*/
 void crearMetadataDirectorio(char* ruta) {
 
 	char* ruta_archivo = string_from_format("%s/Metadata.AFIP", ruta);
@@ -221,9 +244,12 @@ void escribirBloque(int bloque, char* buff) {
 
 	log_info(logger, "Bloque a escribir: %d", bloque);
 	log_info(logger, "Contenido a escribir: %s", buff);
-	char* archivo = string_from_format("%s%d%s", ruta_bloques,bloque,".bin");
+	char* archivo = string_from_format("%s%d%s", ruta_bloques,bloque,".AFIP");
 	FILE* fp = fopen(archivo, "w");
 	fputs(buff, fp);
+	fseek(fp,string_length(buff)+1,SEEK_SET);
+	uint32_t uBloque = bloque;
+	fprintf(fp, "%d", uBloque);
 	fclose(fp);
 
 }
@@ -299,12 +325,12 @@ void crearRestaurante(t_crear_restaurante* argsCrearRestaurante) {
 		// 6. Guardo la información en los bloques
 		persistirDatos(linea, str_bloques, bloques_necesarios);
 
-		// 7. Creo info.bin
+		// 7. Creo info.AFIP
 		t_metadata* metadata = malloc(sizeof(t_metadata));
 		metadata->initial_block = bloqueInicial;
 		metadata->size = tamanio;
 
-		string_append(&ruta_restaurante,"/info.bin");
+		string_append(&ruta_restaurante,"/info.AFIP");
 		crearMetadataArchivo(ruta_restaurante, metadata);
 //			aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
 
@@ -352,13 +378,13 @@ void crearReceta(t_crear_receta* argsCrearReceta){
 		// 6. Guardo la información en los bloques
 		persistirDatos(linea, str_bloques, bloques_necesarios);
 
-		// 7. Creo info.bin
+		// 7. Creo nombreReceta.AFIP
 		t_metadata* metadata = malloc(sizeof(t_metadata));
 		metadata->initial_block = bloqueInicial;
 		metadata->size = tamanio;
 		string_append(&ruta_receta,"/");
 		string_append(&ruta_receta,argsCrearReceta->nombre);
-		string_append(&ruta_receta,".bin");
+		string_append(&ruta_receta,".AFIP");
 		crearMetadataArchivo(ruta_receta, metadata);
 //			aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
 
@@ -377,7 +403,7 @@ void generarBloques() {
 		char* nombre_bloque = string_new();
 		string_append(&nombre_bloque, ruta_bloques);
 		string_append(&nombre_bloque, string_itoa(i));
-		string_append(&nombre_bloque, ".afip");
+		string_append(&nombre_bloque, ".AFIP");
 
 		FILE *fp = fopen(nombre_bloque, "w");
 		fclose(fp);

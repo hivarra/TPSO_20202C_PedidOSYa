@@ -24,9 +24,11 @@ void connection_handler(int* socket_emisor) {
 	}
 
 	case CONSULTAR_PLATOS: {
-
 		char* restaurante = recibir_consultar_platos(*socket_emisor, logger);
-		log_info(logger, "Restaurante: %s", restaurante);
+		log_info(logger, "Se recibe CONSULTAR_PLATOS de Restaurante:%s", restaurante);
+//		t_rta_consultar_platos* rta_consultar_platos = procesar_consultar_platos();
+//		enviar_rta_consultar_platos(rta_consultar_platos, *socket_emisor,logger);
+//		free(rta_consultar_platos);
 		free(restaurante);
 		break;
 	}

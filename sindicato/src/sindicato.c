@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 	/* 4. Hilos */
 	crearHiloConsola();
 	/* 5. Escuchando conexiones*/
-	//escuchar_conexiones_sindicato();
+//	escuchar_conexiones_sindicato();
 
 	pthread_join(thread_consola,NULL);
 
