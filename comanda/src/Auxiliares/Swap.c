@@ -7,6 +7,7 @@
 #include "Swap.h"
 
 void inicializar_memoria_swap(){
+	FILE* memoria_swap;
 	/*CREO LA CARPETA PARA EL SWAP*/
 	path_memoria_swap = getParentPath();
 	string_append(&path_memoria_swap, "/Swap");
@@ -14,22 +15,21 @@ void inicializar_memoria_swap(){
 	/*CREO EL SWAP*/
 	string_append(&path_memoria_swap, "/Comanda_SwapMemory.swp");
 	if (result_mkdir==0 || result_mkdir==-1){//para que mkdir se trabe y espere a que la carpeta se cree
-		memoria_swap = fopen(path_memoria_swap, "w+");
+		memoria_swap = fopen(path_memoria_swap, "w+");//TODO:Si no funciona probar con "w+"
 		truncate(path_memoria_swap, mem_principal_global.tamanio_swap);
 		fclose(memoria_swap);
 	}
-	init_bitmap_ms();
-	if (mem_principal_global.algoritmo_reemplazo == CLOCK_MEJ)
-		puntero_clock = 0;
+	puntero_clock = 0;
 }
 
 void volcar_pagina_a_swap(t_entrada_pagina* entrada_pagina){
+	FILE* memoria_swap;
 	entrada_pagina->presencia = 0;
 
 	t_pagina* pagina_mp = memoria_fisica+entrada_pagina->nro_frame_mp*sizeof(t_pagina);
 
 	if (entrada_pagina->modificado){
-		memoria_swap = fopen(path_memoria_swap, "r+");
+		memoria_swap = fopen(path_memoria_swap, "w");
 		fseek(memoria_swap, entrada_pagina->nro_frame_ms*sizeof(t_pagina), SEEK_SET);//Pongo el puntero al archivo sobre el comienzo de la pagina
 		fwrite(pagina_mp, sizeof(t_pagina), 1, memoria_swap);
 		fclose(memoria_swap);
@@ -38,9 +38,11 @@ void volcar_pagina_a_swap(t_entrada_pagina* entrada_pagina){
 }
 
 void traer_pagina_de_swap(uint32_t frame_mp, t_entrada_pagina* entrada_pagina){
-
+	FILE* memoria_swap;
+	memoria_swap = fopen(path_memoria_swap, "r");
 	fseek(memoria_swap, entrada_pagina->nro_frame_ms*sizeof(t_pagina), SEEK_SET);//Pongo el puntero al archivo sobre el comienzo de la pagina
 	fread(memoria_fisica+frame_mp*sizeof(t_pagina), sizeof(t_pagina), 1, memoria_swap);//Copio el frame desde swap a la memoria fisica
+	fclose(memoria_swap);
 	entrada_pagina->nro_frame_mp = frame_mp;
 	entrada_pagina->presencia = 1;
 }
@@ -51,8 +53,11 @@ t_entrada_pagina* entrada_uso0_modificado0(){
 	for(int i = 0; i < list_size(lista_entradas_paginas); i++){
 		t_entrada_pagina* entrada_i = list_get(lista_entradas_paginas, 0);
 		if (!entrada_i->uso && !entrada_i->modificado){
-			puntero_clock = i;
 			entrada_buscada = entrada_i;
+			if(i < list_size(lista_entradas_paginas)-1)
+				puntero_clock = i+1;
+			else
+				puntero_clock = 0;//Si es la ultima entrada, pone el puntero al principio
 			break;
 		}
 	}
@@ -65,8 +70,11 @@ t_entrada_pagina* entrada_uso0_modificado1(){
 	for(int i = 0; i < list_size(lista_entradas_paginas); i++){
 		t_entrada_pagina* entrada_i = list_get(lista_entradas_paginas, 0);
 		if (!entrada_i->uso && entrada_i->modificado){
-			puntero_clock = i;
 			entrada_buscada = entrada_i;
+			if(i < list_size(lista_entradas_paginas)-1)
+				puntero_clock = i+1;
+			else
+				puntero_clock = 0;//Si es la ultima entrada, pone el puntero al principio
 			break;
 		}
 		else
@@ -121,7 +129,8 @@ t_entrada_pagina* buscar_plato_en_swap(t_list* lista_paginas_swap, char* plato){
 	bool pagina_swap_contiene_plato(t_entrada_pagina* entrada_pag){
 		reemplazo_de_pagina(entrada_pag);
 		t_pagina* pag = memoria_fisica+entrada_pag->nro_frame_mp*sizeof(t_pagina);
-		return (strcmp(pag->nombre_comida, plato)==0);
+		actualizar_bits_de_uso(entrada_pag);
+		return strcmp(pag->nombre_comida, plato) == 0;
 	}
 
 	entrada_pag_buscada = list_find(lista_paginas_swap, (void*)pagina_swap_contiene_plato);

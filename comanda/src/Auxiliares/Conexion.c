@@ -111,8 +111,6 @@ void esperar_cliente(int socket_servidor){
 
 void escuchar_conexiones_comanda(){
 
-	int socket_servidor;
-
 	struct addrinfo hints, *servinfo, *p;
 
 	memset(&hints, 0, sizeof(hints));
@@ -143,26 +141,26 @@ void escuchar_conexiones_comanda(){
 	while(1)
 		esperar_cliente(socket_servidor);
 }
-
-void escuchar__conexiones_comanda(){
-	/*Abro socket*/
-	socket_comanda = definirSocket(logger);
-	/*Bind & Listen*/
-	if (bindearSocketYEscuchar(socket_comanda, IP_COMANDA , atoi(config_get_string_value(config, "PUERTO_ESCUCHA")),
-			logger) <= 0)
-		_exit_with_error("BIND", NULL, logger);
-
-	/*Atiendo solicitudes creando un hilo para cada una*/
-	while(1){
-		pthread_t hilo_conexion;
-		int* new_sock = malloc(sizeof(int));
-
-		*new_sock = aceptarConexiones(socket_comanda, logger);
-
-		if(new_sock < 0)
-			log_error(logger, "Error al realizar ACCEPT.\n");
-
-		pthread_create(&hilo_conexion,NULL,(void*)connection_handler,new_sock);
-		pthread_detach(hilo_conexion);
-	}
-}
+//
+//void escuchar__conexiones_comanda(){
+//	/*Abro socket*/
+//	socket_comanda = definirSocket(logger);
+//	/*Bind & Listen*/
+//	if (bindearSocketYEscuchar(socket_comanda, IP_COMANDA , atoi(config_get_string_value(config, "PUERTO_ESCUCHA")),
+//			logger) <= 0)
+//		_exit_with_error("BIND", NULL, logger);
+//
+//	/*Atiendo solicitudes creando un hilo para cada una*/
+//	while(1){
+//		pthread_t hilo_conexion;
+//		int* new_sock = malloc(sizeof(int));
+//
+//		*new_sock = aceptarConexiones(socket_comanda, logger);
+//
+//		if(new_sock < 0)
+//			log_error(logger, "Error al realizar ACCEPT.\n");
+//
+//		pthread_create(&hilo_conexion,NULL,(void*)connection_handler,new_sock);
+//		pthread_detach(hilo_conexion);
+//	}
+//}

@@ -9,6 +9,8 @@
 
 void signalHandler(int sig){
 
+	close(socket_servidor);
+
 	liberar_memoria();
 	liberar_memoria_swap();
 
@@ -90,4 +92,11 @@ void free_frame_ms(int pos){
 	pthread_mutex_lock(&mutex_bitmap_ms);
 	bitarray_clean_bit(bitmap_ms, pos);
 	pthread_mutex_unlock(&mutex_bitmap_ms);
+}
+
+void actualizar_bits_de_uso(t_entrada_pagina* entrada_pagina){
+	if (mem_principal_global.algoritmo_reemplazo == LRU)
+		entrada_pagina->ultimo_uso = timestamp();
+	else
+		entrada_pagina->uso = 1;
 }

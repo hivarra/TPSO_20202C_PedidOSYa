@@ -9,11 +9,12 @@
 #define AUXILIARES_SWAP_H_
 
 #include "MemoriaPrincipal.h"
+#include "Utils.h"
 
 int puntero_clock;
 
 void inicializar_memoria_swap(void);
-void liberar_memoria_swap();
+void reemplazo_de_pagina(t_entrada_pagina*);
 t_entrada_pagina* buscar_plato_en_swap(t_list*, char*);
 
 #endif /* AUXILIARES_SWAP_H_ */

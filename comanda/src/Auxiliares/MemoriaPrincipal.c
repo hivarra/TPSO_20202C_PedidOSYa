@@ -8,9 +8,17 @@
 
 #include "MemoriaPrincipal.h"
 
+void setear_params_global_mem_principal(void);
+void inicializar_memoria_principal(void);
+
+void inicializar_memoria(){
+	setear_params_global_mem_principal();
+	inicializar_memoria_principal();
+	tablas_segmentos = dictionary_create();
+}
+
 void inicializar_memoria_principal(){
 	memoria_fisica = calloc(1,mem_principal_global.tamanio_memoria);//Inicializa con /0
-	init_bitmap_mp();
 }
 
 void setear_params_global_mem_principal(){
@@ -23,9 +31,18 @@ void setear_params_global_mem_principal(){
 		mem_principal_global.algoritmo_reemplazo = CLOCK_MEJ;
 }
 
+void _destruir_segmento(t_segmento* segmento){
+	list_destroy_and_destroy_elements(segmento->tabla_paginas, free);
+	free(segmento);
+}
+
+void _destruir_tabla_segmentos(t_list* tabla_segmentos){
+	list_destroy_and_destroy_elements(tabla_segmentos, (void*)_destruir_segmento);
+}
+
 void liberar_memoria(){
 	free(memoria_fisica);
-	//TODO:liberar_tablas();
+	dictionary_destroy_and_destroy_elements(tablas_segmentos, (void*)_destruir_tabla_segmentos);
 }
 
 void liberar_memoria_swap(){

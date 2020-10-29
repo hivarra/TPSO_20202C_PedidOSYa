@@ -9,7 +9,6 @@
 #define AUXILIARES_MEMORIAPRINCIPAL_H_
 
 #include "Config_y_log.h"
-#include "Utils.h"
 
 typedef enum{
 	LRU,
@@ -29,14 +28,12 @@ typedef struct{
 }__attribute__((packed)) t_pagina;
 
 typedef struct{
-//	uint32_t nro_segmento;
 	uint32_t id_pedido;
 	uint32_t estado_pedido;
 	t_list* tabla_paginas;
 }t_segmento;
 
 typedef struct{
-//	u_int32_t nro_pagina;
 	uint32_t nro_frame_mp;
 	uint32_t nro_frame_ms;
 	bool uso;
@@ -48,12 +45,11 @@ typedef struct{
 void* memoria_fisica;
 t_params_global_mem_principal mem_principal_global;
 t_list* lista_entradas_paginas;
+t_dictionary *tablas_segmentos;//key:nombre_restaurante
 
 char* path_memoria_swap;
-FILE* memoria_swap;
 
-void inicializar_memoria_principal(void);
-void setear_params_global_mem_principal(void);
+void inicializar_memoria(void);
 void liberar_memoria(void);
 void liberar_memoria_swap(void);
 

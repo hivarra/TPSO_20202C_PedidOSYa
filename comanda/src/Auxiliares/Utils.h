@@ -11,6 +11,7 @@
 #include <shared.h>
 #include <commons/bitarray.h>
 #include "MemoriaPrincipal.h"
+#include "Conexion.h"
 
 int cant_frames_mp;
 int cant_frames_ms;
@@ -33,5 +34,7 @@ void free_frame_mp(int);
 void init_bitmap_ms(void);
 int get_free_frame_ms(void);
 void free_frame_ms(int);
+
+void actualizar_bits_de_uso(t_entrada_pagina*);
 
 #endif /* AUXILIARES_UTILS_H_ */
