@@ -17,7 +17,8 @@
 typedef enum{
 	PENDIENTE,
 	CONFIRMADO,
-	TERMINADO
+	TERMINADO,
+	FAILED
 }t_estado_pedido;
 
 typedef enum{
