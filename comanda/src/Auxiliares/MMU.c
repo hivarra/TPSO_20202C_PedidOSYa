@@ -191,3 +191,57 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 	}
 	return ret;
 }
+
+t_rta_obtener_pedido* procesar_obtener_pedido(t_obtener_pedido* info_obtener_pedido){
+	t_rta_obtener_pedido* respuesta = malloc(sizeof(t_rta_obtener_pedido));
+	respuesta->estado = FAILED;
+	respuesta->cantComidas = 0;
+	respuesta->comidas = list_create();
+	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
+	if(!existe_tabla_de_segmentos_de_restaurante(info_obtener_pedido->restaurante))
+		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_obtener_pedido->restaurante);
+	else{
+		t_segmento* segmento = obtener_segmento_del_pedido(info_obtener_pedido->id_pedido,info_obtener_pedido->restaurante);
+		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
+		if(segmento!=NULL){
+			respuesta->estado = segmento->estado_pedido;
+			respuesta->cantComidas = list_size(segmento->tabla_paginas);
+			/*TODO: OBTENER LOS PLATOS Y COPIARLOS EN LA RESPUESTA*/
+		}
+		else
+			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_obtener_pedido->id_pedido,info_obtener_pedido->restaurante);
+	}
+	return respuesta;
+}
+
+uint32_t procesar_confirmar_pedido(t_confirmar_pedido* info_confirmar_pedido){
+	uint32_t ret = false;
+	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
+	if(!existe_tabla_de_segmentos_de_restaurante(info_confirmar_pedido->restaurante))
+		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_confirmar_pedido->restaurante);
+	else{
+		t_segmento* segmento = obtener_segmento_del_pedido(info_confirmar_pedido->id_pedido,info_confirmar_pedido->restaurante);
+		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
+		if(segmento!=NULL){
+			if(segmento->estado_pedido != PENDIENTE)/*VALIDO SI EL ESTADO ES PENDIENTE*/
+				log_warning(logger,"El pedido %d para el restaurante %s no se encuentra pendiente.",info_confirmar_pedido->id_pedido,info_confirmar_pedido->restaurante);
+			else if(list_size(segmento->tabla_paginas) < 1)/*VALIDO SI TIENE PLATOS PARA CONFIRMAR*/
+				log_warning(logger,"El pedido %d para el restaurante %s no tiene platos para confirmar.",info_confirmar_pedido->id_pedido,info_confirmar_pedido->restaurante);
+			else{/*CONFIRMO EL PEDIDO*/
+				segmento->estado_pedido = CONFIRMADO;
+				ret = true;
+			}
+		}
+		else
+			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_confirmar_pedido->id_pedido,info_confirmar_pedido->restaurante);
+	}
+	return ret;
+}
+
+uint32_t procesar_plato_listo(t_plato_listo* info_plato_listo){
+	return false;
+}
+
+uint32_t procesar_finalizar_pedido(t_finalizar_pedido* info_finalizar_pedido){
+	return false;
+}

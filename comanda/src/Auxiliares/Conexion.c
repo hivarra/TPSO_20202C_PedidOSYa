@@ -61,9 +61,9 @@ void connection_handler(int* socket_emisor){
 		case CONFIRMAR_PEDIDO:{
 
 			t_confirmar_pedido* recibido = recibir_confirmar_pedido(*socket_emisor, logger);
-			//uint32_t resultado = procesar_confirmar_pedido(recibido);
+			uint32_t resultado = procesar_confirmar_pedido(recibido);
 			free(recibido);
-			//enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, *socket_emisor, logger);
+			enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, *socket_emisor, logger);
 			break;
 		}
 

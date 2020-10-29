@@ -30,11 +30,19 @@ void signalHandler(int sig){
 	exit(EXIT_SUCCESS);
 }
 
+int max(int num1, int num2){
+   if (num1 > num2)
+      return num1;
+   else
+      return num2;
+}
+
 void init_bitmap_mp(){
 	cant_frames_mp = mem_principal_global.tamanio_memoria/32;
-	reserva_bitmap_mp = malloc(cant_frames_mp/8);
+	int cant_bytes_bitmap = max(cant_frames_mp/8, 1);//Por si la division me da menor a 1 byte
+	reserva_bitmap_mp = malloc(cant_bytes_bitmap);
 
-	bitmap_mp = bitarray_create_with_mode(reserva_bitmap_mp, cant_frames_mp/8, LSB_FIRST);
+	bitmap_mp = bitarray_create_with_mode(reserva_bitmap_mp, cant_bytes_bitmap, LSB_FIRST);
 
 	for(int i = 0; i < cant_frames_mp; i++){
 		 bitarray_clean_bit(bitmap_mp, i);
@@ -64,9 +72,10 @@ void free_frame_mp(int pos){
 
 void init_bitmap_ms(){
 	cant_frames_ms = mem_principal_global.tamanio_swap/32;
-	reserva_bitmap_ms = malloc(cant_frames_ms/8);
+	int cant_bytes_bitmap = max(cant_frames_ms/8, 1);//Por si la division me da menor a 1 byte
+	reserva_bitmap_ms = malloc(cant_bytes_bitmap);
 
-	bitmap_ms = bitarray_create_with_mode(reserva_bitmap_ms, cant_frames_ms/8, LSB_FIRST);
+	bitmap_ms = bitarray_create_with_mode(reserva_bitmap_ms, cant_bytes_bitmap, LSB_FIRST);
 
 	for(int i = 0; i < cant_frames_ms; i++){
 		 bitarray_clean_bit(bitmap_ms, i);
