@@ -15,6 +15,7 @@ void inicializar_memoria(){
 	setear_params_global_mem_principal();
 	inicializar_memoria_principal();
 	tablas_segmentos = dictionary_create();
+	lista_entradas_paginas = list_create();
 }
 
 void inicializar_memoria_principal(){

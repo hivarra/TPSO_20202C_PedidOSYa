@@ -30,6 +30,7 @@ typedef struct{
 typedef struct{
 	uint32_t id_pedido;
 	uint32_t estado_pedido;
+	uint32_t cant_platos_listos;
 	t_list* tabla_paginas;
 }t_segmento;
 

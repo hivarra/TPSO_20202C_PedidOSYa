@@ -80,7 +80,7 @@ void init_bitmap_ms(){
 	for(int i = 0; i < cant_frames_ms; i++){
 		 bitarray_clean_bit(bitmap_ms, i);
 	}
-	pthread_mutex_init(&mutex_bitmap_mp, NULL);
+	pthread_mutex_init(&mutex_bitmap_ms, NULL);
 }
 
 int get_free_frame_ms(){

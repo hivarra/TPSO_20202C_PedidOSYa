@@ -20,6 +20,7 @@ t_segmento* inicializar_segmento_pedido(t_list* tabla_segmentos,uint32_t id_pedi
 	if (segmento != NULL){
 		segmento->id_pedido = id_pedido;
 		segmento->estado_pedido = PENDIENTE;
+		segmento->cant_platos_listos = 0;
 		segmento->tabla_paginas = list_create();
 		if (segmento->tabla_paginas != NULL)
 			list_add(tabla_segmentos, segmento);
@@ -71,6 +72,25 @@ t_segmento* obtener_segmento_del_pedido(uint32_t id_pedido, char* nombre_restaur
 	return list_find(tabla_segmentos,(void*)existe_pedido_en_segmento);
 }
 
+void borrar_segmento_del_pedido(uint32_t id_pedido, char* nombre_restaurante){
+	t_list* tabla_segmentos = dictionary_get(tablas_segmentos, nombre_restaurante);
+
+	int existe_pedido_en_segmento(t_segmento* segmento){
+		return segmento->id_pedido == id_pedido;
+	}
+
+	list_remove_and_destroy_by_condition(tabla_segmentos, (void*)existe_pedido_en_segmento, free);
+	if (list_size(tabla_segmentos) == 0)
+		dictionary_remove_and_destroy(tablas_segmentos, nombre_restaurante, (void*)list_destroy);
+}
+
+void borrar_entrada_en_lista_global(t_entrada_pagina* entrada_pag){
+	bool _buscar_por_frame_ms(t_entrada_pagina* entrada){
+		return entrada->nro_frame_ms == entrada_pag->nro_frame_ms;
+	}
+	list_remove_by_condition(lista_entradas_paginas, (void*)_buscar_por_frame_ms);
+}
+
 t_entrada_pagina* buscar_plato_en_memoria(t_list* lista_paginas_mem,char* plato){
 	t_entrada_pagina* pagina_encontrada = NULL;
 
@@ -83,7 +103,7 @@ t_entrada_pagina* buscar_plato_en_memoria(t_list* lista_paginas_mem,char* plato)
 	return pagina_encontrada;
 }
 
-t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){
+t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){//TODO:PREGUNTAR SI LA SECUENCIA ES CORRECTA O CORRESPONDE HACERLO SECUENCIAL
 	t_entrada_pagina* entrada_pagina = NULL;
 
 	/*SE RECORRE LAS PAGINAS QUE ESTAN EN MP*/
@@ -107,7 +127,6 @@ t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){
 
 uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
 	uint32_t ret = false;
-	//char* nombre_restaurante = &info_guardar_pedido->restaurante[0];
 	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
 	if(!existe_tabla_de_segmentos_de_restaurante(info_guardar_pedido->restaurante)){
 		/*SI NO EXISTE, SE CREA TABLA DE SEGMENTOS */
@@ -180,6 +199,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 					pagina->cant_lista = 0;
 					actualizar_bits_de_uso(entrada_nueva);
 					entrada_nueva->modificado = 1;
+					list_add(lista_entradas_paginas, entrada_nueva);
 					ret = true;
 				}
 				else
@@ -192,11 +212,40 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 	return ret;
 }
 
+/***FUNCION PARA OBTENER UN T_COMIDA DESDE LA MEMORIA***/
+t_comida* _obtener_plato_de_memoria(t_entrada_pagina* entrada_pag){
+	t_comida* plato = calloc(1,sizeof(t_comida));
+
+	if (!entrada_pag->presencia)
+		reemplazo_de_pagina(entrada_pag);
+
+	t_pagina* pag = memoria_fisica+entrada_pag->nro_frame_mp*sizeof(t_pagina);
+	strcpy(plato->nombre,pag->nombre_comida);
+	plato->cantTotal = pag->cant_total;
+	plato->cantLista = pag->cant_lista;
+	actualizar_bits_de_uso(entrada_pag);
+	return plato;
+}
+
 t_rta_obtener_pedido* procesar_obtener_pedido(t_obtener_pedido* info_obtener_pedido){
 	t_rta_obtener_pedido* respuesta = malloc(sizeof(t_rta_obtener_pedido));
 	respuesta->estado = FAILED;
 	respuesta->cantComidas = 0;
 	respuesta->comidas = list_create();
+
+	/***FUNCION PARA GUARDAR UN PLATO EN LA RESPUESTA***/
+	void _guardar_plato_en_lista(t_entrada_pagina* entrada_pag){
+		t_comida* plato = calloc(1,sizeof(t_comida));
+		if (!entrada_pag->presencia)
+			reemplazo_de_pagina(entrada_pag);
+		t_pagina* pag = memoria_fisica+entrada_pag->nro_frame_mp*sizeof(t_pagina);
+		strcpy(plato->nombre,pag->nombre_comida);
+		plato->cantTotal = pag->cant_total;
+		plato->cantLista = pag->cant_lista;
+		actualizar_bits_de_uso(entrada_pag);
+		list_add(respuesta->comidas,plato);
+	}
+
 	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
 	if(!existe_tabla_de_segmentos_de_restaurante(info_obtener_pedido->restaurante))
 		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_obtener_pedido->restaurante);
@@ -206,7 +255,7 @@ t_rta_obtener_pedido* procesar_obtener_pedido(t_obtener_pedido* info_obtener_ped
 		if(segmento!=NULL){
 			respuesta->estado = segmento->estado_pedido;
 			respuesta->cantComidas = list_size(segmento->tabla_paginas);
-			/*TODO: OBTENER LOS PLATOS Y COPIARLOS EN LA RESPUESTA*/
+			list_iterate(segmento->tabla_paginas, (void*)_guardar_plato_en_lista);
 		}
 		else
 			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_obtener_pedido->id_pedido,info_obtener_pedido->restaurante);
@@ -239,9 +288,66 @@ uint32_t procesar_confirmar_pedido(t_confirmar_pedido* info_confirmar_pedido){
 }
 
 uint32_t procesar_plato_listo(t_plato_listo* info_plato_listo){
-	return false;
+	uint32_t ret = false;
+	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
+	if(!existe_tabla_de_segmentos_de_restaurante(info_plato_listo->restaurante))
+		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_plato_listo->restaurante);
+	else{
+		t_segmento* segmento = obtener_segmento_del_pedido(info_plato_listo->id_pedido,info_plato_listo->restaurante);
+		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
+		if(segmento!=NULL){
+			if(segmento->estado_pedido == CONFIRMADO){/*SE VALIDA QUE EL PEDIDO ESTE CONFIRMADO*/
+				t_entrada_pagina* entrada_pagina = obtener_pagina_de_plato(segmento->tabla_paginas, info_plato_listo->plato);
+				/*SE VALIDA SI EL PLATO ESTA EN MEMORIA*/
+				if(entrada_pagina != NULL){
+					t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
+					if(pagina->cant_lista < pagina->cant_total){
+						pagina->cant_lista++;
+						actualizar_bits_de_uso(entrada_pagina);
+						entrada_pagina->modificado = 1;
+						if (pagina->cant_lista == pagina->cant_total)
+							segmento->cant_platos_listos++;
+						if (segmento->cant_platos_listos == list_size(segmento->tabla_paginas))
+							segmento->estado_pedido = TERMINADO;
+						ret = true;
+					}
+					else
+						log_warning(logger,"El plato %s del pedido %d para el restaurante %s ya se encuantra terminado.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
+				}
+				else
+					log_warning(logger,"El plato %s del pedido %d para el restaurante %s no se encuentra en memoria.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
+			}
+			else
+				log_warning(logger,"El pedido %d para el restaurante %s no se encuentra confirmado.",info_plato_listo->id_pedido,info_plato_listo->restaurante);
+		}
+		else
+			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_plato_listo->id_pedido,info_plato_listo->restaurante);
+	}
+	return ret;
 }
 
 uint32_t procesar_finalizar_pedido(t_finalizar_pedido* info_finalizar_pedido){
-	return false;
+	uint32_t ret = false;
+	/*SE VALIDA SI EXISTE LA TABLA DE SEGMENTOS DEL RESTAURANTE*/
+	if(!existe_tabla_de_segmentos_de_restaurante(info_finalizar_pedido->restaurante))
+		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_finalizar_pedido->restaurante);
+	else{
+		t_segmento* segmento = obtener_segmento_del_pedido(info_finalizar_pedido->id_pedido,info_finalizar_pedido->restaurante);
+		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
+		if(segmento!=NULL){
+			for(int i = 0; i < list_size(segmento->tabla_paginas); i++){
+				t_entrada_pagina* entrada_i = list_get(segmento->tabla_paginas, i);
+				if (entrada_i->presencia)
+					free_frame_mp(entrada_i->nro_frame_mp);
+				free_frame_ms(entrada_i->nro_frame_ms);
+				borrar_entrada_en_lista_global(entrada_i);
+			}
+			list_destroy_and_destroy_elements(segmento->tabla_paginas, free);
+			borrar_segmento_del_pedido(info_finalizar_pedido->id_pedido,info_finalizar_pedido->restaurante);
+			ret = true;
+		}
+		else
+			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_finalizar_pedido->id_pedido,info_finalizar_pedido->restaurante);
+	}
+	return ret;
 }
