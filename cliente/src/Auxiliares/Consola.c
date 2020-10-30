@@ -271,8 +271,8 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 				break;
 			}
 			t_confirmar_pedido* msg_confirmar_pedido = calloc(1,sizeof(t_confirmar_pedido));
-			strcpy(msg_confirmar_pedido->restaurante, parametros[2]);
-			msg_confirmar_pedido->id_pedido = atoi(parametros[1]);
+			strcpy(msg_confirmar_pedido->restaurante, parametros[1]);
+			msg_confirmar_pedido->id_pedido = atoi(parametros[2]);
 			log_info(logger, "Parametros a enviar: ID_Pedido: %d, Restaurante: %s", msg_confirmar_pedido->id_pedido, msg_confirmar_pedido->restaurante);
 			enviar_confirmar_pedido(msg_confirmar_pedido, socket_bidireccional, logger);
 			free(msg_confirmar_pedido);
