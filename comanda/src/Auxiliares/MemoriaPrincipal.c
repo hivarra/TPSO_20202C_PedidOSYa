@@ -44,6 +44,7 @@ void _destruir_tabla_segmentos(t_list* tabla_segmentos){
 void liberar_memoria(){
 	free(memoria_fisica);
 	dictionary_destroy_and_destroy_elements(tablas_segmentos, (void*)_destruir_tabla_segmentos);
+	list_destroy(lista_entradas_paginas);
 }
 
 void liberar_memoria_swap(){

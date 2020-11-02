@@ -13,6 +13,7 @@ void signalHandler(int sig){
 
 	liberar_memoria();
 	liberar_memoria_swap();
+	pthread_mutex_destroy(&mutex_swap);
 
 	bitarray_destroy(bitmap_mp);
 	free(reserva_bitmap_mp);

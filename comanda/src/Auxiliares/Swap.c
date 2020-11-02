@@ -20,19 +20,20 @@ void inicializar_memoria_swap(){
 		fclose(memoria_swap);
 	}
 	puntero_clock = 0;
+	pthread_mutex_init(&mutex_swap, NULL);
 }
 
-void volcar_pagina_a_swap(t_entrada_pagina* entrada_pagina){
+void volcar_pagina_a_swap(t_entrada_pagina* entrada_pagina, t_pagina* pagina){
 	FILE* memoria_swap;
 	entrada_pagina->presencia = 0;
-
-	t_pagina* pagina_mp = memoria_fisica+entrada_pagina->nro_frame_mp*sizeof(t_pagina);
 
 	if (entrada_pagina->modificado){
 		memoria_swap = fopen(path_memoria_swap, "r+");
 		fseek(memoria_swap, entrada_pagina->nro_frame_ms*sizeof(t_pagina), SEEK_SET);//Pongo el puntero al archivo sobre el comienzo de la pagina
-		fwrite(pagina_mp, sizeof(t_pagina), 1, memoria_swap);
+		pthread_mutex_lock(&mutex_swap);
+		fwrite(pagina, sizeof(t_pagina), 1, memoria_swap);
 		fclose(memoria_swap);
+		pthread_mutex_unlock(&mutex_swap);
 		entrada_pagina->modificado = 0;
 	}
 }
@@ -41,8 +42,10 @@ void traer_pagina_de_swap(uint32_t frame_mp, t_entrada_pagina* entrada_pagina){
 	FILE* memoria_swap;
 	memoria_swap = fopen(path_memoria_swap, "r");
 	fseek(memoria_swap, entrada_pagina->nro_frame_ms*sizeof(t_pagina), SEEK_SET);//Pongo el puntero al archivo sobre el comienzo de la pagina
+	pthread_mutex_lock(&mutex_swap);
 	fread(memoria_fisica+frame_mp*sizeof(t_pagina), sizeof(t_pagina), 1, memoria_swap);//Copio el frame desde swap a la memoria fisica
 	fclose(memoria_swap);
+	pthread_mutex_unlock(&mutex_swap);
 	entrada_pagina->nro_frame_mp = frame_mp;
 	entrada_pagina->presencia = 1;
 }
@@ -51,8 +54,8 @@ t_entrada_pagina* entrada_uso0_modificado0(){
 	t_entrada_pagina* entrada_buscada = NULL;
 
 	for(int i = 0; i < list_size(lista_entradas_paginas); i++){
-		t_entrada_pagina* entrada_i = list_get(lista_entradas_paginas, 0);
-		if (!entrada_i->uso && !entrada_i->modificado){
+		t_entrada_pagina* entrada_i = list_get(lista_entradas_paginas, i);
+		if (!entrada_i->uso && !entrada_i->modificado && entrada_i->presencia){
 			entrada_buscada = entrada_i;
 			if(i < list_size(lista_entradas_paginas)-1)
 				puntero_clock = i+1;
@@ -68,23 +71,27 @@ t_entrada_pagina* entrada_uso0_modificado1(){
 	t_entrada_pagina* entrada_buscada = NULL;
 
 	for(int i = 0; i < list_size(lista_entradas_paginas); i++){
-		t_entrada_pagina* entrada_i = list_get(lista_entradas_paginas, 0);
-		if (!entrada_i->uso && entrada_i->modificado){
-			entrada_buscada = entrada_i;
-			if(i < list_size(lista_entradas_paginas)-1)
-				puntero_clock = i+1;
+		t_entrada_pagina* entrada_i = list_get(lista_entradas_paginas, i);
+		if (entrada_i->presencia){
+			if (!entrada_i->uso && entrada_i->modificado){
+				entrada_buscada = entrada_i;
+				if(i < list_size(lista_entradas_paginas)-1)
+					puntero_clock = i+1;
+				else
+					puntero_clock = 0;//Si es la ultima entrada, pone el puntero al principio
+				break;
+			}
 			else
-				puntero_clock = 0;//Si es la ultima entrada, pone el puntero al principio
-			break;
+				entrada_i->uso = 0;
 		}
-		else
-			entrada_i->uso = 0;
 	}
 	return entrada_buscada;
 }
 
 void reemplazo_de_pagina(t_entrada_pagina* entrada_pagina){
 	t_entrada_pagina* entrada_pagina_buscada;
+
+	log_info(logger, "[REEMPLAZO]Comienzo de reemplazo de pagina; Posicion de Swap a traer: %d.", entrada_pagina->nro_frame_ms);
 
 	int frame_libre_mp = get_free_frame_mp();
 	if (frame_libre_mp == -1){
@@ -94,7 +101,7 @@ void reemplazo_de_pagina(t_entrada_pagina* entrada_pagina){
 			for (int i = 0; i < list_size(lista_entradas_paginas); i++){
 				t_entrada_pagina* entrada_i = list_get(lista_entradas_paginas, i);
 
-				if (entrada_i->ultimo_uso < oldLRU){
+				if (entrada_i->ultimo_uso < oldLRU && entrada_i->presencia){
 					entrada_pagina_buscada = entrada_i;
 					oldLRU = entrada_i->ultimo_uso;
 				}
@@ -121,12 +128,16 @@ void reemplazo_de_pagina(t_entrada_pagina* entrada_pagina){
 				}
 			}
 		}
-		volcar_pagina_a_swap(entrada_pagina_buscada);
+		t_pagina* pagina_reemplazar = memoria_fisica+entrada_pagina_buscada->nro_frame_mp*sizeof(t_pagina);
+		volcar_pagina_a_swap(entrada_pagina_buscada, pagina_reemplazar);
+		log_info(logger, "[REEMPLAZO]Frame seleccionado: %d (Plato: %s); Posicion de Swap a traer: %d.", entrada_pagina_buscada->nro_frame_mp, pagina_reemplazar, entrada_pagina->nro_frame_ms);
 		traer_pagina_de_swap(entrada_pagina_buscada->nro_frame_mp, entrada_pagina);
 	}
-
-	else
+	else{
+		log_info(logger, "[REEMPLAZO]Frame seleccionado: %d (LIBRE); Posicion de Swap a traer: %d.", frame_libre_mp, entrada_pagina->nro_frame_ms);
 		traer_pagina_de_swap(frame_libre_mp, entrada_pagina);
+	}
+
 }
 
 t_entrada_pagina* buscar_plato_en_swap(t_list* lista_paginas_swap, char* plato){
@@ -137,7 +148,7 @@ t_entrada_pagina* buscar_plato_en_swap(t_list* lista_paginas_swap, char* plato){
 		reemplazo_de_pagina(entrada_pag);
 		t_pagina* pag = memoria_fisica+entrada_pag->nro_frame_mp*sizeof(t_pagina);
 		actualizar_bits_de_uso(entrada_pag);
-		return strcmp(pag->nombre_comida, plato) == 0;
+		return (strcmp(pag->nombre_comida, plato) == 0);
 	}
 
 	entrada_pag_buscada = list_find(lista_paginas_swap, (void*)pagina_swap_contiene_plato);

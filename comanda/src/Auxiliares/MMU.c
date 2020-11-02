@@ -66,7 +66,7 @@ int crear_tabla_de_paginas_de_pedido(t_segmento* segmento_pedido){
 t_segmento* obtener_segmento_del_pedido(uint32_t id_pedido, char* nombre_restaurante){
 	t_list* tabla_segmentos = dictionary_get(tablas_segmentos, nombre_restaurante);
 
-	int existe_pedido_en_segmento(t_segmento* segmento){
+	bool existe_pedido_en_segmento(t_segmento* segmento){
 		return segmento->id_pedido == id_pedido;
 	}
 	return list_find(tabla_segmentos,(void*)existe_pedido_en_segmento);
@@ -75,7 +75,7 @@ t_segmento* obtener_segmento_del_pedido(uint32_t id_pedido, char* nombre_restaur
 void borrar_segmento_del_pedido(uint32_t id_pedido, char* nombre_restaurante){
 	t_list* tabla_segmentos = dictionary_get(tablas_segmentos, nombre_restaurante);
 
-	int existe_pedido_en_segmento(t_segmento* segmento){
+	bool existe_pedido_en_segmento(t_segmento* segmento){
 		return segmento->id_pedido == id_pedido;
 	}
 
@@ -94,10 +94,10 @@ void borrar_entrada_en_lista_global(t_entrada_pagina* entrada_pag){
 t_entrada_pagina* buscar_plato_en_memoria(t_list* lista_paginas_mem,char* plato){
 	t_entrada_pagina* pagina_encontrada = NULL;
 
-	int plato_buscado(t_entrada_pagina* entrada_pagina){
+	bool plato_buscado(t_entrada_pagina* entrada_pagina){
 		t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
 		actualizar_bits_de_uso(entrada_pagina);
-		return strcmp(pagina->nombre_comida,plato) == 0;
+		return (strcmp(pagina->nombre_comida,plato) == 0);
 	}
 	pagina_encontrada = list_find(lista_paginas_mem,(void*)plato_buscado);
 	return pagina_encontrada;
@@ -107,10 +107,10 @@ t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){//T
 	t_entrada_pagina* entrada_pagina = NULL;
 
 	/*SE RECORRE LAS PAGINAS QUE ESTAN EN MP*/
-	int obtener_pag_en_mem(t_entrada_pagina* entrada_pag){
+	bool obtener_pag_en_mem(t_entrada_pagina* entrada_pag){
 		return entrada_pag->presencia;
 	}
-	int obtener_pag_en_swap(t_entrada_pagina* entrada_pag){
+	bool obtener_pag_en_swap(t_entrada_pagina* entrada_pag){
 		return !entrada_pag->presencia;
 	}
 	t_list* lista_pag_mem = list_filter(lista_paginas,(void*)obtener_pag_en_mem);
@@ -184,22 +184,17 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 					/*SI HAY LUGAR EN SWAP, CREO LA ENTRADA DE PAGINA*/
 					t_entrada_pagina* entrada_nueva = inicializar_entrada_pagina();
 					list_add(segmento->tabla_paginas, entrada_nueva);
-					entrada_nueva->nro_frame_ms = free_frame_swap;
-					int free_frame_mp = get_free_frame_mp();
-					if (free_frame_mp != -1){
-						entrada_nueva->nro_frame_mp = free_frame_mp;
-						entrada_nueva->presencia = 1;
-					}
-					else
-						reemplazo_de_pagina(entrada_nueva);//me actualiza el frame_mp y la presencia
-					/*ESCRIBO LA PAGINA Y ACTUALIZO BITS*/
-					t_pagina* pagina = memoria_fisica + entrada_nueva->nro_frame_mp*sizeof(t_pagina);
-					strcpy(pagina->nombre_comida, info_guardar_plato->plato);
-					pagina->cant_total = info_guardar_plato->cantPlato;
-					pagina->cant_lista = 0;
-					actualizar_bits_de_uso(entrada_nueva);
-					entrada_nueva->modificado = 1;
 					list_add(lista_entradas_paginas, entrada_nueva);
+					entrada_nueva->nro_frame_ms = free_frame_swap;
+					entrada_nueva->modificado = 1;
+					/*ESCRIBO LA PAGINA EN SWAP*/
+					t_pagina* pagina_nueva = calloc(1,sizeof(t_pagina));
+					strcpy(pagina_nueva->nombre_comida, info_guardar_plato->plato);
+					pagina_nueva->cant_total = info_guardar_plato->cantPlato;
+					pagina_nueva->cant_lista = 0;
+					volcar_pagina_a_swap(entrada_nueva, pagina_nueva);
+					log_info(logger, "Se almaceno el plato %s en la posicion %d del area de Swap.", pagina_nueva->nombre_comida, free_frame_swap);
+					free(pagina_nueva);
 					ret = true;
 				}
 				else
@@ -337,9 +332,12 @@ uint32_t procesar_finalizar_pedido(t_finalizar_pedido* info_finalizar_pedido){
 		if(segmento!=NULL){
 			for(int i = 0; i < list_size(segmento->tabla_paginas); i++){
 				t_entrada_pagina* entrada_i = list_get(segmento->tabla_paginas, i);
-				if (entrada_i->presencia)
+				if (entrada_i->presencia){
 					free_frame_mp(entrada_i->nro_frame_mp);
+					log_info(logger, "Se elimino el plato que se encontraba en el frame nro. %d de MP.", entrada_i->nro_frame_mp);
+				}
 				free_frame_ms(entrada_i->nro_frame_ms);
+				log_info(logger, "Se elimino el plato que se encontraba en la posicion %d del area de Swap.", entrada_i->nro_frame_ms);
 				borrar_entrada_en_lista_global(entrada_i);
 			}
 			list_destroy_and_destroy_elements(segmento->tabla_paginas, free);

@@ -62,10 +62,10 @@ void cargar_logger_comanda() {
 
 // Auxiliares
 void mostrar_propiedades() {
-	log_info(logger,"Propiedades leidas:");
-	log_info(logger,"Tamanio memoria: %d", config_get_int_value(config, "TAMANIO_MEMORIA"));
-	log_info(logger,"Tamanio swap: %d", config_get_int_value(config, "TAMANIO_SWAP"));
-	log_info(logger,"Algoritmo reemplazo: %s", config_get_string_value(config, "ALGORITMO_REEMPLAZO"));
-	log_info(logger,"Puerto escucha: %s", config_get_string_value(config, "PUERTO_ESCUCHA"));
-	log_info(logger,"Archivo log: %s", config_get_string_value(config, "ARCHIVO_LOG"));
+	log_trace(logger,"Propiedades leidas:");
+	log_trace(logger,"Tamanio memoria: %d", config_get_int_value(config, "TAMANIO_MEMORIA"));
+	log_trace(logger,"Tamanio swap: %d", config_get_int_value(config, "TAMANIO_SWAP"));
+	log_trace(logger,"Algoritmo reemplazo: %s", config_get_string_value(config, "ALGORITMO_REEMPLAZO"));
+	log_trace(logger,"Puerto escucha: %s", config_get_string_value(config, "PUERTO_ESCUCHA"));
+	log_trace(logger,"Archivo log: %s", config_get_string_value(config, "ARCHIVO_LOG"));
 }
