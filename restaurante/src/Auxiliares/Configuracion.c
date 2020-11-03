@@ -72,6 +72,14 @@ void cargar_configuracion_restaurante(char * path_config) {
 	}
 	else
 		restaurante_conf.nombre_restaurante = config_get_string_value(config, "NOMBRE_RESTAURANTE");
+
+	if (!config_has_property(config, "RETARDO_CICLO_CPU")) {
+			puts("Error al leer RETARDO_CICLO_CPU de archivo de configuracion");
+			exit(2);
+		}
+		else
+			restaurante_conf.retardo_ciclo_cpu = config_get_int_value(config, "RETARDO_CICLO_CPU");
+
 }
 
 void cargar_logger_restaurante() {
@@ -100,4 +108,5 @@ void mostrar_propiedades() {
 	log_info(logger,"Algoritmo planificacion: %s", config_get_string_value(config, "ALGORITMO_PLANIFICACION"));
 	log_info(logger,"Nombre restaurante: %s", restaurante_conf.nombre_restaurante);
 	log_info(logger,"Archvo log: %s", config_get_string_value(config, "ARCHIVO_LOG"));
+	log_info(logger,"Retardo ciclo cpu:%d",restaurante_conf.retardo_ciclo_cpu);
 }

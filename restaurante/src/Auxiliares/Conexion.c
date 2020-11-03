@@ -118,8 +118,8 @@ void iniciar_conexiones_app(){
 	if (socket_envio != -1){
 		t_socket_envio* param_socket_envio = calloc(1,sizeof(t_socket_envio));
 		strcpy(param_socket_envio->id, restaurante_conf.nombre_restaurante);
-		param_socket_envio->posX = restaurante_conf.posX;
-		param_socket_envio->posY = restaurante_conf.posY;
+		param_socket_envio->posX = metadata_restaurante->pos_x;
+		param_socket_envio->posY = metadata_restaurante->pos_y;
 		param_socket_envio->tipoProceso = RESTAURANTE;
 		enviar_socket_envio(param_socket_envio, socket_envio, logger);
 		free(param_socket_envio);
@@ -168,12 +168,13 @@ void obtener_restaurante(){
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
 		if(tipo_mensaje == RTA_OBTENER_RESTAURANTE){
 			t_rta_obtener_restaurante* info_restaurante = recibir_rta_obtener_restaurante(socket_new, logger);
-			restaurante_conf.posX = info_restaurante->posX;
-			restaurante_conf.posY = info_restaurante->posY;
-			restaurante_conf.cantidad_hornos = info_restaurante->cantHornos;
-			id_pedido_actual = info_restaurante->cantPedidos;
-			cocineros_restaurante = info_restaurante->cocineros;
-			platos_restaurante = info_restaurante->platos;
+			metadata_restaurante = malloc(sizeof(t_metadata_restaurante));
+			metadata_restaurante->pos_x = info_restaurante->posX;
+			metadata_restaurante->pos_y = info_restaurante->posY;
+			metadata_restaurante->cantidad_hornos = info_restaurante->cantHornos;
+			metadata_restaurante->cantidad_pedidos = info_restaurante->cantPedidos;
+			metadata_restaurante->cocineros = info_restaurante->cocineros;
+			metadata_restaurante->platos = info_restaurante->platos;
 			log_info(logger, "[Obtener Restaurante] Se obtuvo la metadata desde Sindicato");
 			free(info_restaurante);
 			close(socket_new);

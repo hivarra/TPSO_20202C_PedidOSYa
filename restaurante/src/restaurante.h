@@ -14,5 +14,4 @@
 #include "Auxiliares/Planificador.h"
 #include "Auxiliares/Utils.h"
 
-
 #endif /* RESTAURANTE_H_ */
