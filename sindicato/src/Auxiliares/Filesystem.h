@@ -2,31 +2,17 @@
 #ifndef AUXILIARES_FILESYSTEM_H_
 #define AUXILIARES_FILESYSTEM_H_
 
-#include "../sindicato.h"
-#include "shared.h"
+typedef struct{
+	int initial_block;
+	int size;
+}t_metadata;
+
+#include <sys/mman.h>
+#include <fcntl.h>
 #include <commons/bitarray.h>
+#include "../sindicato.h"
 
-typedef struct {
-	uint32_t initial_block;
-	uint32_t size;
-} t_metadata;
-
-typedef struct{
-	char* nombreRestaurante;
-	char* cantidadCocineros;
-	char* posicion;
-	char* afinidadCocineros;
-	char* platos;
-	char* preciosPlatos;
-	char* cantidadHornos;
-}t_crear_restaurante;
-
-typedef struct{
-	char* nombre;
-	char* pasos;
-	char* tiempoPasos;
-}t_crear_receta;
-
+pthread_mutex_t mutex_bitmap;
 int tamanio_bloques;
 int cantidad_bloques;
 char* bmap;
@@ -36,20 +22,13 @@ char* ruta_bloques;
 char* ruta_restaurantes;
 char* ruta_recetas;
 
-
-void montarFileSystem();
-void crearBitmap();
-void crearDirectorio(char *path);
-void crearDirectorioFiles();
-void crearDirectorioRestaurantes();
-void crearDirectorioRecetas();
-void crearDirectorioBloques();
-void crearMetadataDirectorio(char* ruta);
-void crearMetadataGlobal();
-void crearRestaurante(t_crear_restaurante* argsCrearRestaurante);
-void crearReceta(t_crear_receta* argsCrearReceta);
-void generarBloques();
-int existeDirectorio(char *path);
-
+void montarFileSystem(void);
+int existeDirectorio(char*);
+void crearDirectorio(char*);
+int existeFile(char*);//Si exite por ej un Restaurante/Info.AFIP
+void persistirDatos(char* buffer, int* arrayBloques);
+void crearMetadataArchivo(char* path, t_metadata* mData);
+t_metadata* leerMetadataArchivo(char* path);
+int actualizarSizeMetadataArchivo(char* path, int newSize);
 
 #endif /* AUXILIARES_FILESYSTEM_H_ */

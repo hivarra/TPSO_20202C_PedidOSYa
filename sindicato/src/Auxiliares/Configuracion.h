@@ -2,22 +2,13 @@
 #define CONFIGURACION_H_
 
 #include <shared.h>
-#include "Logueo.h"
 
-typedef struct {
-	char* punto_montaje;
-	uint32_t puerto_escucha;
-	uint32_t block_size;
-	uint32_t blocks;
-	char* magic_number;
-} t_sindicato_config;
-
-
-t_sindicato_config sindicato_conf;
 t_config *config;
+t_log* logger;
 
-void cargarConfigSindicato(char* path);
-void mostrar_propiedades();
+void cargarConfigSindicato(char*);
+void cargar_logger_sindicato(void);
+void mostrar_propiedades(void);
 
 
 #endif /* CONFIGURACION_H_ */

@@ -10,93 +10,98 @@ void connection_handler(int* socket_emisor) {
 		pthread_exit(NULL);
 	}
 
-	log_info(logger, "Se recibe tipo de mensaje: %s",
+	log_trace(logger, "Se recibe tipo de mensaje: %s",
 			get_nombre_mensaje(tipo_mensaje));
 
 	switch (tipo_mensaje) {
 
 	case HANDSHAKE: {
-
 		recibir_mensaje_vacio(*socket_emisor, logger);
 		uint32_t miTipoProceso = SINDICATO;
 		enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_emisor, logger);
 		break;
 	}
-
 	case CONSULTAR_PLATOS: {
 		char* restaurante = recibir_consultar_platos(*socket_emisor, logger);
-		log_info(logger, "Se recibe CONSULTAR_PLATOS de Restaurante:%s", restaurante);
-//		t_rta_consultar_platos* rta_consultar_platos = procesar_consultar_platos();
-//		enviar_rta_consultar_platos(rta_consultar_platos, *socket_emisor,logger);
-//		free(rta_consultar_platos);
+		log_trace(logger, "Restaurante: %s", restaurante);
+		t_rta_consultar_platos* respuesta = procesar_consultar_platos(restaurante);
 		free(restaurante);
+		enviar_rta_consultar_platos(respuesta, *socket_emisor, logger);
+		list_destroy_and_destroy_elements(respuesta->platos, free);
+		free(respuesta);
 		break;
 	}
-
 	case GUARDAR_PEDIDO: {
-
-		t_guardar_pedido* pedido = recibir_guardar_pedido(*socket_emisor, logger);
-		free(pedido);
-
+		t_guardar_pedido* msg_guardar_pedido = recibir_guardar_pedido(*socket_emisor, logger);
+		log_trace(logger, "Restaurante: %s, ID_Pedido: %d", msg_guardar_pedido->restaurante, msg_guardar_pedido->id_pedido);
+		uint32_t resultado_guardar_pedido = procesar_guardar_pedido(msg_guardar_pedido);
+		free(msg_guardar_pedido);
+		enviar_entero(RTA_GUARDAR_PEDIDO, resultado_guardar_pedido, *socket_emisor, logger);
 		break;
 	}
-
 	case GUARDAR_PLATO: {
-
-		t_guardar_plato* recibido = recibir_guardar_plato(*socket_emisor,
-				logger);
+		t_guardar_plato* recibido = recibir_guardar_plato(*socket_emisor, logger);
+		log_trace(logger, "Restaurante: %s, ID_Pedido: %d, Plato: %s, Cant: %d", recibido->restaurante, recibido->id_pedido, recibido->plato, recibido->cantPlato);
+		uint32_t resultado_guardar_plato = procesar_guardar_plato(recibido);
 		free(recibido);
+		enviar_entero(RTA_GUARDAR_PLATO, resultado_guardar_plato, *socket_emisor, logger);
 		break;
 	}
-
 	case CONFIRMAR_PEDIDO: {
-
-		t_confirmar_pedido* recibido = recibir_confirmar_pedido(*socket_emisor,
-				logger);
+		t_confirmar_pedido* recibido = recibir_confirmar_pedido(*socket_emisor, logger);
+		log_trace(logger, "Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
+		uint32_t resultado = procesar_confirmar_pedido(recibido);
 		free(recibido);
+		enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, *socket_emisor, logger);
 		break;
 	}
-
 	case OBTENER_PEDIDO: {
-		t_obtener_pedido* recibido = recibir_obtener_pedido(*socket_emisor,
-				logger);
+		t_obtener_pedido* recibido = recibir_obtener_pedido(*socket_emisor, logger);
+		log_trace(logger, "Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
+		t_rta_obtener_pedido* respuesta = procesar_obtener_pedido(recibido);
 		free(recibido);
+		enviar_rta_obtener_pedido(respuesta, *socket_emisor, logger);
+		list_destroy_and_destroy_elements(respuesta->comidas, free);
+		free(respuesta);
 		break;
 	}
-
 	case OBTENER_RESTAURANTE: {
-
 		char* restaurante = recibir_obtener_restaurante(*socket_emisor, logger);
+		log_trace(logger, "Restaurante: %s", restaurante);
+		t_rta_obtener_restaurante* respuesta = procesar_obtener_restaurante(restaurante);
 		free(restaurante);
-
+		enviar_rta_obtener_restaurante(respuesta, *socket_emisor, logger);
+		free(respuesta);
 		break;
 	}
-
 	case PLATO_LISTO: {
-
 		t_plato_listo* recibido = recibir_plato_listo(*socket_emisor, logger);
+		log_trace(logger, "Restaurante: %s, ID_Pedido: %d, Plato: %s", recibido->restaurante, recibido->id_pedido, recibido->plato);
+		uint32_t resultado = procesar_plato_listo(recibido);
 		free(recibido);
+		enviar_entero(RTA_PLATO_LISTO, resultado, *socket_emisor, logger);
 		break;
 	}
-
 	case OBTENER_RECETA: {
-		char* plato = recibir_terminar_pedido(*socket_emisor, logger);
+		char* plato = recibir_obtener_receta(*socket_emisor, logger);
+		log_trace(logger, "Plato: %s", plato);
+		t_rta_obtener_receta* respuesta = procesar_obtener_receta(plato);
 		free(plato);
+		enviar_rta_obtener_receta(respuesta, *socket_emisor, logger);
+		free(respuesta);
 		break;
 	}
 	case TERMINAR_PEDIDO: {
-
-		t_terminar_pedido* recibido = recibir_terminar_pedido(*socket_emisor,
-				logger);
+		t_terminar_pedido* recibido = recibir_terminar_pedido(*socket_emisor, logger);
+		log_trace(logger, "Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
+		uint32_t resultado = procesar_terminar_pedido(recibido);
 		free(recibido);
+		enviar_entero(RTA_TERMINAR_PEDIDO, resultado, *socket_emisor, logger);
 		break;
 	}
-
 	default:
-		log_error(logger, "El tipo de mensaje %s no es admitido por COMANDA",
-				get_nombre_mensaje(tipo_mensaje));
+		log_error(logger, "El tipo de mensaje %s no es admitido por SINDICATO.", get_nombre_mensaje(tipo_mensaje));
 		break;
-
 	}
 	close(*socket_emisor);
 	free(socket_emisor);
@@ -120,8 +125,6 @@ void esperar_cliente(int socket_servidor) {
 }
 
 void escuchar_conexiones_sindicato() {
-
-	int socket_servidor;
 
 	struct addrinfo hints, *servinfo, *p;
 
@@ -149,33 +152,8 @@ void escuchar_conexiones_sindicato() {
 
 	freeaddrinfo(servinfo);
 
-	log_info(logger, "SERVIDOR | Escuchando conexiones");
+	log_trace(logger, "SERVIDOR | Escuchando conexiones");
 
 	while (1)
 		esperar_cliente(socket_servidor);
-}
-
-void escuchar__conexiones_sindicato() {
-	/*Abro socket*/
-	socket_sindicato = definirSocket(logger);
-	/*Bind & Listen*/
-	if (bindearSocketYEscuchar(socket_sindicato, IP_SINDICATO,
-			atoi(config_get_string_value(config, "PUERTO_ESCUCHA")), logger)
-			<= 0)
-		_exit_with_error("BIND", NULL, logger);
-
-	/*Atiendo solicitudes creando un hilo para cada una*/
-	while (1) {
-		pthread_t hilo_conexion;
-		int* new_sock = malloc(sizeof(int));
-
-		*new_sock = aceptarConexiones(socket_sindicato, logger);
-
-		if (new_sock < 0)
-			log_error(logger, "Error al realizar ACCEPT.\n");
-
-		pthread_create(&hilo_conexion, NULL, (void*) connection_handler,
-				new_sock);
-		pthread_detach(hilo_conexion);
-	}
 }

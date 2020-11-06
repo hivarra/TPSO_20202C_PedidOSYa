@@ -21,19 +21,18 @@ int main(int argc, char **argv) {
 	cargarConfigSindicato(path_config);
 
 	/* 2. Log */
-	char* path_log = getLogPath(PATH_LOG);
-	logger = configurar_logger(path_log, "sindicato");
+	cargar_logger_sindicato();
 	mostrar_propiedades();
 
 	/* 3. File System */
 	montarFileSystem();
 
-	/* 4. Hilos */
-	crearHiloConsola();
-	/* 5. Escuchando conexiones*/
-//	escuchar_conexiones_sindicato();
+	/* 4. Crear hilo para consola */
+	pthread_create(&thread_consola, NULL, (void*)crear_consola, NULL);
+	pthread_detach(thread_consola);
 
-	pthread_join(thread_consola,NULL);
+	/* 5. Escuchando conexiones*/
+	escuchar_conexiones_sindicato();
 
 	destruir_config(config);
 	destruir_logger(logger);

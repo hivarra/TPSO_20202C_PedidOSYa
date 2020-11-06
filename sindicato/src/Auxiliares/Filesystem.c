@@ -1,427 +1,282 @@
 #include "Filesystem.h"
 
-#define BLOCK_SIZE 64
-#define BLOCKS 5192
-#define MAGIC_NUMBER "AFIP"
+/*Declaracion de funciones privadas*/
+void crearBitmap(void);
+void leerBitmap(void);
+void crearDirectorio(char*);
+void crearMetadataGlobal();
+void crearDirectorioFiles(void);
+void crearDirectorioRestaurantes(void);
+void crearDirectorioRecetas(void);
+void crearDirectorioBloques(void);
+void generarBloques();
 
-void leerBitmap(){
-	char* rutaBitmap = string_new();
-	string_append(&rutaBitmap, sindicato_conf.punto_montaje);
-	string_append(&rutaBitmap, "/Metadata");
-	string_append(&rutaBitmap, "/Bitmap.bin");
-
-	int fd = open(rutaBitmap, O_RDWR);
-	bmap = mmap(NULL, cantidad_bloques / 8, PROT_WRITE | PROT_READ, MAP_SHARED,
-			fd, 0);
-	bitmap = (void*)&bmap;
-	msync(bmap,cantidad_bloques / 8, MS_SYNC); // Para sincronizar el bitmap con el archivo físico.
-
-	struct stat mystat;
-	if (fstat(fd, &mystat) < 0) {
-		log_error(logger, "Error al establecer fstat");
-	}
-	fstat(fd, &mystat);
-
-	log_info(logger, "Bitmap leido");
-	close(fd);
-	free(rutaBitmap);
-}
 void montarFileSystem() {
 
-	if (!existeDirectorio(sindicato_conf.punto_montaje)) {
+	char* path_metadata = string_from_format("%s/Metadata/Metadata.AFIP", config_get_string_value(config, "PUNTO_MONTAJE"));
+	FILE* f_metadata = fopen(path_metadata, "r");
 
-		crearDirectorio(sindicato_conf.punto_montaje);
+	if (f_metadata != NULL){
+		fclose(f_metadata);
+		t_config* metadata_global = config_create(path_metadata);
+		tamanio_bloques = config_get_int_value(metadata_global, "BLOCK_SIZE");
+		cantidad_bloques = config_get_int_value(metadata_global, "BLOCKS");
+		leerBitmap();
+		ruta_bloques = string_from_format("%s/Blocks/", config_get_string_value(config, "PUNTO_MONTAJE"));
+		ruta_files = string_from_format("%s/Files/", config_get_string_value(config, "PUNTO_MONTAJE"));
+		ruta_restaurantes = string_from_format("%s/Restaurantes/", ruta_files);
+		ruta_recetas = string_from_format("%s/Recetas/", ruta_files);
+		log_trace(logger,"Blocks: %d", cantidad_bloques);
+		log_trace(logger,"Block size: %d", tamanio_bloques);
+		log_trace(logger,"Magic number: %s", config_get_string_value(metadata_global, "MAGIC_NUMBER"));
+		log_trace(logger, "File System AFIP: Se leyo el FS existente.");
+		config_destroy(metadata_global);
+	}
+	else{
+		crearDirectorio(config_get_string_value(config, "PUNTO_MONTAJE"));
 		crearMetadataGlobal();
 		crearBitmap();
+		crearDirectorioBloques();
+		generarBloques();
 		crearDirectorioFiles();
 		crearDirectorioRestaurantes();
 		crearDirectorioRecetas();
-		crearDirectorioBloques();
-		generarBloques();
-
-		log_info(logger, "File System: Creación finalizada");
-
-	} else {
-		/*TODO:BUG:SI YA EXISTE, DEBE ASIGNAR EL BITMAP YA CREADO*/
-		ruta_files = string_new();
-		string_append(&ruta_files, sindicato_conf.punto_montaje);
-		string_append(&ruta_files, "/Files/");
-
-		leerBitmap();
-
-//		char* rutaBitmap = string_new();
-//		string_append(&rutaBitmap, sindicato_conf.punto_montaje);
-//		string_append(&rutaBitmap, "/Metadata");
-//		string_append(&rutaBitmap, "/Bitmap.bin");
-
-		ruta_bloques = string_new();
-		string_append(&ruta_bloques, sindicato_conf.punto_montaje);
-		string_append(&ruta_bloques, "/Blocks/");
-
-		tamanio_bloques = sindicato_conf.block_size;
-		cantidad_bloques = sindicato_conf.blocks;
-
-		log_info(logger, "File System: Ya existe");
+		log_trace(logger,"Blocks: %d", cantidad_bloques);
+		log_trace(logger,"Block size: %d", tamanio_bloques);
+		log_trace(logger,"Magic number: %s", config_get_string_value(config, "MAGIC_NUMBER"));
+		log_trace(logger, "File System AFIP: Creación finalizada.");
 	}
-
+	free(path_metadata);
 }
+
 void crearBitmap() {
 
-	char* rutaBitmap = string_new();
-	string_append(&rutaBitmap, sindicato_conf.punto_montaje);
-	string_append(&rutaBitmap, "/Metadata");
-	string_append(&rutaBitmap, "/Bitmap.bin");
+	char* rutaBitmap = string_from_format("%s/Metadata/Bitmap.bin", config_get_string_value(config, "PUNTO_MONTAJE"));
 
-	FILE *file = fopen(rutaBitmap, "w");
-	fclose(file);
-	int fd = open(rutaBitmap, O_RDWR);
-	ftruncate(fd, (cantidad_bloques / 8) + 1);
-	bmap = mmap(NULL, cantidad_bloques / 8, PROT_WRITE | PROT_READ, MAP_SHARED,
-			fd, 0);
-	bitmap = bitarray_create_with_mode(bmap, cantidad_bloques / 8, MSB_FIRST);
-	msync(bmap, cantidad_bloques / 8, MS_SYNC); // Para sincronizar el bitmap con el archivo físico.
-
-	struct stat mystat;
-	if (fstat(fd, &mystat) < 0) {
-		log_error(logger, "Error al establecer fstat");
-	}
-	fstat(fd, &mystat);
-
-	log_info(logger, "Bitmap generado");
-	close(fd);
+	int bitarray_fd = open(rutaBitmap, O_RDWR | O_CREAT, 0777);
 	free(rutaBitmap);
 
+	if (bitarray_fd == -1){
+		puts("No se pudo crear el fichero del bitarray.");
+		exit(-1);
+	}
+
+	ftruncate(bitarray_fd, cantidad_bloques/8);
+
+	bmap = mmap(NULL, cantidad_bloques/8, PROT_READ | PROT_WRITE, MAP_SHARED, bitarray_fd, 0);
+	close(bitarray_fd);
+
+	if (bmap == MAP_FAILED) {
+		puts("No se pudo mapear el fichero del bitarray.");
+		exit(-1);
+	}
+
+	bitmap = bitarray_create_with_mode(bmap, cantidad_bloques/8, LSB_FIRST);
+
+	for(int i = 0; i < cantidad_bloques; i++){
+		 bitarray_clean_bit(bitmap, i);
+	}
+
+	if (msync(bmap, cantidad_bloques/8, MS_SYNC) == -1)
+		log_warning(logger, "No se pudo actualizar el bitmap.");
+
+	pthread_mutex_init(&mutex_bitmap, NULL);
+}
+
+void leerBitmap(){
+
+	char* rutaBitmap = string_from_format("%s/Metadata/Bitmap.bin", config_get_string_value(config, "PUNTO_MONTAJE"));
+
+	int bitarray_fd = open(rutaBitmap, O_RDWR, 0777);
+	free(rutaBitmap);
+
+	if (bitarray_fd == -1){
+		puts("No se pudo leer el fichero del bitarray.");
+		exit(-1);
+	}
+
+	bmap = mmap(NULL, cantidad_bloques/8, PROT_READ | PROT_WRITE, MAP_SHARED, bitarray_fd, 0);
+	close(bitarray_fd);
+
+	if (bmap == MAP_FAILED) {
+		puts("No se pudo mapear el fichero del bitarray.");
+		exit(-1);
+	}
+
+	bitmap = (void*)&bmap;
+
+	if (msync(bmap, cantidad_bloques/8, MS_SYNC) == -1)
+		log_warning(logger, "No se pudo actualizar el bitmap.");
+
+	pthread_mutex_init(&mutex_bitmap, NULL);
 }
 
 void crearDirectorioFiles() {
 
-	ruta_files = string_new();
-	string_append(&ruta_files, sindicato_conf.punto_montaje);
-	string_append(&ruta_files, "/Files/");
+	ruta_files = string_from_format("%s/Files/", config_get_string_value(config, "PUNTO_MONTAJE"));
 	crearDirectorio(ruta_files);
-	log_info(logger, "Ruta Files creada.");
 }
 
 void crearDirectorioRestaurantes() {
 
-	ruta_restaurantes = string_new();
-	string_append(&ruta_restaurantes, ruta_files);
-	string_append(&ruta_restaurantes, "/Restaurantes/");
+	ruta_restaurantes = string_from_format("%s/Restaurantes/", ruta_files);
 	crearDirectorio(ruta_restaurantes);
 }
 
 void crearDirectorioRecetas() {
 
-	ruta_recetas = string_new();
-	string_append(&ruta_recetas, ruta_files);
-	string_append(&ruta_recetas, "/Recetas/");
+	ruta_recetas = string_from_format("%s/Recetas/", ruta_files);
 	crearDirectorio(ruta_recetas);
 }
 
 void crearDirectorioBloques() {
-	ruta_bloques = string_new();
-	string_append(&ruta_bloques, sindicato_conf.punto_montaje);
-	string_append(&ruta_bloques, "/Blocks/");
+	ruta_bloques = string_from_format("%s/Blocks/", config_get_string_value(config, "PUNTO_MONTAJE"));
 	crearDirectorio(ruta_bloques);
-	log_info(logger, "Ruta Blocks creada.");
-}
-
-void crearDirectorio(char *path) {
-
-	struct stat st = { 0 };
-
-	if (stat(path, &st) == -1) {
-		if (mkdir(path, 0777) == -1) {
-			perror("mkdir");
-			log_error(logger, "CREAR_DIR: ERROR. PERMISOS %s", path);
-		}
-	} else {
-//		log_info(logger, "CREAR_DIR: WARNING. YA EXISTE %s", path);
-	}
-
-}
-/*TODO: DEPRECATED FUNCTION?? SI NO ES NECESARIO ELIMINARLO*/
-void crearMetadataDirectorio(char* ruta) {
-
-	char* ruta_archivo = string_from_format("%s/Metadata.AFIP", ruta);
-	FILE* fp = fopen(ruta_archivo, "w");
-	char* contenido = string_new();
-	string_append(&contenido, "DIRECTORY=Y");
-
-	fputs(contenido, fp);
-	free(contenido);
-	free(ruta_archivo);
-	fclose(fp);
-
-}
-
-void crearMetadataGlobal() {
-
-	char* rutaMetadata = string_new();
-	string_append(&rutaMetadata, sindicato_conf.punto_montaje);
-	string_append(&rutaMetadata, "/Metadata/");
-
-	crearDirectorio(rutaMetadata);
-	string_append(&rutaMetadata, "Metadata.AFIP");
-
-	FILE *file = fopen(rutaMetadata, "w");
-	char* buffer = string_new();
-
-	string_append(&buffer, "BLOCK_SIZE=");
-	string_append(&buffer, string_itoa(sindicato_conf.block_size));
-	tamanio_bloques = sindicato_conf.block_size;
-	string_append(&buffer, "\n");
-
-	string_append(&buffer, "BLOCKS=");
-	string_append(&buffer, string_itoa(sindicato_conf.blocks));
-	cantidad_bloques = sindicato_conf.blocks;
-	string_append(&buffer, "\n");
-
-	string_append(&buffer, "MAGIC_NUMBER=");
-	string_append(&buffer, sindicato_conf.magic_number);
-	string_append(&buffer, "\n");
-
-	fputs(buffer, file);
-	log_info(logger, "Metadata global cargada");
-
-	fclose(file);
-	free(rutaMetadata);
-
-}
-int existeRestaurante(char* nombreRestaurante){
-	char *ruta_pokemon = string_from_format("%s%s", ruta_files, nombreRestaurante);
-	log_info(logger, "Ruta: %s", ruta_pokemon);
-	FILE *fp = fopen(ruta_pokemon, "r");
-	free(ruta_pokemon);
-
-	if (fp) {
-		fclose(fp);
-		return 1;
-	} else {
-		return 0;
-	}
-}
-char* generarContenidoRestauranteEnBloques(t_crear_restaurante* argsCrearRestaurante) {
-	char* buffer = string_from_format("CANTIDAD_COCINEROS=%s\nPOSICION=%s\nAFINIDAD_COCINEROS=%s\nRECETAS=%s\nPRECIO_RECETAS=%s\nCANTIDAD_HORNOS=%s",
-			argsCrearRestaurante->cantidadCocineros,
-			argsCrearRestaurante->posicion,
-			argsCrearRestaurante->afinidadCocineros,
-			argsCrearRestaurante->platos,
-			argsCrearRestaurante->preciosPlatos,
-			argsCrearRestaurante->cantidadHornos);
-	return buffer;
-}
-char* generarContenidoRecetaEnBloques(t_crear_receta* argsCrearReceta) {
-	char* buffer = string_from_format("PASOS=%s\nTIEMPO_PASOS=%s",
-			argsCrearReceta->pasos,
-			argsCrearReceta->tiempoPasos);
-	return buffer;
-}
-int calcularBloquesNecesarios(int bytes) {
-	int aux = (bytes / tamanio_bloques);
-	return (bytes % tamanio_bloques == 0) ? aux : (aux + 1);
-}
-int asignarBloqueLibre() {
-
-	size_t sizeBitmap = bitarray_get_max_bit(bitmap);
-	int bloque = 1;
-	int count = 0;
-
-	while(count < sizeBitmap && bloque != -1) {
-
-		if(bitarray_test_bit(bitmap, count ) == 0) {
-			bitarray_set_bit(bitmap, count);
-			log_info(logger,"Bloque asignado: %d", count);
-			bloque = count;
-			return bloque;
-		}
-		count ++;
-	}
-
-	return bloque;
-}
-void escribirBloque(int bloque, char* buff) {
-
-	log_info(logger, "Bloque a escribir: %d", bloque);
-	log_info(logger, "Contenido a escribir: %s", buff);
-	char* archivo = string_from_format("%s%d%s", ruta_bloques,bloque,".AFIP");
-	FILE* fp = fopen(archivo, "w");
-	fputs(buff, fp);
-	fseek(fp,string_length(buff)+1,SEEK_SET);
-	uint32_t uBloque = bloque;
-	fprintf(fp, "%d", uBloque);
-	fclose(fp);
-
-}
-void persistirDatos(char* contenido, char* str_bloques, int cant_bloques) {
-
-	char* buffer;
-	int inicio_str = 0;
-	char** arr_bloques = string_get_string_as_array(str_bloques);
-
-	if(cant_bloques == 0){
-		cant_bloques = 1;
-	}
-	for(int i=1; i <= cant_bloques; i++) {
-
-		buffer = string_substring(contenido, inicio_str, tamanio_bloques-4);
-		int bloque = atoi(arr_bloques[i-1]);
-		escribirBloque(bloque, buffer);
-		inicio_str += tamanio_bloques-4;
-		free(arr_bloques[i-1]);
-	}
-	free(arr_bloques);
-}
-void crearMetadataArchivo(char* ruta, t_metadata* metadata) {
-//	log_info(logger, "%s", ruta_archivo);
-	FILE* fp = fopen(ruta, "w");
-	char* contenido = string_new();
-	string_append(&contenido, "SIZE=");
-	string_append(&contenido, string_itoa(metadata->size));
-	string_append(&contenido, "\n");
-	string_append(&contenido, "INITIAL_BLOCK=");
-	string_append(&contenido, string_itoa(metadata->initial_block));
-
-//	log_info(logger, "Contenido Metadata: %s", contenido);
-
-	fputs(contenido, fp);
-	free(contenido);
-	fclose(fp);
-}
-void crearRestaurante(t_crear_restaurante* argsCrearRestaurante) {
-	/*0.Se valida si ya existe el restaurante*/
-	if(existeRestaurante(argsCrearRestaurante->nombreRestaurante))
-		log_info(logger, "El restaurante:%s ya existe en el FileSystem Sindicato",argsCrearRestaurante->nombreRestaurante);
-	else{
-		// 1. Creo directorio con nombre restaurante
-		char* ruta_restaurante = string_new();
-		string_append(&ruta_restaurante, ruta_files);
-		string_append(&ruta_restaurante, "Restaurantes/");
-		string_append(&ruta_restaurante, argsCrearRestaurante->nombreRestaurante);
-		log_info(logger, "RUTA: %s", ruta_restaurante);
-		crearDirectorio(ruta_restaurante);
-		// 2. Armar buffer a escribir
-		char* linea = generarContenidoRestauranteEnBloques(argsCrearRestaurante);
-		log_info(logger, "Linea a escribir: %s", linea);
-		// 3. Calcular size buffer/archivo
-		int tamanio = string_length(linea);
-		log_info(logger, "Tamanio info: %d", tamanio);
-		// 4. Calcular cantidad de bloques necesarios
-		int bloques_necesarios = calcularBloquesNecesarios(tamanio);
-		log_info(logger, "Bloques necesarios: %d", bloques_necesarios);
-		// 5. Pido los bloques que necesito y genero el string de tipo [1,2,3]
-		char* str_bloques = string_new();
-		string_append(&str_bloques, "[");
-		int bloqueInicial;
-		for(int i=1; i <= bloques_necesarios; i++) {
-			int bloque = asignarBloqueLibre();
-			if(i==1)
-				bloqueInicial = bloque;
-			char* str_bloque = (i == bloques_necesarios) ? string_from_format("%d]", bloque) : string_from_format("%d,", bloque);
-			string_append(&str_bloques, str_bloque);
-		}
-		log_info(logger, "Bloques: %s", str_bloques);
-
-		// 6. Guardo la información en los bloques
-		persistirDatos(linea, str_bloques, bloques_necesarios);
-
-		// 7. Creo info.AFIP
-		t_metadata* metadata = malloc(sizeof(t_metadata));
-		metadata->initial_block = bloqueInicial;
-		metadata->size = tamanio;
-
-		string_append(&ruta_restaurante,"/info.AFIP");
-		crearMetadataArchivo(ruta_restaurante, metadata);
-//			aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
-
-		free(metadata);
-		free(linea);
-		free(ruta_restaurante);
-
-		log_info(logger, "Restaurante:%s creado", argsCrearRestaurante->nombreRestaurante);
-	}
-}
-void crearReceta(t_crear_receta* argsCrearReceta){
-	/*0.Se valida si ya existe la receta*/
-	if(existeRestaurante(argsCrearReceta->nombre))
-		log_info(logger, "La receta:%s ya existe en el FileSystem Sindicato",argsCrearReceta->nombre);
-	else{
-		// 1. Creo directorio con nombre de la receta
-		char* ruta_receta = string_new();
-		string_append(&ruta_receta, ruta_files);
-		string_append(&ruta_receta, "Recetas/");
-		string_append(&ruta_receta, argsCrearReceta->nombre);
-		log_info(logger, "RUTA: %s", ruta_receta);
-		crearDirectorio(ruta_receta);
-		// 2. Armar buffer a escribir
-		char* linea = generarContenidoRecetaEnBloques(argsCrearReceta);
-		log_info(logger, "Linea a escribir: %s", linea);
-		// 3. Calcular size buffer/archivo
-		int tamanio = string_length(linea);
-		log_info(logger, "Tamanio info: %d", tamanio);
-		// 4. Calcular cantidad de bloques necesarios
-		int bloques_necesarios = calcularBloquesNecesarios(tamanio);
-		log_info(logger, "Bloques necesarios: %d", bloques_necesarios);
-		// 5. Pido los bloques que necesito y genero el string de tipo [1,2,3]
-		char* str_bloques = string_new();
-		string_append(&str_bloques, "[");
-		int bloqueInicial;
-		for(int i=1; i <= bloques_necesarios; i++) {
-			int bloque = asignarBloqueLibre();
-			if(i==1)
-				bloqueInicial = bloque;
-			char* str_bloque = (i == bloques_necesarios) ? string_from_format("%d]", bloque) : string_from_format("%d,", bloque);
-			string_append(&str_bloques, str_bloque);
-		}
-		log_info(logger, "Bloques: %s", str_bloques);
-
-		// 6. Guardo la información en los bloques
-		persistirDatos(linea, str_bloques, bloques_necesarios);
-
-		// 7. Creo nombreReceta.AFIP
-		t_metadata* metadata = malloc(sizeof(t_metadata));
-		metadata->initial_block = bloqueInicial;
-		metadata->size = tamanio;
-		string_append(&ruta_receta,"/");
-		string_append(&ruta_receta,argsCrearReceta->nombre);
-		string_append(&ruta_receta,".AFIP");
-		crearMetadataArchivo(ruta_receta, metadata);
-//			aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
-
-		free(metadata);
-		free(linea);
-		free(ruta_receta);
-
-		log_info(logger, "Receta:%s creada", argsCrearReceta->nombre);
-	}
 }
 
 void generarBloques() {
 
-	for (int i = 0; i <= cantidad_bloques; i++) {
+	for (int i = 1; i <= cantidad_bloques; i++) {
 
-		char* nombre_bloque = string_new();
-		string_append(&nombre_bloque, ruta_bloques);
-		string_append(&nombre_bloque, string_itoa(i));
-		string_append(&nombre_bloque, ".AFIP");
+		char* nombre_bloque_i = string_from_format("%s%d.AFIP", ruta_bloques, i);
 
-		FILE *fp = fopen(nombre_bloque, "w");
-		fclose(fp);
-
-		free(nombre_bloque);
+		FILE* file_bloque_i = fopen(nombre_bloque_i, "w");
+		truncate(nombre_bloque_i, tamanio_bloques);
+		free(nombre_bloque_i);
+		fseek(file_bloque_i, -sizeof(uint32_t), SEEK_END);//Pongo el puntero al archivo para escribir los ultimos 4 bytes
+		uint32_t num_cero = 0;
+		fwrite(&num_cero, sizeof(uint32_t), 1, file_bloque_i);
+		fclose(file_bloque_i);
 	}
-	log_info(logger, "Bloques generados.");
+}
+
+void crearMetadataGlobal() {
+
+	char* rutaMetadata = string_from_format("%s/Metadata", config_get_string_value(config, "PUNTO_MONTAJE"));
+	crearDirectorio(rutaMetadata);
+
+	string_append(&rutaMetadata, "/Metadata.AFIP");
+	FILE *file = fopen(rutaMetadata, "w");
+	free(rutaMetadata);
+
+	tamanio_bloques = config_get_int_value(config, "BLOCK_SIZE");
+	char* buffer = string_from_format("BLOCK_SIZE=%d\n", tamanio_bloques);
+
+	cantidad_bloques = config_get_int_value(config, "BLOCKS");
+	string_append_with_format(&buffer, "BLOCKS=%d\n", cantidad_bloques);
+
+	string_append_with_format(&buffer, "MAGIC_NUMBER=%s", config_get_string_value(config, "MAGIC_NUMBER"));
+
+	fputs(buffer, file);
+	free(buffer);
+	fclose(file);
 }
 
 int existeDirectorio(char *path) {
 
 	struct stat st = { 0 };
 
-	if (stat(path, &st) != -1) {
-		log_info(logger, "El directorio %s ya existe", path);
+	if (stat(path, &st) != -1)
 		return 1;
-	} else {
+	else
 		return 0;
-	}
+}
 
+void crearDirectorio(char *path) {
+
+	if (!existeDirectorio(path)){
+		if (mkdir(path, 0777) == -1) {
+			perror("mkdir");
+			log_error(logger, "[CrearDirectorio] ERROR. PERMISOS %s", path);
+		}
+	}
+//SI YA EXISTE, NO HACE NADA.
+}
+
+int existeFile(char* file){
+	int result = 0;
+
+	FILE* f_file = fopen(file, "r");
+
+	if (f_file != NULL){
+		fclose(f_file);
+		result = 1;
+	}
+	return result;
+}
+
+void escribirBloque(int bloque, void* buff, int size, int sig_bloque) {
+
+	char* archivo = string_from_format("%s%d.AFIP", ruta_bloques, bloque);
+	FILE* file_bloque = fopen(archivo, "r+");
+	fwrite(buff, size, 1, file_bloque);
+	fseek(file_bloque, -sizeof(uint32_t), SEEK_END);
+	uint32_t u_sig_bloque = sig_bloque;
+	fwrite(&u_sig_bloque, sizeof(uint32_t), 1, file_bloque);
+	fclose(file_bloque);
+	free(archivo);
+}
+
+void persistirDatos(char* contenido, int* array_bloques) {
+
+	int tamEscribible = tamanio_bloques-sizeof(uint32_t);
+	int tamContenidoNoEscrito = strlen(contenido)+1;
+	int cant_bloques = calcularBloquesNecesarios(tamContenidoNoEscrito);
+	int sig_bloque = 0;
+	int offset = 0;
+
+	for(int i = 0; i < cant_bloques; i++){
+		/*Si es ultimo bloque, el siguiente bloque sera 0*/
+		if (i != cant_bloques-1)
+			sig_bloque = array_bloques[i+1];
+		else
+			sig_bloque = 0;
+
+		/*Verifico si debo escribir el bloque completo*/
+		if (tamContenidoNoEscrito >= tamEscribible){
+			escribirBloque(array_bloques[i], contenido+offset, tamEscribible, sig_bloque);
+			offset += tamEscribible;
+			tamContenidoNoEscrito -= tamEscribible;
+		}
+		/*Si no tengo que escribir el bloque completo*/
+		else
+			escribirBloque(array_bloques[i], contenido+offset, tamContenidoNoEscrito, sig_bloque);
+	}
+}
+
+void crearMetadataArchivo(char* ruta, t_metadata* metadata){
+
+	FILE* fp = fopen(ruta, "w");
+	char* contenido = string_from_format("SIZE=%d\nINITIAL_BLOCK=%d", metadata->size, metadata->initial_block);
+	fputs(contenido, fp);
+	free(contenido);
+	fclose(fp);
+}
+
+t_metadata* leerMetadataArchivo(char* ruta){
+	t_metadata* metadata = NULL;
+
+	t_config* configMetadata = config_create(ruta);
+	if (configMetadata != NULL){
+		metadata = malloc(sizeof(t_metadata));
+		metadata->size = config_get_int_value(configMetadata, "SIZE");
+		metadata-> initial_block = config_get_int_value(configMetadata, "INITIAL_BLOCK");
+		config_destroy(configMetadata);
+	}
+	return metadata;
+}
+
+int actualizarSizeMetadataArchivo(char* ruta, int size){
+	int result = 0;
+
+	t_config* configMetadata = config_create(ruta);
+	if (configMetadata != NULL && config_has_property(configMetadata, "SIZE")){
+		char* str_size = string_itoa(size);
+		config_set_value(configMetadata, "SIZE", str_size);
+		free(str_size);
+		config_save(configMetadata);
+		config_destroy(configMetadata);
+		result = 1;
+	}
+	return result;
 }
