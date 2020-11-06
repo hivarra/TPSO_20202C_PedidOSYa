@@ -144,8 +144,7 @@ int crearRestaurante(t_crear_restaurante* argsCrearRestaurante){
 		int* bloques_necesarios = listar_bloques_necesarios_file_nuevo(tamanio);
 		// 4. Guardo la información en los bloques
 		persistirDatos(linea, bloques_necesarios);
-
-		// 7. Creo info.AFIP
+		// 5. Creo info.AFIP
 		t_metadata* new_metadata = malloc(sizeof(t_metadata));
 		new_metadata->size = tamanio;
 		new_metadata->initial_block = bloques_necesarios[0];

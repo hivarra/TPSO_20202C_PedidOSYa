@@ -103,16 +103,6 @@ int* listar_bloques_necesarios_file_existente(int size_nuevo, int size_viejo, in
 	return array_bloques_asignados;
 }
 
-void copiar_string_bloque(char* str_total, FILE* f_bloque){
-	int tam_string = tamanio_bloques-sizeof(uint32_t);
-
-	char* str_leido = malloc(tam_string+1);//Para poder copiar el '\0' en caso de no tenerlo
-	fread(str_leido, tam_string, 1, f_bloque);
-	memset(str_leido+tam_string, '\0', sizeof(char));//Copio fin de string por si no es el ultimo bloque
-	string_append(&str_total, str_leido);
-	free(str_leido);
-}
-
 t_file_leido* leer_bloques_file(t_metadata* mData){
 
 	t_file_leido* file_leido = malloc(sizeof(t_file_leido));
@@ -126,6 +116,8 @@ t_file_leido* leer_bloques_file(t_metadata* mData){
 	file_leido->string_leido = string_new();
 
 	/*Variables auxiliares*/
+	int tam_string = tamanio_bloques-sizeof(uint32_t);
+	char* buffer = calloc(1,tam_string+1);
 	int num_bloque_i = mData->initial_block;
 	uint32_t num_bloque_sig;
 
@@ -138,12 +130,14 @@ t_file_leido* leer_bloques_file(t_metadata* mData){
 		FILE* file_bloque_i = fopen(nombre_bloque_i, "r");
 		free(nombre_bloque_i);
 		/*Copio el string del bloque en un string total*/
-		copiar_string_bloque(file_leido->string_leido, file_bloque_i);
+		fread(buffer, tam_string, 1, file_bloque_i);
+		string_append(&file_leido->string_leido, buffer);
 		/*Leo el siguiente num de bloque*/
 		fread(&num_bloque_sig, sizeof(uint32_t), 1, file_bloque_i);
 		fclose(file_bloque_i);
 		num_bloque_i = num_bloque_sig;//Para diferenciar el uint32_t del int
 	}
+	free(buffer);
 
 	return file_leido;
 }
