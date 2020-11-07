@@ -158,7 +158,61 @@ void conectar_a_app(){
 		close(socket_handshake);
 	}
 }
-
+void imprimir_lista_pasos(t_list* lista_pasos){
+	void imprimir_paso(t_paso_receta* paso_receta){
+		log_info(logger,"PASO:%s",paso_receta->accion);
+		log_info(logger,"TIEMPO:%d",paso_receta->tiempo);
+	}
+	list_iterate(lista_pasos,(void*)imprimir_paso);
+}
+void enviar_obtener_pasos_receta(t_rta_obtener_pedido* rta_obtener_pedido){
+	void obtener_pasos_receta_de_comida(t_comida* plato){
+		int socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
+			if (socket_new == -1)
+				log_warning(logger, "[Obtener Receta] No se pudo conectar a Sindicato");
+			else{
+				enviar_obtener_receta(plato->nombre,socket_new,logger);
+				t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
+				if(tipo_mensaje == RTA_OBTENER_RECETA){
+					t_rta_obtener_receta* rta_obtener_receta = recibir_rta_obtener_receta(socket_new,logger);
+					log_info(logger,"NOMBRE_PLATO:%s",rta_obtener_receta->nombre);
+					log_info(logger,"CANTIDAD_PASOS:%d",rta_obtener_receta->cantPasos);
+					imprimir_lista_pasos(rta_obtener_receta->pasos);
+				}
+			}
+	}
+	list_iterate(rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
+}
+void imprimir_lista_comida(t_list* lista_comidas){
+	void imprimir_comida(t_comida* comida){
+		log_info(logger,"NOMBRE_COMIDA:%s",comida->nombre);
+		log_info(logger,"CANTIDAD_TOTAL:%d",comida->cantTotal);
+		log_info(logger,"CANTIDAD_LISTA:%d",comida->cantLista);
+	}
+	list_iterate(lista_comidas,(void*)imprimir_comida);
+}
+void obtener_pedido(uint32_t id_pedido){
+	int socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
+		if (socket_new == -1)
+			log_warning(logger, "[Obtener Pedido] No se pudo conectar a Sindicato");
+		else{
+			t_obtener_pedido* msg_obtener_pedido = malloc(sizeof(t_obtener_pedido));
+			msg_obtener_pedido->id_pedido = id_pedido;
+			strcpy(msg_obtener_pedido->restaurante,restaurante_conf.nombre_restaurante);
+			enviar_obtener_pedido(msg_obtener_pedido,socket_new,logger);
+			t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
+			if(tipo_mensaje == RTA_OBTENER_PEDIDO){
+				t_rta_obtener_pedido* rta_obtener_pedido = recibir_rta_obtener_pedido(socket_new,logger);
+				log_info(logger,"CANTIDAD_COMIDAS:%d",rta_obtener_pedido->cantComidas);
+				log_info(logger,"LISTA_COMIDAS:");
+				imprimir_lista_comida(rta_obtener_pedido->comidas);
+				log_info(logger,"ESTADO_PEDIDO:%d",rta_obtener_pedido->estado);
+				pthread_t hilo_enviar_obtener_receta;
+				pthread_create(&hilo_enviar_obtener_receta,NULL,(void*)enviar_obtener_pasos_receta,rta_obtener_pedido);
+				pthread_detach(hilo_enviar_obtener_receta);
+			}
+		}
+}
 void obtener_restaurante(){
 	int socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
 	if (socket_new == -1)
@@ -173,14 +227,14 @@ void obtener_restaurante(){
 			metadata_restaurante->pos_y = info_restaurante->posY;
 			metadata_restaurante->cantidad_hornos = info_restaurante->cantHornos;
 			metadata_restaurante->cantidad_pedidos = info_restaurante->cantPedidos;
-			metadata_restaurante->cocineros = info_restaurante->cocineros;
+			metadata_restaurante->afinidades_cocineros = info_restaurante->cocineros;
 			metadata_restaurante->platos = info_restaurante->platos;
 			log_info(logger, "[Obtener Restaurante] Se obtuvo la metadata desde Sindicato");
 			log_info(logger,"POS_X:%d",metadata_restaurante->pos_x);
 			log_info(logger,"POS_Y:%d",metadata_restaurante->pos_y);
 			log_info(logger,"CANTIDAD_HORNOS:%d",metadata_restaurante->cantidad_hornos);
 			log_info(logger,"CANTIDAD_PEDIDOS:%d",metadata_restaurante->cantidad_pedidos);
-			imprimir_lista_strings(metadata_restaurante->cocineros,"AFINIDAD_COCINEROS");
+			imprimir_lista_strings(metadata_restaurante->afinidades_cocineros,"AFINIDAD_COCINEROS");
 			log_info(logger,"PLATOS:");
 			void imprimir_plato(t_plato* plato){
 				log_info(logger,"NOMBRE_PLATO:%s",plato->nombre);

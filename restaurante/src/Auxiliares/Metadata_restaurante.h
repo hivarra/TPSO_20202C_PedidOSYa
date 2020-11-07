@@ -13,7 +13,7 @@ typedef struct{
 	int pos_y;
 	int cantidad_hornos;
 	uint32_t cantidad_pedidos;
-	t_list* cocineros;
+	t_list* afinidades_cocineros;
 	t_list* platos;
 	t_list* clientes_conectados;//t_cliente
 }t_metadata_restaurante;

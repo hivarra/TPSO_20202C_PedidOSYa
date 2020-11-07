@@ -17,9 +17,12 @@ typedef enum{
 	RR
 }t_algoritmo;
 
+pthread_mutex_t* mutex_dictionary_ready;
+pthread_mutex_t* mutex_colas_hornos;
+pthread_mutex_t* mutex_lista_cocineros;
+
 t_dictionary* dictionary_colas_ready;
 t_list* lista_colas_hornos;
-t_list* lista_cocineros;
 
 t_algoritmo algoritmo_planificacion;
 

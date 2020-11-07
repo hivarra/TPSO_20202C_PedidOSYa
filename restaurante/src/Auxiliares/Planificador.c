@@ -16,13 +16,15 @@ void inicializar_algoritmo(){
 void inicializar_colas_ready(){
 	dictionary_colas_ready = dictionary_create();
 
-	for(int i=0;i<=list_size(metadata_restaurante->cocineros);i++){
-		char* afinidad = list_get(metadata_restaurante->cocineros,i);
+	for(int i=0;i<=list_size(metadata_restaurante->afinidades_cocineros);i++){
+		char* afinidad = list_get(metadata_restaurante->afinidades_cocineros,i);
 		if(string_equals_ignore_case(afinidad,"N")){
 			t_list* cola_ready = list_create();
 			dictionary_put(dictionary_colas_ready,afinidad,cola_ready);
 		}
 	}
+	t_list* cola_ready_normal = list_create();
+	dictionary_put(dictionary_colas_ready,"NORMAL",cola_ready_normal);
 }
 void inicializar_colas_hornos(){
 	for(int i=0;i<=metadata_restaurante->cantidad_hornos;i++){

@@ -59,7 +59,7 @@ void escuchar_cliente_particular(t_cliente* cliente_particular){
 			case CONFIRMAR_PEDIDO:{
 				t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(*cliente_particular->socket_envio, logger);
 				log_info(logger, "[CONFIRMAR_PEDIDO]ID_Pedido: %d", msg_confirmar_pedido->id_pedido);
-				//uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
+				uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
 				free(msg_confirmar_pedido);
 				enviar_entero(RTA_CONFIRMAR_PEDIDO, 0, *cliente_particular->socket_envio, logger);//TODO:PRUEBA
 			}
