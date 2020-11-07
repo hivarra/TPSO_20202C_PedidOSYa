@@ -176,6 +176,18 @@ void obtener_restaurante(){
 			metadata_restaurante->cocineros = info_restaurante->cocineros;
 			metadata_restaurante->platos = info_restaurante->platos;
 			log_info(logger, "[Obtener Restaurante] Se obtuvo la metadata desde Sindicato");
+			log_info(logger,"POS_X:%d",metadata_restaurante->pos_x);
+			log_info(logger,"POS_Y:%d",metadata_restaurante->pos_y);
+			log_info(logger,"CANTIDAD_HORNOS:%d",metadata_restaurante->cantidad_hornos);
+			log_info(logger,"CANTIDAD_PEDIDOS:%d",metadata_restaurante->cantidad_pedidos);
+			imprimir_lista_strings(metadata_restaurante->cocineros,"AFINIDAD_COCINEROS");
+			log_info(logger,"PLATOS:");
+			void imprimir_plato(t_plato* plato){
+				log_info(logger,"NOMBRE_PLATO:%s",plato->nombre);
+				log_info(logger,"PRECIO_PLATO:%d",plato->precio);
+			}
+			list_iterate(metadata_restaurante->platos,(void*)imprimir_plato);
+
 			free(info_restaurante);
 			close(socket_new);
 		}

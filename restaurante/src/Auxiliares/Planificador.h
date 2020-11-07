@@ -9,11 +9,17 @@
 #define AUXILIARES_PLANIFICADOR_H_
 
 #include "Conexion.h"
+#include "Plato.h"
+#include "Cocinero.h"
 
 typedef enum{
 	FIFO,
 	RR
 }t_algoritmo;
+
+t_dictionary* dictionary_colas_ready;
+t_list* lista_colas_hornos;
+t_list* lista_cocineros;
 
 t_algoritmo algoritmo_planificacion;
 
