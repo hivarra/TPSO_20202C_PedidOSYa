@@ -11,6 +11,8 @@
 #include <signal.h>
 #include "Conexion.h"
 
+uint32_t RETARDO_CICLO_CPU;
+
 void signalHandler(int);
 
 #endif /* AUXILIARES_UTILS_H_ */

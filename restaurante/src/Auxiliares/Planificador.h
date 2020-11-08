@@ -11,21 +11,23 @@
 #include "Conexion.h"
 #include "Plato.h"
 #include "Cocinero.h"
+#include "Metadata_restaurante.h"
+#include "Semaforos.h"
+#include "Hilos.h"
+
+#include <semaphore.h>
 
 typedef enum{
 	FIFO,
 	RR
 }t_algoritmo;
 
-pthread_mutex_t* mutex_dictionary_ready;
-pthread_mutex_t* mutex_colas_hornos;
-pthread_mutex_t* mutex_lista_cocineros;
-
+uint32_t id_pcb_global;
 t_dictionary* dictionary_colas_ready;
 t_list* lista_colas_hornos;
-
 t_algoritmo algoritmo_planificacion;
 
 void inicializar_planificador(void);
+void inicializar_planificacion(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta);
 
 #endif /* AUXILIARES_PLANIFICADOR_H_ */

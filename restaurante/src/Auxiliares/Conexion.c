@@ -165,7 +165,9 @@ void imprimir_lista_pasos(t_list* lista_pasos){
 	}
 	list_iterate(lista_pasos,(void*)imprimir_paso);
 }
-void enviar_obtener_pasos_receta(t_rta_obtener_pedido* rta_obtener_pedido){
+void enviar_obtener_pasos_receta(t_args_aux* args_aux){
+	/*SE ITERA LA LISTA DE COMIDAS DEL PEDIDO*/
+	/*SE OBTIENE LISTA DE PASOS Y TIEMPOS DE CADA COMIDA*/
 	void obtener_pasos_receta_de_comida(t_comida* plato){
 		int socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
 			if (socket_new == -1)
@@ -178,10 +180,11 @@ void enviar_obtener_pasos_receta(t_rta_obtener_pedido* rta_obtener_pedido){
 					log_info(logger,"NOMBRE_PLATO:%s",rta_obtener_receta->nombre);
 					log_info(logger,"CANTIDAD_PASOS:%d",rta_obtener_receta->cantPasos);
 					imprimir_lista_pasos(rta_obtener_receta->pasos);
+					inicializar_planificacion(args_aux,rta_obtener_receta);
 				}
 			}
 	}
-	list_iterate(rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
+	list_iterate(args_aux->rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
 }
 void imprimir_lista_comida(t_list* lista_comidas){
 	void imprimir_comida(t_comida* comida){
@@ -207,8 +210,13 @@ void obtener_pedido(uint32_t id_pedido){
 				log_info(logger,"LISTA_COMIDAS:");
 				imprimir_lista_comida(rta_obtener_pedido->comidas);
 				log_info(logger,"ESTADO_PEDIDO:%d",rta_obtener_pedido->estado);
+
+				t_args_aux* args_aux = malloc(sizeof(t_args_aux));
+				args_aux->rta_obtener_pedido = rta_obtener_pedido;
+				args_aux->id_pedido = id_pedido;
+
 				pthread_t hilo_enviar_obtener_receta;
-				pthread_create(&hilo_enviar_obtener_receta,NULL,(void*)enviar_obtener_pasos_receta,rta_obtener_pedido);
+				pthread_create(&hilo_enviar_obtener_receta,NULL,(void*)enviar_obtener_pasos_receta,args_aux);
 				pthread_detach(hilo_enviar_obtener_receta);
 			}
 		}

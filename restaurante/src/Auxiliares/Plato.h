@@ -9,6 +9,7 @@
 #define AUXILIARES_PLATO_H_
 
 #include "shared.h"
+#include "protocolo.h"
 
 typedef enum{
 	NEW,
@@ -21,10 +22,12 @@ typedef enum{
 
 typedef struct{
 	uint32_t id;
-	uint32_t estado;
+	uint32_t id_pedido;
+	char nombre_plato[L_PLATO];
+	t_estado_pcb estado;
 	uint32_t cocinero_asignado;
 	uint32_t quantum;
-	t_list* lista_pasos;
+	t_list* lista_pasos;//lista de t_paso_receta
 }t_pcb;
 
 
