@@ -198,7 +198,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 				}
 				for(int i = 0; i < respuesta->cantPlatos; i++){
 					t_plato* plato_i = list_get(respuesta->platos, i);
-					log_info(logger, "[RTA_OBTENER_RESTAURANTE]Plato %d: Nombre: %s, Precio: %d", i+1, plato_i->nombre, plato_i->precio);
+					log_info(logger, "[RTA_OBTENER_RESTAURANTE]Plato %d: %s, Precio: %d", i+1, plato_i->nombre, plato_i->precio);
 				}
 				list_destroy_and_destroy_elements(respuesta->cocineros, free);
 				list_destroy_and_destroy_elements(respuesta->platos, free);
@@ -220,7 +220,8 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			if (tipo_rta == RTA_CONSULTAR_PLATOS){
 				t_rta_consultar_platos* respuesta = recibir_rta_consultar_platos(socket_bidireccional, logger);
 				for(int i = 0; i < respuesta->cantPlatos; i++){
-					log_info(logger, "[RTA_CONSULTAR_PLATOS]Plato %d: %s", i+1, list_get(respuesta->platos, i));
+					t_plato* plato_i = list_get(respuesta->platos, i);
+					log_info(logger, "[RTA_CONSULTAR_PLATOS]Plato %d: %s, Precio: %d", i+1, plato_i->nombre, plato_i->precio);
 				}
 				list_destroy_and_destroy_elements(respuesta->platos, free);
 				free(respuesta);
