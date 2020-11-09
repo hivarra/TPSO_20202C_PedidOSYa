@@ -31,12 +31,32 @@ int main(int argc, char **argv) {
 	pthread_create(&thread_consola, NULL, (void*)crear_consola, NULL);
 	pthread_detach(thread_consola);
 
+	/*Extra. Liberar bien con ctrl+c*/
+	signal(SIGINT, &signalHandler);
+
 	/* 5. Escuchando conexiones*/
 	escuchar_conexiones_sindicato();
+
+	return EXIT_FAILURE;
+}
+
+void signalHandler(int sig){
+
+	close(socket_servidor);
+
+	//bitarray_destroy(bitmap);
+	pthread_mutex_destroy(&mutex_bitmap);
+	munmap(bmap, cantidad_bloques/8);
+
+	free(ruta_files);
+	free(ruta_bloques);
+	free(ruta_restaurantes);
+	free(ruta_recetas);
 
 	destruir_config(config);
 	destruir_logger(logger);
 
 	puts("Fin Proceso SINDICATO");
-	return EXIT_SUCCESS;
+
+	exit(EXIT_SUCCESS);
 }

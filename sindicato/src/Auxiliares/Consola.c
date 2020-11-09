@@ -2,7 +2,8 @@
 
 typedef enum t_tipoComando {
 	crearRestaurante_,
-	crearReceta_
+	crearReceta_,
+	exit_
 } t_tipoComando;
 
 typedef struct{
@@ -27,11 +28,12 @@ int validar_crear_receta(char**);
 int crearRestaurante(t_crear_restaurante* args);
 int crearReceta(t_crear_receta* args);
 
-void *crear_consola() {
+void crear_consola() {
 
 	char *line;
+	int consolaActiva = 1;
 
-	while (1) {
+	while (consolaActiva) {
 
 		line = readline("Ingrese un comando> ");
 
@@ -80,17 +82,21 @@ void *crear_consola() {
 			}
 			break;
 
+		case exit_:
+			consolaActiva = 0;
+			break;
+
 		default:
 			printf("No se reconoce el comando %s.", comando[0]);
 		}
 		liberar_lista(comando);
 	}
-	return 0;
+	/*Si se eligio exit, termina solo la consola*/
 }
 
 t_tipoComando buscar_enum_sfs(char *sval) {
 	t_tipoComando result = crearRestaurante_;
-	char* comandos_str[] = { "CrearRestaurante", "CrearReceta", NULL };
+	char* comandos_str[] = { "CrearRestaurante", "CrearReceta", "exit", NULL };
 	if (sval == NULL)
 		return -2;
 	for (int i = 0; comandos_str[i] != NULL; i++, result++)
@@ -109,7 +115,7 @@ int validar_crear_receta(char** comandos_crear_receta){
 }
 
 char* generarContenidoRestauranteEnBloques(t_crear_restaurante* argsCrearRestaurante) {
-	char* buffer = string_from_format("CANTIDAD_COCINEROS=%s\nPOSICION=%s\nAFINIDAD_COCINEROS=%s\nPLATOS=%s\nPRECIO_PLATOS=%s\nCANTIDAD_HORNOS=%s\nCANTIDAD_PEDIDOS=0",
+	char* buffer = string_from_format("CANTIDAD_COCINEROS=%s\nPOSICION=%s\nAFINIDAD_COCINEROS=%s\nPLATOS=%s\nPRECIO_PLATOS=%s\nCANTIDAD_HORNOS=%s",
 			argsCrearRestaurante->cantidadCocineros,
 			argsCrearRestaurante->posicion,
 			argsCrearRestaurante->afinidadCocineros,

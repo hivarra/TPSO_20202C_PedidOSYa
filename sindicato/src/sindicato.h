@@ -16,4 +16,6 @@
 #include "Auxiliares/Consola.h"
 #include "Auxiliares/Utils.h"
 
+void signalHandler(int);
+
 #endif /* SINDICATO_H_ */

@@ -4,12 +4,12 @@
 void crearBitmap(void);
 void leerBitmap(void);
 void crearDirectorio(char*);
-void crearMetadataGlobal();
+void crearMetadataGlobal(void);
 void crearDirectorioFiles(void);
 void crearDirectorioRestaurantes(void);
 void crearDirectorioRecetas(void);
 void crearDirectorioBloques(void);
-void generarBloques();
+void generarBloques(void);
 
 void montarFileSystem() {
 
@@ -260,7 +260,7 @@ t_metadata* leerMetadataArchivo(char* ruta){
 	if (configMetadata != NULL){
 		metadata = malloc(sizeof(t_metadata));
 		metadata->size = config_get_int_value(configMetadata, "SIZE");
-		metadata-> initial_block = config_get_int_value(configMetadata, "INITIAL_BLOCK");
+		metadata->initial_block = config_get_int_value(configMetadata, "INITIAL_BLOCK");
 		config_destroy(configMetadata);
 	}
 	return metadata;

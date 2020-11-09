@@ -71,6 +71,8 @@ void connection_handler(int* socket_emisor) {
 		t_rta_obtener_restaurante* respuesta = procesar_obtener_restaurante(restaurante);
 		free(restaurante);
 		enviar_rta_obtener_restaurante(respuesta, *socket_emisor, logger);
+		list_destroy_and_destroy_elements(respuesta->cocineros, free);
+		list_destroy_and_destroy_elements(respuesta->platos, free);
 		free(respuesta);
 		break;
 	}
@@ -88,6 +90,7 @@ void connection_handler(int* socket_emisor) {
 		t_rta_obtener_receta* respuesta = procesar_obtener_receta(plato);
 		free(plato);
 		enviar_rta_obtener_receta(respuesta, *socket_emisor, logger);
+		list_destroy_and_destroy_elements(respuesta->pasos, free);
 		free(respuesta);
 		break;
 	}
@@ -107,7 +110,7 @@ void connection_handler(int* socket_emisor) {
 	free(socket_emisor);
 }
 
-void esperar_cliente(int socket_servidor) {
+void esperar_cliente(int socket_server) {
 	pthread_t hilo_conexion;
 
 	struct sockaddr_in dir_cliente;
@@ -116,7 +119,7 @@ void esperar_cliente(int socket_servidor) {
 
 	int* new_socket = malloc(sizeof(int));
 
-	*new_socket = accept(socket_servidor, (void*) &dir_cliente,
+	*new_socket = accept(socket_server, (void*) &dir_cliente,
 			(void*) &tam_direccion);
 
 	pthread_create(&hilo_conexion, NULL, (void*) connection_handler,

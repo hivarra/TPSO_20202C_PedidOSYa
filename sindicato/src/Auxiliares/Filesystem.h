@@ -16,7 +16,7 @@ pthread_mutex_t mutex_bitmap;
 int tamanio_bloques;
 int cantidad_bloques;
 char* bmap;
-t_bitarray *bitmap;
+t_bitarray* bitmap;
 char* ruta_files;
 char* ruta_bloques;
 char* ruta_restaurantes;

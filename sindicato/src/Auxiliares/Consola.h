@@ -6,6 +6,6 @@
 
 pthread_t thread_consola;
 
-void *crear_consola();
+void crear_consola();
 
 #endif /* CONSOLA_H_ */
