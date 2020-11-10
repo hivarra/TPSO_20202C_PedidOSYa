@@ -56,7 +56,38 @@ t_rta_consultar_platos* procesar_consultar_platos(char* nombre_restaurante){
 }
 
 uint32_t procesar_guardar_pedido(t_guardar_pedido* msg_guardar_pedido){
-	return 0;
+	uint32_t result = 0;
+	char* path_pedido = string_from_format("%s%s", ruta_restaurantes, msg_guardar_pedido->restaurante);//Es el path del restaurante, pero lo voy a reusar
+	/*Valido si existe el restaurante*/
+	if (!existeDirectorio(path_pedido))
+		log_warning(logger, "El restaurante %s no existe en el FileSystem AFIP.", msg_guardar_pedido->restaurante);
+	else {
+		/*Valido si existe el pedido*/
+		string_append_with_format(&path_pedido, "/Pedido%d.AFIP", msg_guardar_pedido->id_pedido);
+		if (existeFile(path_pedido))
+			log_warning(logger, "El pedido %d del restaurante %s ya existe.", msg_guardar_pedido->id_pedido, msg_guardar_pedido->restaurante);
+		else{
+			/*Creo el contenido del archivo*/
+			char* contenido = string_from_format("ESTADO_PEDIDO=Pendiente\nLISTA_PLATOS=[]\nCANTIDAD_PLATOS=[]\nCANTIDAD_LISTA=[]\nPRECIO_TOTAL=0");
+			/*Creo los datos de la metadata*/
+			t_metadata* file_mdata = malloc(sizeof(t_metadata));
+			file_mdata->size = strlen(contenido)+1;
+			/*Solicito bloques nuevos*/
+			int* bloques = listar_bloques_necesarios_file_nuevo(file_mdata->size);
+			file_mdata->initial_block = bloques[0];
+			/*Guardo contenido en los bloques*/
+			persistirDatos(contenido, bloques);
+			/*Creo el archivo metadata*/
+			crearMetadataArchivo(path_pedido, file_mdata);
+
+			free(contenido);
+			free(bloques);
+			free(file_mdata);
+			result = 1;
+		}
+	}
+	free(path_pedido);
+	return result;
 }
 
 uint32_t procesar_guardar_plato(t_guardar_plato* msg_guardar_plato){
