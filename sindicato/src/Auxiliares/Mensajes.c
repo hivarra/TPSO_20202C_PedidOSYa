@@ -6,6 +6,20 @@
  */
 #include "Mensajes.h"
 
+char* concatenarLineasModificadas(char** lineas){
+
+	char* concatenado = string_new();
+	int i = 0;
+	while(lineas[i] != NULL){
+		if(lineas[i+1] != NULL)
+			string_append_with_format(&concatenado, "%s\n", lineas[i]);
+		else
+			string_append(&concatenado, lineas[i]);
+		i++;
+	}
+	return concatenado;
+}
+
 t_rta_consultar_platos* procesar_consultar_platos(char* nombre_restaurante){
 	t_rta_consultar_platos* respuesta = malloc(sizeof(t_rta_consultar_platos));
 	/*Inicializo la respuesta*/
@@ -91,7 +105,133 @@ uint32_t procesar_guardar_pedido(t_guardar_pedido* msg_guardar_pedido){
 }
 
 uint32_t procesar_guardar_plato(t_guardar_plato* msg_guardar_plato){
-	return 0;
+	/*Funcion auxiliar para buscar el plato en el restaurante(para calcular el precio total)*/
+	int precioPlato(){
+		int precio = -1;
+		bool _contienePlato(t_plato* platoIterado){
+			return strcmp(platoIterado->nombre, msg_guardar_plato->plato) == 0;
+		}
+		t_rta_consultar_platos* consultar_platos = procesar_consultar_platos(msg_guardar_plato->restaurante);
+		t_plato* platoYprecio = list_find(consultar_platos->platos,(void*)_contienePlato);
+		if(platoYprecio)
+			precio = platoYprecio->precio;
+		list_destroy_and_destroy_elements(consultar_platos->platos, free);
+		free(consultar_platos);
+		return precio;
+	}
+	/****************************************************************************************/
+
+	uint32_t result = 0;
+
+	char* path_pedido = string_from_format("%s%s", ruta_restaurantes, msg_guardar_plato->restaurante);//Es el path del restaurante, pero lo voy a reusar
+	/*Valido si existe el restaurante*/
+	if (!existeDirectorio(path_pedido))
+		log_warning(logger, "El restaurante %s no existe en el FileSystem AFIP.", msg_guardar_plato->restaurante);
+	else {
+		/*Valido si existe el pedido*/
+		string_append_with_format(&path_pedido, "/Pedido%d.AFIP", msg_guardar_plato->id_pedido);
+		if (!existeFile(path_pedido))
+			log_warning(logger, "El pedido %d del restaurante %s no existe.", msg_guardar_plato->id_pedido, msg_guardar_plato->restaurante);
+		else{
+			/*Leo los datos de la metadata*/
+			t_metadata* file_mdata = leerMetadataArchivo(path_pedido);
+			/*Leo los bloques del restaurante*/
+			t_file_leido* contenido_file = leer_bloques_file(file_mdata);
+			/*Separo las distintas lineas*/
+			char** lineas_info =  string_split(contenido_file->string_leido, "\n");
+			free(contenido_file->string_leido);
+			/*Valido el estado del pedido*/
+			char* estadoPedido = string_substring_from(lineas_info[0], 14);
+			if (strcmp(estadoPedido, "Pendiente") != 0)
+				log_warning(logger, "El pedido %d del restaurante %s no se encuentra PENDIENTE.", msg_guardar_plato->id_pedido, msg_guardar_plato->restaurante);
+			else{
+				/*Verifico si el plato ya existe en el pedido*/
+				if(!string_contains(lineas_info[1], msg_guardar_plato->plato)){//Si no existe, lo agrego, con su cantidad
+					int tam_linea_platos = strlen(lineas_info[1]);
+					char* linea_platos = string_substring_until(lineas_info[1], tam_linea_platos-1);
+					char* linea_cant_platos = string_substring_until(lineas_info[2], strlen(lineas_info[2])-1);
+					char* linea_cant_lista = string_substring_until(lineas_info[3], strlen(lineas_info[3])-1);
+					if (tam_linea_platos > 15){
+						string_append_with_format(&linea_platos, ",%s]", msg_guardar_plato->plato);
+						string_append_with_format(&linea_cant_platos, ",%d]", msg_guardar_plato->cantPlato);
+						string_append(&linea_cant_lista, ",0]");
+					}
+					else{
+						string_append_with_format(&linea_platos, "%s]", msg_guardar_plato->plato);
+						string_append_with_format(&linea_cant_platos, "%d]", msg_guardar_plato->cantPlato);
+						string_append(&linea_cant_lista, "0]");
+					}
+					void* aux_delete1 = lineas_info[1];
+					void* aux_delete2 = lineas_info[2];
+					void* aux_delete3 = lineas_info[3];
+					lineas_info[1] = linea_platos;
+					lineas_info[2] = linea_cant_platos;
+					lineas_info[3] = linea_cant_lista;
+					free(aux_delete1);
+					free(aux_delete2);
+					free(aux_delete3);
+				}
+				else{//Si existe busco en que parte del string esta el plato, y aumento su cantidad en el string de abajo
+					char* listaPlatos = string_substring_from(lineas_info[1], 13);
+					char** arrayPlatos = string_get_string_as_array(listaPlatos);
+					free(listaPlatos);
+					char* listaCantidades = string_substring_from(lineas_info[2], 16);
+					char** arrayCantidades = string_get_string_as_array(listaCantidades);
+					free(listaCantidades);
+					char* newLineaCantidades = string_from_format("CANTIDAD_PLATOS=[");
+					int i = 0;
+					while(arrayPlatos[i]!=NULL && arrayCantidades[i]!=NULL){
+						if (strcmp(arrayPlatos[i], msg_guardar_plato->plato) == 0){
+							int nuevaCantidad = atoi(arrayCantidades[i]) + msg_guardar_plato->cantPlato;
+							if(arrayCantidades[i+1]!=NULL)
+								string_append_with_format(&newLineaCantidades, "%d,", nuevaCantidad);
+							else
+								string_append_with_format(&newLineaCantidades, "%d", nuevaCantidad);
+						}
+						else{
+							if(arrayCantidades[i+1]!=NULL)
+								string_append_with_format(&newLineaCantidades, "%s,", arrayCantidades[i]);
+							else
+								string_append(&newLineaCantidades, arrayCantidades[i]);
+						}
+						i++;
+					}
+					string_append(&newLineaCantidades, "]");
+					liberar_lista(arrayPlatos);
+					liberar_lista(arrayCantidades);
+					void* aux_delete = lineas_info[2];
+					lineas_info[2] = newLineaCantidades;
+					free(aux_delete);
+				}
+				//TODO:FALTA CREAR LAS CANTIDADES LISTAS EN 0
+				//Actualizo el precio total del pedido
+				int precio_unitario = precioPlato();
+				char** lineasPrecioTotal =  string_split(lineas_info[4], "=");
+				int precio_total = atoi(lineasPrecioTotal[1]) + precio_unitario*msg_guardar_plato->cantPlato;
+				char* nuevaLineaPrecioTotal = string_from_format("%s=%d", lineasPrecioTotal[0], precio_total);
+				liberar_lista(lineasPrecioTotal);
+				void* aux_delete = lineas_info[4];
+				lineas_info[4] = nuevaLineaPrecioTotal;
+				free(aux_delete);
+				//Creo un nuevo super string concatenando todas las lineas modificadas
+				char* nuevo_contenido = concatenarLineasModificadas(lineas_info);
+				/*Actualizo los files*/
+				contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques);
+				persistirDatos(nuevo_contenido, contenido_file->array_bloques);
+				actualizarSizeMetadataArchivo(path_pedido, strlen(nuevo_contenido)+1);
+				free(nuevo_contenido);
+				/*Lo que todos estabamos esperando*/
+				result = 1;
+			}
+			liberar_lista(lineas_info);
+			free(contenido_file->array_bloques);
+			free(contenido_file);
+			free(estadoPedido);
+			free(file_mdata);
+		}
+	}
+	free(path_pedido);
+	return result;
 }
 
 uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
