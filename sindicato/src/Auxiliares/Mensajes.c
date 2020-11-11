@@ -151,12 +151,12 @@ uint32_t procesar_guardar_plato(t_guardar_plato* msg_guardar_plato){
 					char* linea_platos = string_substring_until(lineas_info[1], tam_linea_platos-1);
 					char* linea_cant_platos = string_substring_until(lineas_info[2], strlen(lineas_info[2])-1);
 					char* linea_cant_lista = string_substring_until(lineas_info[3], strlen(lineas_info[3])-1);
-					if (tam_linea_platos > 15){
+					if (tam_linea_platos > 15){//Si ya existen platos en el array...
 						string_append_with_format(&linea_platos, ",%s]", msg_guardar_plato->plato);
 						string_append_with_format(&linea_cant_platos, ",%d]", msg_guardar_plato->cantPlato);
 						string_append(&linea_cant_lista, ",0]");
 					}
-					else{
+					else{//Si NO existen platos en el array...
 						string_append_with_format(&linea_platos, "%s]", msg_guardar_plato->plato);
 						string_append_with_format(&linea_cant_platos, "%d]", msg_guardar_plato->cantPlato);
 						string_append(&linea_cant_lista, "0]");
@@ -203,7 +203,6 @@ uint32_t procesar_guardar_plato(t_guardar_plato* msg_guardar_plato){
 					lineas_info[2] = newLineaCantidades;
 					free(aux_delete);
 				}
-				//TODO:FALTA CREAR LAS CANTIDADES LISTAS EN 0
 				//Actualizo el precio total del pedido
 				int precio_unitario = precioPlato();
 				char** lineasPrecioTotal =  string_split(lineas_info[4], "=");
