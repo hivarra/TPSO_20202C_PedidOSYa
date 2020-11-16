@@ -11,8 +11,8 @@
 #include <protocolo.h>
 #include "Conexion.h"
 
-void procesar_socket_envio(t_socket_envio*, int*);
-void procesar_socket_escucha(t_socket_escucha*, int*);
+t_cliente* buscar_cliente(char*);//Busca por ID un cliente en la lista de clientes conectados
+void procesar_handshake_inicial(t_handshake_inicial*, int socket_emisor);
 
 t_rta_consultar_platos* procesar_consultar_platos(void);
 uint32_t procesar_crear_pedido(void);

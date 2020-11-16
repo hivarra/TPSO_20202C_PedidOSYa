@@ -22,8 +22,7 @@ typedef struct{
 
 typedef struct{
 	char nombre[L_ID];
-	int* socket_envio;//para recibir solicitudes y responderlas
-	int* socket_escucha;//para enviarle al cliente actualizaciones
+	int socket_escucha;//para enviarle al cliente actualizaciones
 	//t_list* pedidos;
 }t_cliente;
 

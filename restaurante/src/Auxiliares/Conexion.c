@@ -6,9 +6,6 @@
  */
 #include "Conexion.h"
 
-void iniciar_conexiones_app(void);
-
-
 void escuchar_app(){
 	while(1){
 
@@ -35,7 +32,7 @@ void escuchar_app(){
 			break;
 			case CREAR_PEDIDO:{
 				recibir_mensaje_vacio(socket_envio, logger);
-				//uint32_t id_pedido = procesar_crear_pedido();
+				//uint32_t id_pedido = procesar_crear_pedido();TODO: Tiene que guardarse que el pedido lo pidio APP, para poder enviar actualizacion
 				//enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_envio, logger);
 			}
 			break;
@@ -70,6 +67,58 @@ void escuchar_app(){
 	}
 }
 
+void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
+
+	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_cliente, logger);
+
+	log_info(logger, "Se recibe tipo de mensaje %s desde el cliente %s.", get_nombre_mensaje(tipo_mensaje), cliente->id);
+
+	switch(tipo_mensaje){
+
+		case CONSULTAR_PLATOS:{
+			char* nombre_restaurante = recibir_consultar_platos(socket_envio, logger);//No importa este nombre
+			free(nombre_restaurante);
+			//t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
+			//enviar_rta_consultar_platos(respuesta, socket_cliente, logger);
+			//free(respuesta);
+		}
+		break;
+		case CREAR_PEDIDO:{
+			recibir_mensaje_vacio(socket_envio, logger);
+			//uint32_t id_pedido = procesar_crear_pedido();//TODO: Tiene que guardarse que el pedido es de tal cliente, para poder enviar actualizacion
+			//enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_cliente, logger);
+		}
+		break;
+		case ANADIR_PLATO:{
+			t_anadir_plato* msg_anadir_plato = recibir_anadir_plato(socket_envio, logger);
+			log_info(logger, "[ANADIR_PLATO]Plato: %s, ID_Pedido: %d", msg_anadir_plato->plato, msg_anadir_plato->id_pedido);
+			//uint32_t resultado = procesar_anadir_plato(msg_anadir_plato);
+			free(msg_anadir_plato);
+			//enviar_entero(RTA_ANADIR_PLATO, resultado, socket_cliente, logger);
+		}
+		break;
+		case CONFIRMAR_PEDIDO:{
+			t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(socket_envio, logger);
+			log_info(logger, "[CONFIRMAR_PEDIDO]ID_Pedido: %d", msg_confirmar_pedido->id_pedido);
+			//uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
+			free(msg_confirmar_pedido);
+			//enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, socket_cliente, logger);
+		}
+		break;
+		case CONSULTAR_PEDIDO:{
+			uint32_t id_pedido = recibir_entero(socket_envio, logger);
+			log_info(logger, "[CONSULTAR_PEDIDO]ID_Pedido: %d", id_pedido);
+			//t_rta_consultar_pedido* respuesta = procesar_consultar_pedido(id_pedido);
+			//enviar_rta_consultar_pedido(respuesta, socket_cliente, logger);
+			//free(respuesta);
+		}
+		break;
+		default:
+			log_error(logger, "Tipo de mensaje no admitido.");
+			break;
+	}
+}
+
 void connection_handler_cliente(int* socket_emisor){
 
 	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_emisor, logger);
@@ -80,59 +129,48 @@ void connection_handler_cliente(int* socket_emisor){
 		pthread_exit(NULL);
 	}
 
-	log_info(logger, "Se recibe tipo de mensaje %s desde un nuevo cliente.", get_nombre_mensaje(tipo_mensaje));
+	log_info(logger, "Se recibe tipo de mensaje %s desde un cliente.", get_nombre_mensaje(tipo_mensaje));
 
-	switch (tipo_mensaje){
+		switch(tipo_mensaje){
 
-		case HANDSHAKE:{
-			recibir_mensaje_vacio(*socket_emisor, logger);
-			uint32_t miTipoProceso = RESTAURANTE;
-			enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_emisor, logger);
-			close(*socket_emisor);
-			free(socket_emisor);
-			break;
+			case HANDSHAKE_INICIAL:{
+				t_handshake_inicial* handshake_inicial = recibir_handshake_inicial(*socket_emisor, logger);
+				procesar_handshake_inicial(handshake_inicial, *socket_emisor);
+				free(handshake_inicial);
+				uint32_t miTipoProceso = RESTAURANTE;
+				enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_emisor, logger);
+				break;
+			}
+			case HANDSHAKE:{
+				t_handshake* handshake = recibir_handshake(*socket_emisor, logger);
+				escuchar_cliente_existente(*socket_emisor, handshake);
+				free(handshake);
+				close(*socket_emisor);
+				free(socket_emisor);
+				break;
+			}
+			default:
+				log_error(logger, "Tipo de mensaje no admitido.");
+				close(*socket_emisor);
+				free(socket_emisor);
+				break;
 		}
-		case SOCKET_ENVIO:{
-			t_socket_envio* msg_socket_envio = recibir_socket_envio(*socket_emisor, logger);
-			procesar_socket_envio(msg_socket_envio, socket_emisor);
-			free(msg_socket_envio);
-			break;
-		}
-		case SOCKET_ESCUCHA:{
-			t_socket_escucha* msg_socket_escucha = recibir_socket_escucha(*socket_emisor, logger);
-			procesar_socket_escucha(msg_socket_escucha, socket_emisor);
-			free(msg_socket_escucha);
-			break;
-		}
-		default:
-			log_error(logger, "Tipo de mensaje no admitido.");
-			close(*socket_emisor);
-			free(socket_emisor);
-			break;
-	}
 }
 
-void iniciar_conexiones_app(){
+void crear_socket_envio(){
 
-	socket_envio = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
-	if (socket_envio != -1){
-		t_socket_envio* param_socket_envio = calloc(1,sizeof(t_socket_envio));
-		strcpy(param_socket_envio->id, restaurante_conf.nombre_restaurante);
-		param_socket_envio->posX = metadata_restaurante->pos_x;
-		param_socket_envio->posY = metadata_restaurante->pos_y;
-		param_socket_envio->tipoProceso = RESTAURANTE;
-		enviar_socket_envio(param_socket_envio, socket_envio, logger);
-		free(param_socket_envio);
-
-		socket_escucha = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
-
-		if (socket_escucha != -1){
-			t_socket_escucha* socket_escucha_info = calloc(1,sizeof(t_socket_escucha));
-			strcpy(socket_escucha_info->id, restaurante_conf.nombre_restaurante);
-			socket_escucha_info->tipoProceso = RESTAURANTE;
-			enviar_socket_escucha(socket_escucha_info, socket_escucha, logger);
-			free(socket_escucha_info);
-		}
+	int socket_envio_aux = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
+	if (socket_envio_aux == -1)
+		log_warning(logger, "No se pudo conectar a App para el socket de envio y respuesta.");
+	else{
+		/*Realizo el handshake para el socket de envio y respuesta*/
+		t_handshake* handshake = calloc(1,sizeof(handshake));
+		strcpy(handshake->id, restaurante_conf.nombre_restaurante);
+		handshake->tipoProceso = RESTAURANTE;
+		enviar_handshake(handshake, socket_envio_aux, logger);
+		free(handshake);
+		socket_envio = socket_envio_aux;//EL SOCKET PARA QUE APP ME ENVIE Y YO LE CONTESTE, ES ESTE
+		/*Creo el hilo para escuchar a app*/
 		pthread_create(&hilo_escucha_app, NULL, (void*)escuchar_app, NULL);
 		pthread_detach(hilo_escucha_app);
 	}
@@ -142,20 +180,30 @@ void conectar_a_app(){
 
 	int socket_handshake = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
 	if (socket_handshake == -1)
-		log_warning(logger, "No se pudo conectar a App");
+		log_warning(logger, "No se pudo conectar a App para el socket de actualizaciones.");
 	else{
-		enviar_mensaje_vacio(HANDSHAKE, socket_handshake, logger);
+		/*Realizo el handshake inicial (Para el socket de actualizaciones)*/
+		t_handshake_inicial* handshake_inicial = calloc(1,sizeof(t_handshake_inicial));
+		strcpy(handshake_inicial->id, restaurante_conf.nombre_restaurante);
+		handshake_inicial->posX = metadata_restaurante->pos_x;
+		handshake_inicial->posY = metadata_restaurante->pos_y;
+		handshake_inicial->tipoProceso = RESTAURANTE;
+		enviar_handshake_inicial(handshake_inicial, socket_handshake, logger);
+		free(handshake_inicial);
+
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_handshake, logger);
 		if(tipo_mensaje == RTA_HANDSHAKE){
 			uint32_t respuesta_entero = recibir_entero(socket_handshake, logger);
 			if (respuesta_entero == APP){
-				log_info(logger, "Fin Handshake con App");
-				iniciar_conexiones_app();
+				log_info(logger, "Se realizo el HANDSHAKE INICIAL con App.");
+				socket_escucha = socket_handshake;//EL SOCKET PARA ENVIAR ACTUALIZACIONES HACIA APP
+				crear_socket_envio();
 			}
-			else
+			else{
 				log_warning(logger, "[Handshake] el proceso que respondio no es App");
+				close(socket_handshake);
+			}
 		}
-		close(socket_handshake);
 	}
 }
 void imprimir_lista_pasos(t_list* lista_pasos){
@@ -261,8 +309,17 @@ void conectar_a_sindicato(){
 	int socket_handshake = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
 	if (socket_handshake == -1)
 		log_warning(logger, "No se pudo conectar a Sindicato");
+		//TODO: DEBERIA CERRAR EL PROGRAMA XQ VA A ROMPER.
 	else{
-		enviar_mensaje_vacio(HANDSHAKE, socket_handshake, logger);
+		/*Realizo el handshake inicial*/
+		t_handshake_inicial* handshake_inicial = calloc(1,sizeof(t_handshake_inicial));
+		strcpy(handshake_inicial->id, restaurante_conf.nombre_restaurante);
+		handshake_inicial->posX = 0;//No importa este valor, y todavia no lo conozco
+		handshake_inicial->posY = 0;//No importa este valor, y todavia no lo conozco
+		handshake_inicial->tipoProceso = RESTAURANTE;
+		enviar_handshake_inicial(handshake_inicial, socket_handshake, logger);
+		free(handshake_inicial);
+
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_handshake, logger);
 		if(tipo_mensaje == RTA_HANDSHAKE){
 			uint32_t respuesta_entero = recibir_entero(socket_handshake, logger);
