@@ -12,6 +12,7 @@
 bool validarPrimerParametro(char*);
 int procesar_comando(char*);
 void procesar_solicitud(char**);
+char* estado_string(uint32_t);
 
 
 void leer_consola(){
@@ -27,6 +28,14 @@ void leer_consola(){
 }
 
 void procesar_solicitud_app_restaurante(char** parametros){
+
+	/*RREALIZO UN NUEVO HANDSHAKE POR CADA MENSAJE*/
+	int socket_envio = conectar_a_server();
+	t_handshake* handshake = calloc(1,sizeof(t_handshake));
+	strcpy(handshake->id, cliente_config.id_cliente);
+	handshake->tipoProceso = CLIENTE;
+	enviar_handshake(handshake, socket_envio, logger);
+	free(handshake);
 
 	t_tipoMensaje tipo_mensaje = tipo_mensaje_string_to_enum(parametros[0]);
 	log_info(logger, "Mensaje a enviar: %s", parametros[0]);
@@ -50,7 +59,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 				puts("Faltan parametros para enviar el mensaje");
 				break;
 			}
-			char* nombre_restaurante = malloc(L_ID);
+			char* nombre_restaurante = calloc(1,L_ID);
 			strcpy(nombre_restaurante, parametros[1]);
 			log_info(logger, "Parametro a enviar: Restaurante: %s", nombre_restaurante);
 			enviar_seleccionar_restaurante(nombre_restaurante, socket_envio, logger);
@@ -63,7 +72,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		case CONSULTAR_PLATOS:{
-			char* msg_consultar_platos = malloc(L_ID);
+			char* msg_consultar_platos = calloc(1,L_ID);
 			strcpy(msg_consultar_platos, "N");//APP Y RESTAURANTE NO NECESITAN ESTE PARAMETRO
 			enviar_consultar_platos(msg_consultar_platos, socket_envio, logger);
 			free(msg_consultar_platos);
@@ -154,7 +163,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
 			if (tipo_rta == RTA_CONSULTAR_PEDIDO){
 				t_rta_consultar_pedido* respuesta = recibir_rta_consultar_pedido(socket_envio, logger);
-				log_info(logger, "Restaurante: %s, Estado del pedido: %d", respuesta->restaurante, respuesta->estado);//TODO: FALTA QUE LO MUESTRE COMO STRING
+				log_info(logger, "Restaurante: %s, Estado del pedido: %s", respuesta->restaurante, estado_string(respuesta->estado));
 				for(int i = 0; i < respuesta->cantComidas; i++){
 					t_comida* comida_i = list_get(respuesta->comidas, i);
 					log_info(logger, "[RTA_CONSULTAR_PEDIDO]Comida %d: %s, Cant. total: %d, Cant. lista: %d", i+1, comida_i->nombre, comida_i->cantTotal, comida_i->cantLista);
@@ -165,9 +174,10 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		default:
-			puts("No se reconoce el mensaje.");
+			log_error(logger, "No se reconoce el mensaje.");
 			break;
 	}
+	close(socket_envio);
 }
 
 void procesar_solicitud_comanda_sindicato(char** parametros){
@@ -317,7 +327,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
 			if (tipo_rta == RTA_OBTENER_PEDIDO){
 				t_rta_obtener_pedido* respuesta = recibir_rta_obtener_pedido(socket_bidireccional, logger);
-				log_info(logger, "[RTA_OBTENER_PEDIDO]Estado del pedido: %d", respuesta->estado);//TODO: FALTA QUE LO MUESTRE COMO STRING
+				log_info(logger, "[RTA_OBTENER_PEDIDO]Estado del pedido: %s", estado_string(respuesta->estado));
 				for(int i = 0; i < respuesta->cantComidas; i++){
 					t_comida* comida_i = list_get(respuesta->comidas, i);
 					log_info(logger, "[RTA_OBTENER_PEDIDO]Comida %d: %s, Cant. total: %d, Cant. lista: %d", i+1, comida_i->nombre, comida_i->cantTotal, comida_i->cantLista);
@@ -387,7 +397,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		default:
-			puts("No se reconoce el mensaje.");
+			log_error(logger, "No se reconoce el mensaje.");
 			break;
 	}
 	close(socket_bidireccional);
@@ -403,8 +413,9 @@ int procesar_comando(char *line){
 		return -1;
 	}
 
-	procesar_solicitud(parametros);
-	liberar_lista(parametros);
+	pthread_t hilo_procesar_comando;
+	pthread_create(&hilo_procesar_comando, NULL, (void*)procesar_solicitud, (void*)parametros);
+	pthread_detach(hilo_procesar_comando);
 
 	return 0;
 }
@@ -453,5 +464,20 @@ void procesar_solicitud(char** parametros){
 		procesar_solicitud_app_restaurante(parametros);
 	else if(tipo_proceso_server == COMANDA || tipo_proceso_server == SINDICATO)
 		procesar_solicitud_comanda_sindicato(parametros);
+	liberar_lista(parametros);
+}
+
+char* estado_string(uint32_t estado_num){
+
+	switch(estado_num){
+		case PENDIENTE:
+			return "PENDIENTE";
+		case CONFIRMADO:
+			return "CONFIRMADO";
+		case TERMINADO:
+			return "TERMINADO";
+		default:
+			return "FAILED";
+	}
 }
 

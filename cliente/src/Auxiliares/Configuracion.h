@@ -7,7 +7,6 @@
 
 #ifndef AUXILIARES_CONFIGURACION_H_
 #define AUXILIARES_CONFIGURACION_H_
-#define PATH  "/home/utnso/Repositorios/tp-2020-2c-Thread-Away/cliente/config/cliente.config"
 
 #include <shared.h>
 
@@ -24,7 +23,7 @@ t_config* config;
 t_cliente_config cliente_config;
 t_log *logger;
 
-void cargarConfigCliente();
+void cargarConfigCliente(char*);
 void cargar_logger_cliente();
 
 #endif /* AUXILIARES_CONFIGURACION_H_ */

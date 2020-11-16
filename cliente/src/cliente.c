@@ -11,9 +11,11 @@
 
 #include "cliente.h"
 
-int main(void) {
+int main(int argc, char *argv[]) {
 
-	configurarProceso();
+	char* path_config = getConfigPath(argv[1]);
+	configurarProceso(path_config);
+	free(path_config);
 
 	inicializar_conexion();
 
@@ -22,9 +24,9 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
-void configurarProceso() {
+void configurarProceso(char* path_config) {
 	/* 0. Configuración */
-	cargarConfigCliente();
+	cargarConfigCliente(path_config);
 	/* 1. Log */
 	cargar_logger_cliente();
 }
