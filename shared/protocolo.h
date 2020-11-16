@@ -9,7 +9,7 @@
 #define PROTOCOLO_H_
 
 #define L_ID 16//largo de los ID (nombres) usados en Cliente y Restaurenate
-#define L_PLATO 16//Largo de todas las comidas y afinidades, ej. Milanesa, ensalada, etc
+#define L_PLATO 24//Largo de todas las comidas y afinidades, ej. Milanesa, ensalada, etc
 #define L_PASO_REC 16////Largo de los pasos de las recetas, ej. Hornear, Reposar, etc.
 
 #include "shared.h"
@@ -54,25 +54,21 @@ typedef struct{
 
 /****************Protocolos****************/
 
-/********HANDSHAKE********/
-//Recibe: nada
-//Retorna: uint32_t tipoProceso;
-
-/********Socket envio********///SE USA DESDE CLIENTE HACIA APP o RESTAURANTE, O DESDE RESTAURANTE HACIA APP
+/********Handshake Inicial********///SE USA COMO PRIMER CONEXION ENTRA CUALQUIER PROCESO. PUEDE GUARDARSE COMO SOCKET DE ESCUCHA DE ACTUALIZACIONES
 //Recibe:
 typedef struct{
 	char id[L_ID];
 	uint32_t posX;
 	uint32_t posY;
 	uint32_t tipoProceso;
-}__attribute__((packed)) t_socket_envio;
+}__attribute__((packed)) t_handshake_inicial;
 
-/********Socket escucha********///SE USA DESDE CLIENTE HACIA APP o RESTAURANTE, O DESDE RESTAURANTE HACIA APP
+/********Handshake********///SE USA DESDE CLIENTE HACIA APP o RESTAURANTE, y REST->APP. PUEDE GUARDARSE COMO SOCKET DE ENVIO Y RECEPCION DE MENSAJES COMUNES
 //Recibe:
 typedef struct{
 	char id[L_ID];
 	uint32_t tipoProceso;
-}__attribute__((packed)) t_socket_escucha;
+}__attribute__((packed)) t_handshake;
 
 
 /********Consultar Restaurantes********/
@@ -243,20 +239,13 @@ void* recibir_mensaje_vacio(int socketEmisor, t_log* logger);//DEVUELVE NULL, ES
 int enviar_entero(t_tipoMensaje tipoMensaje, uint32_t numero, int socketReceptor, t_log* logger);//ENVIA UN RESULTADO O UN ID_PEDIDO
 uint32_t recibir_entero(int socketEmisor, t_log* logger);
 
+/********HANDSHAKE INICIAL********/
+int enviar_handshake_inicial(t_handshake_inicial* mensaje, int socketReceptor, t_log* logger);
+t_handshake_inicial* recibir_handshake_inicial(int socketEmisor, t_log* logger);
 
 /********HANDSHAKE********/
-//int enviar_mensaje_vacio(t_tipoMensaje HANDSHAKE, int socketReceptor, t_log* logger);
-//void* recibir_mensaje_vacio(int socketEmisor, t_log* logger);
-//int enviar_entero(t_tipoMensaje RTA_HANDSHAKE, uint32_t TIPO_PROCESO, int socketReceptor, t_log* logger);
-//uint32_t recibir_entero(int socketEmisor, t_log* logger);
-
-/********SOCKET ENVIO********/
-int enviar_socket_envio(t_socket_envio* mensaje, int socketReceptor, t_log* logger);
-t_socket_envio* recibir_socket_envio(int socketEmisor, t_log* logger);
-
-/********SOCKET ESCUCHA********/
-int enviar_socket_escucha(t_socket_escucha* mensaje, int socketReceptor, t_log* logger);
-t_socket_escucha* recibir_socket_escucha(int socketEmisor, t_log* logger);
+int enviar_handshake(t_handshake* mensaje, int socketReceptor, t_log* logger);
+t_handshake* recibir_handshake(int socketEmisor, t_log* logger);
 
 /********CONSULTAR RESTAURANTES********/
 //int enviar_mensaje_vacio(t_tipoMensaje CONSULTAR_RESTAURANTES, int socketReceptor, t_log* logger);
