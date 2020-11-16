@@ -21,9 +21,10 @@ void connection_handler(int* socket_emisor){
 
 	switch (tipo_mensaje) {
 
-		case HANDSHAKE:{
+		case HANDSHAKE_INICIAL:{
 
-			recibir_mensaje_vacio(*socket_emisor, logger);
+			t_handshake_inicial* handshake_recibido = recibir_handshake_inicial(*socket_emisor, logger);
+			free(handshake_recibido);//NO ME IMPORTA QUIEN SE CONECTA
 			uint32_t miTipoProceso = COMANDA;
 			enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_emisor, logger);
 			break;
