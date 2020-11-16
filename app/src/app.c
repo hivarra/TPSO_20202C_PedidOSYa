@@ -48,12 +48,13 @@ void inicializar() {
 }
 
 void iniciarListas() {
-	restaurantes = list_create();
+	//restaurantes = list_create();
 }
 
 void iniciarSemaforos() {
 
-	pthread_mutex_init(&mutexClientesRestaurantes, 0);
+	pthread_mutex_init(&mutexClientes, NULL);
+	pthread_mutex_init(&mutexRestaurantes, NULL);
 }
 
 //void iniciarRestauranteDefault() {
@@ -77,6 +78,7 @@ void iniciarRepartidores() {
 		repartidor->posY = atoi(coordenada[1]);
 		repartidor->frecuenciaDescanso = atoi(app_conf.frecuencias_descanso[i]);
 		repartidor->tiempoDescanso = atoi(app_conf.tiempos_descanso[i]);
+		liberar_lista(coordenada);
 		i++;
 
 		imprimirRepartidor(repartidor);

@@ -16,23 +16,36 @@
 
 typedef struct{
 	char id[L_ID];
-	uint32_t tipoProceso;
+	char restaurante_seleccionado[L_ID];
+	int socketEscucha;
+	int pos_x;
+	int pos_y;
+	//t_list* pedidos;//(Posiblemente necesario)Pedidos que realiza un cliente
+}t_info_cliente;
+
+typedef struct{
+	char id[L_ID];
 	int socketEscucha;
 	int socketEnvio;
 	int pos_x;
 	int pos_y;
-} t_info_cliente;
+}t_info_restaurante;
 
 int socket_app;
-t_list* restaurantes;
-pthread_mutex_t mutexClientesRestaurantes;
+//t_list* restaurantes;
+pthread_mutex_t mutexRestaurantes;
+pthread_mutex_t mutexClientes;
 
-t_list* listaClientesRestaurantes;
+t_info_restaurante* infoRestoDefault;
 
-void *crearServidor();
-void* atenderConexion();
+t_list* restaurantesConectados;
+t_list* clientesConectados;
+
+void crearServidor();
 void inicializarListaClientesRest();
 void incializarRestoDefault();
+t_info_cliente* buscarClienteConectado(char* id);
+t_info_restaurante* buscarRestauranteConectado(char* id);
 //void imprimir_restaurante(t_restaurante* restaurante);
 //void agregarRestaurante(t_restaurante* restaurante);
 
