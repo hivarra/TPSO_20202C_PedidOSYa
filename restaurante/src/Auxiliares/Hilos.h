@@ -9,9 +9,7 @@
 #define AUXILIARES_HILOS_H_
 
 pthread_mutex_t mutex_id_pcb;
-pthread_mutex_t mutex_dictionary_ready;
-pthread_mutex_t mutex_colas_hornos;
-pthread_mutex_t mutex_lista_cocineros;
-pthread_mutex_t mutex_cola_ready_normal;
+pthread_mutex_t* mutex_colas_hornos;
+pthread_mutex_t* mutex_colas_ready;
 
 #endif /* AUXILIARES_HILOS_H_ */

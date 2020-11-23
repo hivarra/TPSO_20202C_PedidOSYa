@@ -14,6 +14,7 @@
 #include "Configuracion.h"
 #include "Mensajes.h"
 #include "Metadata_restaurante.h"
+#include "Planificador.h"
 
 typedef struct{
 	t_rta_obtener_pedido* rta_obtener_pedido;

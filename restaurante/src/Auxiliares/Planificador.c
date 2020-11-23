@@ -27,18 +27,18 @@ t_pcb* generar_pcb(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta){
 	return pcb;
 }
 void agregar_pcb_en_cola_ready_normal(t_pcb* pcb){
-	t_list* cola_ready_normal = dictionary_get(dictionary_colas_ready,"NORMAL");
-	pthread_mutex_lock(&mutex_cola_ready_normal);
-	list_add(cola_ready_normal,pcb);
-	pthread_mutex_unlock(&mutex_cola_ready_normal);
+//	t_list* cola_ready_normal = dictionary_get(dictionary_colas_ready,"NORMAL");
+//	pthread_mutex_lock(&mutex_cola_ready_normal);
+//	list_add(cola_ready_normal,pcb);
+//	pthread_mutex_unlock(&mutex_cola_ready_normal);
 }
 void pasar_pcb_a_ready(t_pcb* pcb){
-	t_list* cola_ready_con_afinidad  = dictionary_get(dictionary_colas_ready,pcb->nombre_plato);
-	if(cola_ready_con_afinidad == NULL){
-		log_info(logger,"No existe cola READY con afinidad:%s",pcb->nombre_plato);
-		log_info(logger,"Se procede a agregar pcb en cola READY NORMAL");
-		agregar_pcb_en_cola_ready_normal(pcb);
-	}
+//	t_list* cola_ready_con_afinidad  = dictionary_get(dictionary_colas_ready,pcb->nombre_plato);
+//	if(cola_ready_con_afinidad == NULL){
+//		log_info(logger,"No existe cola READY con afinidad:%s",pcb->nombre_plato);
+//		log_info(logger,"Se procede a agregar pcb en cola READY NORMAL");
+//		agregar_pcb_en_cola_ready_normal(pcb);
+//	}
 }
 void pasar_pcb_a_estado(t_pcb* pcb, t_estado_pcb estado){
 	switch(estado){
@@ -104,29 +104,39 @@ void inicializar_algoritmo(){
 	RETARDO_CICLO_CPU = restaurante_conf.retardo_ciclo_cpu;
 }
 void inicializar_colas_ready(){
-	dictionary_colas_ready = dictionary_create();
+	int contar_sin_afinidad(char* afinidad){
+		return string_equals_ignore_case(afinidad,"N");
+	}
+	int cant_sin_afinidad = list_count_satisfying(metadata_restaurante->afinidades_cocineros,(void*)contar_sin_afinidad);
 
-	for(int i=0;i<=list_size(metadata_restaurante->afinidades_cocineros);i++){
-		char* afinidad = list_get(metadata_restaurante->afinidades_cocineros,i);
-		if(string_equals_ignore_case(afinidad,"N")){
-			t_list* cola_ready = list_create();
-			dictionary_put(dictionary_colas_ready,afinidad,cola_ready);
+	if(cant_sin_afinidad > 0){
+		int cantidad_afinidades = list_size(metadata_restaurante->afinidades_cocineros)-cant_sin_afinidad+1;
+		mutex_colas_ready = malloc(sizeof(pthread_mutex_t)*cantidad_afinidades);
+
+		for(int i=0;i<=cantidad_afinidades;i++){
+			lista_colas_ready[i] = list_create();
+			pthread_mutex_init(&mutex_colas_ready[i],NULL);
 		}
 	}
-	t_list* cola_ready_normal = list_create();
-	dictionary_put(dictionary_colas_ready,"NORMAL",cola_ready_normal);
+	else{
+		int cantidad_afinidades = list_size(metadata_restaurante->afinidades_cocineros);
+		mutex_colas_ready = malloc(sizeof(pthread_mutex_t)*cantidad_afinidades);
+
+		for(int i=0;i<=cantidad_afinidades;i++){
+			lista_colas_ready[i] = list_create();
+			pthread_mutex_init(&mutex_colas_ready[i],NULL);
+		}
+	}
 }
 void inicializar_colas_hornos(){
+	mutex_colas_hornos = malloc(sizeof(pthread_mutex_t)*metadata_restaurante->cantidad_hornos);
+
 	for(int i=0;i<=metadata_restaurante->cantidad_hornos;i++){
-		t_list* cola_horno = list_create();
-		list_add(lista_colas_hornos,cola_horno);
+		lista_colas_hornos[i] = list_create();
+		pthread_mutex_init(&mutex_colas_hornos[i],NULL);
 	}
 }
 void inicializar_sem_mutex(){
-	pthread_mutex_init(&mutex_dictionary_ready,NULL);
-	pthread_mutex_init(&mutex_cola_ready_normal,NULL);
-	pthread_mutex_init(&mutex_colas_hornos,NULL);
-	pthread_mutex_init(&mutex_lista_cocineros,NULL);
 	pthread_mutex_init(&mutex_id_pcb,NULL);
 }
 void inicializar_sem_contadores(){
@@ -134,9 +144,17 @@ void inicializar_sem_contadores(){
 	sem_realizar_paso =malloc(sizeof(sem_t)*list_size(metadata_restaurante->afinidades_cocineros));
 }
 void inicializar_hilo_planificador(){
-	pthread_t hilo_planificador;
-	pthread_create(&hilo_planificador,NULL,(void*)planificar_platos,NULL);
-	pthread_detach(hilo_planificador);
+	int contar_sin_afinidad(char* afinidad){
+		return string_equals_ignore_case(afinidad,"N");
+	}
+	int cant_sin_afinidad = list_count_satisfying(metadata_restaurante->afinidades_cocineros,(void*)contar_sin_afinidad);
+	int cantidad_afinidades = list_size(metadata_restaurante->afinidades_cocineros)-cant_sin_afinidad+1;
+
+	for(int i=0;i<=cantidad_afinidades;i++){
+		pthread_t hilo_planificador;
+		pthread_create(&hilo_planificador,NULL,(void*)planificar_platos,NULL);
+		pthread_detach(hilo_planificador);
+	}
 }
 void inicializar_hilos_cocineros(){
 	for(int i=0;i<=list_size(metadata_restaurante->afinidades_cocineros);i++){
