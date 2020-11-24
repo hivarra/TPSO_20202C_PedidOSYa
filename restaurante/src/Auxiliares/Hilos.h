@@ -9,6 +9,7 @@
 #define AUXILIARES_HILOS_H_
 
 pthread_mutex_t mutex_id_pcb;
+pthread_mutex_t mutex_afinidades_maestro;
 pthread_mutex_t* mutex_colas_hornos;
 pthread_mutex_t* mutex_colas_ready;
 
