@@ -234,11 +234,120 @@ uint32_t procesar_guardar_plato(t_guardar_plato* msg_guardar_plato){
 }
 
 uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
-	return 0;
+	uint32_t result = 0;
+
+	char* path_pedido = string_from_format("%s%s", ruta_restaurantes, msg_confirmar_pedido->restaurante);//Es el path del restaurante, pero lo voy a reusar
+	/*Valido si existe el restaurante*/
+	if (!existeDirectorio(path_pedido))
+		log_warning(logger, "El restaurante %s no existe en el FileSystem AFIP.", msg_confirmar_pedido->restaurante);
+	else {
+		/*Valido si existe el pedido*/
+		string_append_with_format(&path_pedido, "/Pedido%d.AFIP", msg_confirmar_pedido->id_pedido);
+		if (!existeFile(path_pedido))
+			log_warning(logger, "El pedido %d del restaurante %s no existe.", msg_confirmar_pedido->id_pedido, msg_confirmar_pedido->restaurante);
+		else{
+			/*Leo los datos de la metadata*/
+			t_metadata* file_mdata = leerMetadataArchivo(path_pedido);
+			/*Leo los bloques del restaurante*/
+			t_file_leido* contenido_file = leer_bloques_file(file_mdata);
+			/*Separo las distintas lineas*/
+			char** lineas_info =  string_split(contenido_file->string_leido, "\n");
+			free(contenido_file->string_leido);
+			/*Valido el estado del pedido*/
+			char* estadoPedido = string_substring_from(lineas_info[0], 14);
+			if (strcmp(estadoPedido, "Pendiente") != 0)
+				log_warning(logger, "El pedido %d del restaurante %s no se encuentra PENDIENTE.", msg_confirmar_pedido->id_pedido, msg_confirmar_pedido->restaurante);
+			else{
+				//Actualizo el estado del pedido
+				char* nuevaLineaEstado = string_from_format("ESTADO_PEDIDO=Confirmado");
+				void* aux_delete = lineas_info[0];
+				lineas_info[0] = nuevaLineaEstado;
+				free(aux_delete);
+				//Creo un nuevo super string concatenando todas las lineas modificadas
+				char* nuevo_contenido = concatenarLineasModificadas(lineas_info);
+				/*Actualizo los files*/
+				contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques);
+				persistirDatos(nuevo_contenido, contenido_file->array_bloques);
+				actualizarSizeMetadataArchivo(path_pedido, strlen(nuevo_contenido)+1);
+				free(nuevo_contenido);
+				result = 1;
+			}
+			liberar_lista(lineas_info);
+			free(contenido_file->array_bloques);
+			free(contenido_file);
+			free(estadoPedido);
+			free(file_mdata);
+		}
+	}
+	free(path_pedido);
+	return result;
 }
 
 t_rta_obtener_pedido* procesar_obtener_pedido(t_obtener_pedido* msg_obtener_pedido){
-	t_rta_obtener_pedido* respuesta = NULL;
+	t_rta_obtener_pedido* respuesta = malloc(sizeof(t_rta_obtener_pedido));
+	respuesta->estado = FAILED;
+	respuesta->cantComidas = 0;
+	respuesta->comidas = list_create();
+
+	char* path_pedido = string_from_format("%s%s", ruta_restaurantes, msg_obtener_pedido->restaurante);//Es el path del restaurante, pero lo voy a reusar
+	/*Valido si existe el restaurante*/
+	if (!existeDirectorio(path_pedido))
+		log_warning(logger, "El restaurante %s no existe en el FileSystem AFIP.", msg_obtener_pedido->restaurante);
+	else {
+		/*Valido si existe el pedido*/
+		string_append_with_format(&path_pedido, "/Pedido%d.AFIP", msg_obtener_pedido->id_pedido);
+		if (!existeFile(path_pedido))
+			log_warning(logger, "El pedido %d del restaurante %s no existe.", msg_obtener_pedido->id_pedido, msg_obtener_pedido->restaurante);
+		else{
+			/*Leo los datos de la metadata*/
+			t_metadata* file_mdata = leerMetadataArchivo(path_pedido);
+			/*Leo los bloques del restaurante*/
+			t_file_leido* contenido_file = leer_bloques_file(file_mdata);
+			free(file_mdata);
+			free(contenido_file->array_bloques);
+			/*Separo las distintas lineas*/
+			char** lineas_info =  string_split(contenido_file->string_leido, "\n");
+			free(contenido_file->string_leido);
+			free(contenido_file);
+			/*Obtengo el estado del pedido*/
+			char* estadoPedido = string_substring_from(lineas_info[0], 14);
+			if (strcmp(estadoPedido, "Pendiente") == 0)
+				respuesta->estado = PENDIENTE;
+			else if(strcmp(estadoPedido, "Confirmado") == 0)
+				respuesta->estado = CONFIRMADO;
+			else if(strcmp(estadoPedido, "Terminado") == 0)
+				respuesta->estado = TERMINADO;
+			free(estadoPedido);
+			/*Obtengo la cantidad de platos*/
+			char* platos = string_substring_from(lineas_info[1], 13);
+			char** arrayPlatos = string_get_string_as_array(platos);
+			free(platos);
+			char* cantidades = string_substring_from(lineas_info[2], 16);
+			char** arrayCantidades = string_get_string_as_array(cantidades);
+			free(cantidades);
+			char* cantidadesListas = string_substring_from(lineas_info[3], 15);
+			char** arrayCantidadesListas = string_get_string_as_array(cantidadesListas);
+			free(cantidadesListas);
+			liberar_lista(lineas_info);
+
+			int i = 0;
+			while(arrayPlatos[i]!=NULL && arrayCantidades[i]!=NULL && arrayCantidadesListas[i]!=NULL){
+
+				t_comida* comida_i = calloc(1,sizeof(t_comida));
+				strcpy(comida_i->nombre, arrayPlatos[i]);
+				comida_i->cantTotal = atoi(arrayCantidades[i]);
+				comida_i->cantLista = atoi(arrayCantidadesListas[i]);
+
+				list_add(respuesta->comidas, comida_i);
+				i++;
+			}
+			respuesta->cantComidas = i;
+			liberar_lista(arrayPlatos);
+			liberar_lista(arrayCantidades);
+			liberar_lista(arrayCantidadesListas);
+		}
+	}
+	free(path_pedido);
 	return respuesta;
 }
 
@@ -345,11 +454,136 @@ t_rta_obtener_restaurante* procesar_obtener_restaurante(char* nombre_restaurante
 }
 
 uint32_t procesar_plato_listo(t_plato_listo* msg_plato_listo){
-	return 0;
+	uint32_t result = 0;
+
+	char* path_pedido = string_from_format("%s%s", ruta_restaurantes, msg_plato_listo->restaurante);//Es el path del restaurante, pero lo voy a reusar
+	/*Valido si existe el restaurante*/
+	if (!existeDirectorio(path_pedido))
+		log_warning(logger, "El restaurante %s no existe en el FileSystem AFIP.", msg_plato_listo->restaurante);
+	else {
+		/*Valido si existe el pedido*/
+		string_append_with_format(&path_pedido, "/Pedido%d.AFIP", msg_plato_listo->id_pedido);
+		if (!existeFile(path_pedido))
+			log_warning(logger, "El pedido %d del restaurante %s no existe.", msg_plato_listo->id_pedido, msg_plato_listo->restaurante);
+		else{
+			/*Leo los datos de la metadata*/
+			t_metadata* file_mdata = leerMetadataArchivo(path_pedido);
+			/*Leo los bloques del restaurante*/
+			t_file_leido* contenido_file = leer_bloques_file(file_mdata);
+			/*Separo las distintas lineas*/
+			char** lineas_info =  string_split(contenido_file->string_leido, "\n");
+			free(contenido_file->string_leido);
+			/*Valido el estado del pedido*/
+			char* estadoPedido = string_substring_from(lineas_info[0], 14);
+			if (strcmp(estadoPedido, "Confirmado") != 0)
+				log_warning(logger, "El pedido %d del restaurante %s no se encuentra PENDIENTE.", msg_plato_listo->id_pedido, msg_plato_listo->restaurante);
+			else{
+				/*Verifico si el plato ya existe en el pedido*/
+				if(string_contains(lineas_info[1], msg_plato_listo->plato)){
+					/*Obtengo el plato*/
+					char* platos = string_substring_from(lineas_info[1], 13);
+					char** arrayPlatos = string_get_string_as_array(platos);
+					free(platos);
+					char* cantidadesListas = string_substring_from(lineas_info[3], 15);
+					char** arrayCantidadesListas = string_get_string_as_array(cantidadesListas);
+					free(cantidadesListas);
+					char* newLineaCantidadesLista = string_from_format("CANTIDAD_LISTA=[");
+
+					int i = 0;
+					while(arrayPlatos[i]!=NULL && arrayCantidadesListas[i]!=NULL){
+						if (strcmp(arrayPlatos[i], msg_plato_listo->plato) == 0){
+								int nuevaCantidad = atoi(arrayCantidadesListas[i]) + 1;
+								if(arrayCantidadesListas[i+1]!=NULL)
+									string_append_with_format(&newLineaCantidadesLista, "%d,", nuevaCantidad);
+								else
+									string_append_with_format(&newLineaCantidadesLista, "%d", nuevaCantidad);
+								result = 1;
+						}
+						else{
+							if(arrayCantidadesListas[i+1]!=NULL)
+								string_append_with_format(&newLineaCantidadesLista, "%s,", arrayCantidadesListas[i]);
+							else
+								string_append(&newLineaCantidadesLista, arrayCantidadesListas[i]);
+						}
+						i++;
+					}
+					string_append(&newLineaCantidadesLista, "]");
+					liberar_lista(arrayPlatos);
+					liberar_lista(arrayCantidadesListas);
+					void* aux_delete = lineas_info[3];
+					lineas_info[3] = newLineaCantidadesLista;
+					free(aux_delete);
+
+					//Creo un nuevo super string concatenando todas las lineas modificadas
+					char* nuevo_contenido = concatenarLineasModificadas(lineas_info);
+					/*Actualizo los files*/
+					contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques);
+					persistirDatos(nuevo_contenido, contenido_file->array_bloques);
+					actualizarSizeMetadataArchivo(path_pedido, strlen(nuevo_contenido)+1);
+					free(nuevo_contenido);
+				}
+				else
+					log_warning(logger, "El plato %s no se encuentra dentro del pedido pedido %d del restaurante %s.", msg_plato_listo->plato, msg_plato_listo->id_pedido, msg_plato_listo->restaurante);
+			}
+			liberar_lista(lineas_info);
+			free(contenido_file->array_bloques);
+			free(contenido_file);
+			free(estadoPedido);
+			free(file_mdata);
+		}
+	}
+	free(path_pedido);
+	return result;
 }
 
 uint32_t procesar_terminar_pedido(t_terminar_pedido* msg_terminar_pedido){
-	return 0;
+	uint32_t result = 0;
+
+	char* path_pedido = string_from_format("%s%s", ruta_restaurantes, msg_terminar_pedido->restaurante);//Es el path del restaurante, pero lo voy a reusar
+	/*Valido si existe el restaurante*/
+	if (!existeDirectorio(path_pedido))
+		log_warning(logger, "El restaurante %s no existe en el FileSystem AFIP.", msg_terminar_pedido->restaurante);
+	else {
+		/*Valido si existe el pedido*/
+		string_append_with_format(&path_pedido, "/Pedido%d.AFIP", msg_terminar_pedido->id_pedido);
+		if (!existeFile(path_pedido))
+			log_warning(logger, "El pedido %d del restaurante %s no existe.", msg_terminar_pedido->id_pedido, msg_terminar_pedido->restaurante);
+		else{
+			/*Leo los datos de la metadata*/
+			t_metadata* file_mdata = leerMetadataArchivo(path_pedido);
+			/*Leo los bloques del restaurante*/
+			t_file_leido* contenido_file = leer_bloques_file(file_mdata);
+			/*Separo las distintas lineas*/
+			char** lineas_info =  string_split(contenido_file->string_leido, "\n");
+			free(contenido_file->string_leido);
+			/*Valido el estado del pedido*/
+			char* estadoPedido = string_substring_from(lineas_info[0], 14);
+			if (strcmp(estadoPedido, "Confirmado") != 0)
+				log_warning(logger, "El pedido %d del restaurante %s no se encuentra CONFIRMADO.", msg_terminar_pedido->id_pedido, msg_terminar_pedido->restaurante);
+			else{
+				//Actualizo el estado del pedido
+				char* nuevaLineaEstado = string_from_format("ESTADO_PEDIDO=Terminado");
+				void* aux_delete = lineas_info[0];
+				lineas_info[0] = nuevaLineaEstado;
+				free(aux_delete);
+				//Creo un nuevo super string concatenando todas las lineas modificadas
+				char* nuevo_contenido = concatenarLineasModificadas(lineas_info);
+				/*Actualizo los files*/
+				contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques);
+				persistirDatos(nuevo_contenido, contenido_file->array_bloques);
+				actualizarSizeMetadataArchivo(path_pedido, strlen(nuevo_contenido)+1);
+				free(nuevo_contenido);
+				result = 1;
+			}
+			liberar_lista(lineas_info);
+			free(contenido_file->array_bloques);
+			free(contenido_file);
+			free(estadoPedido);
+			free(file_mdata);
+		}
+	}
+	free(path_pedido);
+	return result;
 }
 
 t_rta_obtener_receta* procesar_obtener_receta(char* nombre_receta){

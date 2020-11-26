@@ -35,7 +35,11 @@ void connection_handler(int* socket_emisor) {
 	case GUARDAR_PEDIDO: {
 		t_guardar_pedido* msg_guardar_pedido = recibir_guardar_pedido(*socket_emisor, logger);
 		log_trace(logger, "Restaurante: %s, ID_Pedido: %d", msg_guardar_pedido->restaurante, msg_guardar_pedido->id_pedido);
+
+		pthread_mutex_t* semaforo = mutex_pedido(msg_guardar_pedido->restaurante, msg_guardar_pedido->id_pedido);
 		uint32_t resultado_guardar_pedido = procesar_guardar_pedido(msg_guardar_pedido);
+		pthread_mutex_unlock(semaforo);
+
 		free(msg_guardar_pedido);
 		enviar_entero(RTA_GUARDAR_PEDIDO, resultado_guardar_pedido, *socket_emisor, logger);
 		break;
@@ -43,7 +47,11 @@ void connection_handler(int* socket_emisor) {
 	case GUARDAR_PLATO: {
 		t_guardar_plato* recibido = recibir_guardar_plato(*socket_emisor, logger);
 		log_trace(logger, "Restaurante: %s, ID_Pedido: %d, Plato: %s, Cant: %d", recibido->restaurante, recibido->id_pedido, recibido->plato, recibido->cantPlato);
+
+		pthread_mutex_t* semaforo = mutex_pedido(recibido->restaurante, recibido->id_pedido);
 		uint32_t resultado_guardar_plato = procesar_guardar_plato(recibido);
+		pthread_mutex_unlock(semaforo);
+
 		free(recibido);
 		enviar_entero(RTA_GUARDAR_PLATO, resultado_guardar_plato, *socket_emisor, logger);
 		break;
@@ -51,7 +59,11 @@ void connection_handler(int* socket_emisor) {
 	case CONFIRMAR_PEDIDO: {
 		t_confirmar_pedido* recibido = recibir_confirmar_pedido(*socket_emisor, logger);
 		log_trace(logger, "Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
+
+		pthread_mutex_t* semaforo = mutex_pedido(recibido->restaurante, recibido->id_pedido);
 		uint32_t resultado = procesar_confirmar_pedido(recibido);
+		pthread_mutex_unlock(semaforo);
+
 		free(recibido);
 		enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, *socket_emisor, logger);
 		break;
@@ -59,7 +71,11 @@ void connection_handler(int* socket_emisor) {
 	case OBTENER_PEDIDO: {
 		t_obtener_pedido* recibido = recibir_obtener_pedido(*socket_emisor, logger);
 		log_trace(logger, "Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
+
+		pthread_mutex_t* semaforo = mutex_pedido(recibido->restaurante, recibido->id_pedido);
 		t_rta_obtener_pedido* respuesta = procesar_obtener_pedido(recibido);
+		pthread_mutex_unlock(semaforo);
+
 		free(recibido);
 		enviar_rta_obtener_pedido(respuesta, *socket_emisor, logger);
 		list_destroy_and_destroy_elements(respuesta->comidas, free);
@@ -80,7 +96,11 @@ void connection_handler(int* socket_emisor) {
 	case PLATO_LISTO: {
 		t_plato_listo* recibido = recibir_plato_listo(*socket_emisor, logger);
 		log_trace(logger, "Restaurante: %s, ID_Pedido: %d, Plato: %s", recibido->restaurante, recibido->id_pedido, recibido->plato);
+
+		pthread_mutex_t* semaforo = mutex_pedido(recibido->restaurante, recibido->id_pedido);
 		uint32_t resultado = procesar_plato_listo(recibido);
+		pthread_mutex_unlock(semaforo);
+
 		free(recibido);
 		enviar_entero(RTA_PLATO_LISTO, resultado, *socket_emisor, logger);
 		break;
@@ -98,7 +118,11 @@ void connection_handler(int* socket_emisor) {
 	case TERMINAR_PEDIDO: {
 		t_terminar_pedido* recibido = recibir_terminar_pedido(*socket_emisor, logger);
 		log_trace(logger, "Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
+
+		pthread_mutex_t* semaforo = mutex_pedido(recibido->restaurante, recibido->id_pedido);
 		uint32_t resultado = procesar_terminar_pedido(recibido);
+		pthread_mutex_unlock(semaforo);
+
 		free(recibido);
 		enviar_entero(RTA_TERMINAR_PEDIDO, resultado, *socket_emisor, logger);
 		break;

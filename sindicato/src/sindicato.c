@@ -42,10 +42,17 @@ int main(int argc, char **argv) {
 
 void signalHandler(int sig){
 
+	void _destruir_semaforos_pedidos(pthread_mutex_t* semaforo){
+		pthread_mutex_destroy(semaforo);
+		free(semaforo);
+	}
+
 	close(socket_servidor);
 
 	//bitarray_destroy(bitmap);
 	pthread_mutex_destroy(&mutex_bitmap);
+	pthread_mutex_destroy(&mutexSemaforosPedidos);
+	dictionary_destroy_and_destroy_elements(semaforos_pedidos, (void*)_destruir_semaforos_pedidos);
 	munmap(bmap, cantidad_bloques/8);
 
 	free(ruta_files);

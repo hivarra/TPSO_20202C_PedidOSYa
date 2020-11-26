@@ -141,3 +141,24 @@ t_file_leido* leer_bloques_file(t_metadata* mData){
 
 	return file_leido;
 }
+
+pthread_mutex_t* mutex_pedido(char* restaurante, uint32_t pedido){
+	pthread_mutex_t* semaforo;
+
+	char* nombre_semaforo = string_from_format("%s_%d", restaurante, pedido);
+
+	if(dictionary_has_key(semaforos_pedidos, nombre_semaforo))
+		semaforo = dictionary_get(semaforos_pedidos, nombre_semaforo);
+	else{
+		semaforo = malloc(sizeof(pthread_mutex_t));
+		pthread_mutex_lock(&mutexSemaforosPedidos);
+		pthread_mutex_init(semaforo, NULL);
+		dictionary_put(semaforos_pedidos, nombre_semaforo, semaforo);
+		pthread_mutex_unlock(&mutexSemaforosPedidos);
+	}
+
+	free(nombre_semaforo);
+	pthread_mutex_lock(semaforo);
+
+	return semaforo;
+}

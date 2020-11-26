@@ -47,6 +47,8 @@ void montarFileSystem() {
 		log_trace(logger, "File System AFIP: Creación finalizada.");
 	}
 	free(path_metadata);
+	semaforos_pedidos = dictionary_create();
+	pthread_mutex_init(&mutexSemaforosPedidos, NULL);
 }
 
 void crearBitmap() {
