@@ -170,7 +170,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 
 	switch(tipo_mensaje) {
 		case OBTENER_RESTAURANTE:{
-			char* msg_obtener_restaurante = malloc(L_ID);
+			char* msg_obtener_restaurante = calloc(1,L_ID);
 			strcpy(msg_obtener_restaurante, parametros[1]);
 			log_info(logger, "Parametro a enviar: Restaurante: %s", msg_obtener_restaurante);
 			enviar_obtener_restaurante(msg_obtener_restaurante, socket_bidireccional, logger);
@@ -194,7 +194,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case CONSULTAR_PLATOS:{
-			char* msg_consultar_platos = malloc(L_ID);
+			char* msg_consultar_platos = calloc(1,L_ID);
 			strcpy(msg_consultar_platos, parametros[1]);
 			log_info(logger, "Parametro a enviar: Restaurante: %s", msg_consultar_platos);
 			enviar_consultar_platos(msg_consultar_platos, socket_bidireccional, logger);
@@ -319,7 +319,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case OBTENER_RECETA:{
-			char* msg_obtener_receta = malloc(L_PLATO);
+			char* msg_obtener_receta = calloc(1,L_PLATO);
 			strcpy(msg_obtener_receta, parametros[1]);
 			log_info(logger, "Parametro a enviar: Comida: %s", msg_obtener_receta);
 			enviar_obtener_receta(msg_obtener_receta, socket_bidireccional, logger);
