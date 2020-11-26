@@ -47,6 +47,11 @@ void* memoria_fisica;
 t_params_global_mem_principal mem_principal_global;
 t_list* lista_entradas_paginas;
 t_dictionary *tablas_segmentos;//key:nombre_restaurante
+t_dictionary *semaforos_pedidos;//key:restaurante_idPedido
+
+pthread_mutex_t mutex_lista_global;
+pthread_mutex_t mutex_tablas;
+pthread_mutex_t mutexSemaforosPedidos;
 
 char* path_memoria_swap;
 

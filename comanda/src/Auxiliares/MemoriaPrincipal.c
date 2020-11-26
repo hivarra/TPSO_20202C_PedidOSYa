@@ -15,7 +15,11 @@ void inicializar_memoria(){
 	setear_params_global_mem_principal();
 	inicializar_memoria_principal();
 	tablas_segmentos = dictionary_create();
+	semaforos_pedidos = dictionary_create();
 	lista_entradas_paginas = list_create();
+	pthread_mutex_init(&mutex_tablas, NULL);
+	pthread_mutex_init(&mutex_lista_global, NULL);
+	pthread_mutex_init(&mutexSemaforosPedidos, NULL);
 }
 
 void inicializar_memoria_principal(){

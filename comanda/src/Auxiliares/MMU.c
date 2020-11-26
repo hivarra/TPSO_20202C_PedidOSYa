@@ -10,8 +10,12 @@
 
 t_list* inicializar_tabla_segmentos(char* nombre_restaurante){
 	t_list* tabla_segmentos = list_create();
+
+	pthread_mutex_lock(&mutex_tablas);
 	if (tabla_segmentos != NULL)
 		dictionary_put(tablas_segmentos, nombre_restaurante, tabla_segmentos);
+	pthread_mutex_unlock(&mutex_tablas);
+
 	return tabla_segmentos;
 }
 
@@ -64,7 +68,9 @@ int crear_tabla_de_paginas_de_pedido(t_segmento* segmento_pedido){
 }
 
 t_segmento* obtener_segmento_del_pedido(uint32_t id_pedido, char* nombre_restaurante){
+	pthread_mutex_t* semRest = mutex_restaurante(nombre_restaurante);
 	t_list* tabla_segmentos = dictionary_get(tablas_segmentos, nombre_restaurante);
+	pthread_mutex_unlock(semRest);
 
 	bool existe_pedido_en_segmento(t_segmento* segmento){
 		return segmento->id_pedido == id_pedido;
@@ -73,6 +79,7 @@ t_segmento* obtener_segmento_del_pedido(uint32_t id_pedido, char* nombre_restaur
 }
 
 void borrar_segmento_del_pedido(uint32_t id_pedido, char* nombre_restaurante){
+	pthread_mutex_t* semRest = mutex_restaurante(nombre_restaurante);
 	t_list* tabla_segmentos = dictionary_get(tablas_segmentos, nombre_restaurante);
 
 	bool existe_pedido_en_segmento(t_segmento* segmento){
@@ -80,49 +87,74 @@ void borrar_segmento_del_pedido(uint32_t id_pedido, char* nombre_restaurante){
 	}
 
 	list_remove_and_destroy_by_condition(tabla_segmentos, (void*)existe_pedido_en_segmento, free);
+	pthread_mutex_unlock(semRest);
+
+	pthread_mutex_lock(&mutex_tablas);
 	if (list_size(tabla_segmentos) == 0)
 		dictionary_remove_and_destroy(tablas_segmentos, nombre_restaurante, (void*)list_destroy);
+	pthread_mutex_unlock(&mutex_tablas);
 }
 
 void borrar_entrada_en_lista_global(t_entrada_pagina* entrada_pag){
 	bool _buscar_por_frame_ms(t_entrada_pagina* entrada){
 		return entrada->nro_frame_ms == entrada_pag->nro_frame_ms;
 	}
+
+	pthread_mutex_lock(&mutex_lista_global);
 	list_remove_by_condition(lista_entradas_paginas, (void*)_buscar_por_frame_ms);
+	pthread_mutex_unlock(&mutex_lista_global);
 }
 
-t_entrada_pagina* buscar_plato_en_memoria(t_list* lista_paginas_mem,char* plato){
-	t_entrada_pagina* pagina_encontrada = NULL;
+//t_entrada_pagina* buscar_plato_en_memoria(t_list* lista_paginas_mem,char* plato){
+//	t_entrada_pagina* pagina_encontrada = NULL;
+//
+//	bool plato_buscado(t_entrada_pagina* entrada_pagina){
+//		t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
+//		actualizar_bits_de_uso(entrada_pagina);
+//		return (strcmp(pagina->nombre_comida,plato) == 0);
+//	}
+//	pagina_encontrada = list_find(lista_paginas_mem,(void*)plato_buscado);
+//	return pagina_encontrada;
+//}
 
-	bool plato_buscado(t_entrada_pagina* entrada_pagina){
-		t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
-		actualizar_bits_de_uso(entrada_pagina);
-		return (strcmp(pagina->nombre_comida,plato) == 0);
-	}
-	pagina_encontrada = list_find(lista_paginas_mem,(void*)plato_buscado);
-	return pagina_encontrada;
-}
+//t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){//TODO:PREGUNTAR SI LA SECUENCIA ES CORRECTA O CORRESPONDE HACERLO SECUENCIAL
+//	t_entrada_pagina* entrada_pagina = NULL;
+//
+//	/*SE RECORRE LAS PAGINAS QUE ESTAN EN MP*/
+//	bool obtener_pag_en_mem(t_entrada_pagina* entrada_pag){
+//		return entrada_pag->presencia;
+//	}
+//	bool obtener_pag_en_swap(t_entrada_pagina* entrada_pag){
+//		return !entrada_pag->presencia;
+//	}
+//	t_list* lista_pag_mem = list_filter(lista_paginas,(void*)obtener_pag_en_mem);
+//	entrada_pagina = buscar_plato_en_memoria(lista_pag_mem,plato);
+//	list_destroy(lista_pag_mem);
+//	/*SI NO ESTÁ EN MP, LUEGO SE RECORREN LAS PAGINAS QUE ESTAN EN SWAP*/
+//	if(entrada_pagina == NULL){
+//		t_list* lista_pag_swap = list_filter(lista_paginas,(void*)obtener_pag_en_swap);
+//		entrada_pagina = buscar_plato_en_swap(lista_pag_swap,plato);
+//		list_destroy(lista_pag_swap);
+//	}
+//	return entrada_pagina;
+//}
 
-t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){//TODO:PREGUNTAR SI LA SECUENCIA ES CORRECTA O CORRESPONDE HACERLO SECUENCIAL
-	t_entrada_pagina* entrada_pagina = NULL;
+t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){//MODO SECUENCIAL
+	t_entrada_pagina* entrada_buscada = NULL;
 
-	/*SE RECORRE LAS PAGINAS QUE ESTAN EN MP*/
-	bool obtener_pag_en_mem(t_entrada_pagina* entrada_pag){
-		return entrada_pag->presencia;
+	for (int i = 0; i < list_size(lista_paginas); i++){
+		t_entrada_pagina* entrada_i = list_get(lista_paginas, i);
+		if (!entrada_i->presencia)
+			reemplazo_de_pagina(entrada_i);
+
+		t_pagina* pagina = memoria_fisica + entrada_i->nro_frame_mp*sizeof(t_pagina);
+		actualizar_bits_de_uso(entrada_i);
+		if (strcmp(pagina->nombre_comida,plato) == 0){
+			entrada_buscada = entrada_i;
+			break;
+		}
 	}
-	bool obtener_pag_en_swap(t_entrada_pagina* entrada_pag){
-		return !entrada_pag->presencia;
-	}
-	t_list* lista_pag_mem = list_filter(lista_paginas,(void*)obtener_pag_en_mem);
-	entrada_pagina = buscar_plato_en_memoria(lista_pag_mem,plato);
-	list_destroy(lista_pag_mem);
-	/*SI NO ESTÁ EN MP, LUEGO SE RECORREN LAS PAGINAS QUE ESTAN EN SWAP*/
-	if(entrada_pagina == NULL){
-		t_list* lista_pag_swap = list_filter(lista_paginas,(void*)obtener_pag_en_swap);
-		entrada_pagina = buscar_plato_en_swap(lista_pag_swap,plato);
-		list_destroy(lista_pag_swap);
-	}
-	return entrada_pagina;
+	return entrada_buscada;
 }
 
 uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
@@ -136,7 +168,11 @@ uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
 			return false;
 		}
 		/*SE CREA SEGMENTO*/
+		pthread_mutex_t* semRest = mutex_restaurante(info_guardar_pedido->restaurante);
+		pthread_mutex_t* semPed = mutex_pedido(info_guardar_pedido->restaurante, info_guardar_pedido->id_pedido);
 		t_segmento* segmento_pedido = inicializar_segmento_pedido(tabla_segmentos,info_guardar_pedido->id_pedido);
+		pthread_mutex_unlock(semPed);
+		pthread_mutex_unlock(semRest);
 		if (segmento_pedido != NULL)
 			ret = true;
 		else
@@ -148,7 +184,11 @@ uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
 			/*SE BUSCA LA TABLA DE SEGMENTO*/
 			t_list* tabla_segmentos = dictionary_get(tablas_segmentos,info_guardar_pedido->restaurante);
 			/*SE CREA SEGMENTO*/
+			pthread_mutex_t* semRest = mutex_restaurante(info_guardar_pedido->restaurante);
+			pthread_mutex_t* semPed = mutex_pedido(info_guardar_pedido->restaurante, info_guardar_pedido->id_pedido);
 			t_segmento* segmento_pedido = inicializar_segmento_pedido(tabla_segmentos,info_guardar_pedido->id_pedido);
+			pthread_mutex_unlock(semPed);
+			pthread_mutex_unlock(semRest);
 			if (segmento_pedido != NULL)
 				ret = true;
 			else
@@ -166,6 +206,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 	if(!existe_tabla_de_segmentos_de_restaurante(info_guardar_plato->restaurante))
 		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_guardar_plato->restaurante);
 	else{
+		pthread_mutex_t* semPed = mutex_pedido(info_guardar_plato->restaurante, info_guardar_plato->id_pedido);
 		t_segmento* segmento = obtener_segmento_del_pedido(info_guardar_plato->id_pedido,info_guardar_plato->restaurante);
 		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
 		if(segmento!=NULL){
@@ -184,7 +225,11 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 					/*SI HAY LUGAR EN SWAP, CREO LA ENTRADA DE PAGINA*/
 					t_entrada_pagina* entrada_nueva = inicializar_entrada_pagina();
 					list_add(segmento->tabla_paginas, entrada_nueva);
+
+					pthread_mutex_lock(&mutex_lista_global);
 					list_add(lista_entradas_paginas, entrada_nueva);
+					pthread_mutex_unlock(&mutex_lista_global);
+
 					entrada_nueva->nro_frame_ms = free_frame_swap;
 					entrada_nueva->modificado = 1;
 					/*ESCRIBO LA PAGINA EN SWAP*/
@@ -203,6 +248,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 		}
 		else
 			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_guardar_plato->id_pedido,info_guardar_plato->restaurante);
+		pthread_mutex_unlock(semPed);
 	}
 	return ret;
 }
@@ -245,6 +291,7 @@ t_rta_obtener_pedido* procesar_obtener_pedido(t_obtener_pedido* info_obtener_ped
 	if(!existe_tabla_de_segmentos_de_restaurante(info_obtener_pedido->restaurante))
 		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_obtener_pedido->restaurante);
 	else{
+		pthread_mutex_t* semPed = mutex_pedido(info_obtener_pedido->restaurante, info_obtener_pedido->id_pedido);
 		t_segmento* segmento = obtener_segmento_del_pedido(info_obtener_pedido->id_pedido,info_obtener_pedido->restaurante);
 		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
 		if(segmento!=NULL){
@@ -254,6 +301,7 @@ t_rta_obtener_pedido* procesar_obtener_pedido(t_obtener_pedido* info_obtener_ped
 		}
 		else
 			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_obtener_pedido->id_pedido,info_obtener_pedido->restaurante);
+		pthread_mutex_unlock(semPed);
 	}
 	return respuesta;
 }
@@ -264,6 +312,7 @@ uint32_t procesar_confirmar_pedido(t_confirmar_pedido* info_confirmar_pedido){
 	if(!existe_tabla_de_segmentos_de_restaurante(info_confirmar_pedido->restaurante))
 		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_confirmar_pedido->restaurante);
 	else{
+		pthread_mutex_t* semPed = mutex_pedido(info_confirmar_pedido->restaurante, info_confirmar_pedido->id_pedido);
 		t_segmento* segmento = obtener_segmento_del_pedido(info_confirmar_pedido->id_pedido,info_confirmar_pedido->restaurante);
 		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
 		if(segmento!=NULL){
@@ -278,6 +327,7 @@ uint32_t procesar_confirmar_pedido(t_confirmar_pedido* info_confirmar_pedido){
 		}
 		else
 			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_confirmar_pedido->id_pedido,info_confirmar_pedido->restaurante);
+		pthread_mutex_unlock(semPed);
 	}
 	return ret;
 }
@@ -288,6 +338,7 @@ uint32_t procesar_plato_listo(t_plato_listo* info_plato_listo){
 	if(!existe_tabla_de_segmentos_de_restaurante(info_plato_listo->restaurante))
 		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_plato_listo->restaurante);
 	else{
+		pthread_mutex_t* semPed = mutex_pedido(info_plato_listo->restaurante, info_plato_listo->id_pedido);
 		t_segmento* segmento = obtener_segmento_del_pedido(info_plato_listo->id_pedido,info_plato_listo->restaurante);
 		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
 		if(segmento!=NULL){
@@ -317,6 +368,7 @@ uint32_t procesar_plato_listo(t_plato_listo* info_plato_listo){
 		}
 		else
 			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_plato_listo->id_pedido,info_plato_listo->restaurante);
+		pthread_mutex_unlock(semPed);
 	}
 	return ret;
 }
@@ -327,6 +379,7 @@ uint32_t procesar_finalizar_pedido(t_finalizar_pedido* info_finalizar_pedido){
 	if(!existe_tabla_de_segmentos_de_restaurante(info_finalizar_pedido->restaurante))
 		log_warning(logger,"La tabla de segmentos del restaurante %s no existe.",info_finalizar_pedido->restaurante);
 	else{
+		pthread_mutex_t* semPed = mutex_pedido(info_finalizar_pedido->restaurante, info_finalizar_pedido->id_pedido);
 		t_segmento* segmento = obtener_segmento_del_pedido(info_finalizar_pedido->id_pedido,info_finalizar_pedido->restaurante);
 		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
 		if(segmento!=NULL){
@@ -346,6 +399,7 @@ uint32_t procesar_finalizar_pedido(t_finalizar_pedido* info_finalizar_pedido){
 		}
 		else
 			log_warning(logger,"El segmento del pedido %d para el restaurante %s no existe.",info_finalizar_pedido->id_pedido,info_finalizar_pedido->restaurante);
+		pthread_mutex_unlock(semPed);
 	}
 	return ret;
 }

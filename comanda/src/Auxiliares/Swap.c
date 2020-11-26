@@ -21,6 +21,7 @@ void inicializar_memoria_swap(){
 	}
 	puntero_clock = 0;
 	pthread_mutex_init(&mutex_swap, NULL);
+	pthread_mutex_init(&mutex_reemplazo, NULL);
 }
 
 void volcar_pagina_a_swap(t_entrada_pagina* entrada_pagina, t_pagina* pagina){
@@ -89,6 +90,7 @@ t_entrada_pagina* entrada_uso0_modificado1(){
 }
 
 void reemplazo_de_pagina(t_entrada_pagina* entrada_pagina){
+	pthread_mutex_lock(&mutex_reemplazo);
 	t_entrada_pagina* entrada_pagina_buscada;
 
 	log_info(logger, "[REEMPLAZO]Comienzo de reemplazo de pagina; Posicion de Swap a traer: %d.", entrada_pagina->nro_frame_ms);
@@ -137,23 +139,23 @@ void reemplazo_de_pagina(t_entrada_pagina* entrada_pagina){
 		log_info(logger, "[REEMPLAZO]Frame seleccionado: %d (LIBRE); Posicion de Swap a traer: %d.", frame_libre_mp, entrada_pagina->nro_frame_ms);
 		traer_pagina_de_swap(frame_libre_mp, entrada_pagina);
 	}
-
+	pthread_mutex_unlock(&mutex_reemplazo);
 }
 
-t_entrada_pagina* buscar_plato_en_swap(t_list* lista_paginas_swap, char* plato){
-
-	t_entrada_pagina* entrada_pag_buscada = NULL;
-
-	bool pagina_swap_contiene_plato(t_entrada_pagina* entrada_pag){
-		reemplazo_de_pagina(entrada_pag);
-		t_pagina* pag = memoria_fisica+entrada_pag->nro_frame_mp*sizeof(t_pagina);
-		actualizar_bits_de_uso(entrada_pag);
-		return (strcmp(pag->nombre_comida, plato) == 0);
-	}
-
-	entrada_pag_buscada = list_find(lista_paginas_swap, (void*)pagina_swap_contiene_plato);
-
-	return entrada_pag_buscada;
-}
+//t_entrada_pagina* buscar_plato_en_swap(t_list* lista_paginas_swap, char* plato){
+//
+//	t_entrada_pagina* entrada_pag_buscada = NULL;
+//
+//	bool pagina_swap_contiene_plato(t_entrada_pagina* entrada_pag){
+//		reemplazo_de_pagina(entrada_pag);
+//		t_pagina* pag = memoria_fisica+entrada_pag->nro_frame_mp*sizeof(t_pagina);
+//		actualizar_bits_de_uso(entrada_pag);
+//		return (strcmp(pag->nombre_comida, plato) == 0);
+//	}
+//
+//	entrada_pag_buscada = list_find(lista_paginas_swap, (void*)pagina_swap_contiene_plato);
+//
+//	return entrada_pag_buscada;
+//}
 
 

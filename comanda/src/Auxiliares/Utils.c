@@ -7,6 +7,11 @@
 
 #include "Utils.h"
 
+void _destruir_semaforos_pedidos(pthread_mutex_t* semaforo){
+	pthread_mutex_destroy(semaforo);
+	free(semaforo);
+}
+
 void signalHandler(int sig){
 
 	close(socket_servidor);
@@ -14,6 +19,11 @@ void signalHandler(int sig){
 	liberar_memoria();
 	liberar_memoria_swap();
 	pthread_mutex_destroy(&mutex_swap);
+	pthread_mutex_destroy(&mutex_tablas);
+	pthread_mutex_destroy(&mutex_lista_global);
+	pthread_mutex_destroy(&mutexSemaforosPedidos);
+
+	dictionary_destroy_and_destroy_elements(semaforos_pedidos, (void*)_destruir_semaforos_pedidos);
 
 	bitarray_destroy(bitmap_mp);
 	free(reserva_bitmap_mp);
@@ -109,4 +119,43 @@ void actualizar_bits_de_uso(t_entrada_pagina* entrada_pagina){
 		entrada_pagina->ultimo_uso = timestamp();
 	else
 		entrada_pagina->uso = 1;
+}
+
+pthread_mutex_t* mutex_pedido(char* restaurante, uint32_t pedido){
+	pthread_mutex_t* semaforo;
+
+	char* nombre_semaforo = string_from_format("%s_%d", restaurante, pedido);
+
+	if(dictionary_has_key(semaforos_pedidos, nombre_semaforo))
+		semaforo = dictionary_get(semaforos_pedidos, nombre_semaforo);
+	else{
+		semaforo = malloc(sizeof(pthread_mutex_t));
+		pthread_mutex_lock(&mutexSemaforosPedidos);
+		pthread_mutex_init(semaforo, NULL);
+		dictionary_put(semaforos_pedidos, nombre_semaforo, semaforo);
+		pthread_mutex_unlock(&mutexSemaforosPedidos);
+	}
+
+	free(nombre_semaforo);
+	pthread_mutex_lock(semaforo);
+
+	return semaforo;
+}
+
+pthread_mutex_t* mutex_restaurante(char* restaurante){
+	pthread_mutex_t* semaforo;
+
+	if(dictionary_has_key(semaforos_pedidos, restaurante))
+		semaforo = dictionary_get(semaforos_pedidos, restaurante);
+	else{
+		semaforo = malloc(sizeof(pthread_mutex_t));
+		pthread_mutex_lock(&mutexSemaforosPedidos);
+		pthread_mutex_init(semaforo, NULL);
+		dictionary_put(semaforos_pedidos, restaurante, semaforo);
+		pthread_mutex_unlock(&mutexSemaforosPedidos);
+	}
+
+	pthread_mutex_lock(semaforo);
+
+	return semaforo;
 }

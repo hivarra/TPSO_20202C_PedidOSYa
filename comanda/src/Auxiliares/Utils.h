@@ -36,5 +36,7 @@ int get_free_frame_ms(void);
 void free_frame_ms(int);
 
 void actualizar_bits_de_uso(t_entrada_pagina*);
+pthread_mutex_t* mutex_pedido(char*, uint32_t);
+pthread_mutex_t* mutex_restaurante(char*);
 
 #endif /* AUXILIARES_UTILS_H_ */

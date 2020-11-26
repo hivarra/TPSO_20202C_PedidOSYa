@@ -51,7 +51,7 @@ void cargar_logger_comanda() {
 
 	carpeta_creada = crear_carpeta_log(config_get_string_value(config, "ARCHIVO_LOG"));
 	if (carpeta_creada){
-		logger = log_create(config_get_string_value(config, "ARCHIVO_LOG"), "Comanda", 1, LOG_LEVEL_TRACE);
+		logger = log_create(config_get_string_value(config, "ARCHIVO_LOG"), "Comanda", 0, LOG_LEVEL_TRACE);
 		log_info(logger, "*************** NUEVO LOG ***************");
 	}
 	else{
