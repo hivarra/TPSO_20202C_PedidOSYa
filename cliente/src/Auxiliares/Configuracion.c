@@ -35,7 +35,7 @@ void cargar_logger_cliente() {
 
 	carpeta_creada = crear_carpeta_log(cliente_config.archivo_log);
 	if (carpeta_creada){
-		logger = log_create(cliente_config.archivo_log, "Cliente", 1, LOG_LEVEL_TRACE);
+		logger = log_create(cliente_config.archivo_log, "Cliente", 0, LOG_LEVEL_TRACE);
 		log_info(logger, "*************** NUEVO LOG ***************");
 	}
 	else{

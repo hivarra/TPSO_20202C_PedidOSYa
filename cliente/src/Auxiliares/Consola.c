@@ -10,6 +10,7 @@
 //char* comandos_str[] = { "ejecutar", "status", "finalizar", "metricas", "salir", NULL };
 
 bool validarPrimerParametro(char*);
+int validar_parametros(char**);
 int procesar_comando(char*);
 void procesar_solicitud(char**);
 char* estado_string(uint32_t);
@@ -29,7 +30,7 @@ void leer_consola(){
 
 void procesar_solicitud_app_restaurante(char** parametros){
 
-	/*RREALIZO UN NUEVO HANDSHAKE POR CADA MENSAJE*/
+	/*REALIZO UN NUEVO HANDSHAKE POR CADA MENSAJE*/
 	int socket_envio = conectar_a_server();
 	t_handshake* handshake = calloc(1,sizeof(t_handshake));
 	strcpy(handshake->id, cliente_config.id_cliente);
@@ -55,10 +56,6 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		case SELECCIONAR_RESTAURANTE:{
-			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			char* nombre_restaurante = calloc(1,L_ID);
 			strcpy(nombre_restaurante, parametros[1]);
 			log_info(logger, "Parametro a enviar: Restaurante: %s", nombre_restaurante);
@@ -98,10 +95,6 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		case ANADIR_PLATO:{
-			if (parametros[1]==NULL || parametros[2]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_anadir_plato* msg_anadir_plato = calloc(1,sizeof(t_anadir_plato));
 			strcpy(msg_anadir_plato->plato, parametros[1]);
 			msg_anadir_plato->id_pedido = atoi(parametros[2]);
@@ -116,10 +109,6 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		case CONFIRMAR_PEDIDO:{
-			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_confirmar_pedido* msg_confirmar_pedido = calloc(1,sizeof(t_confirmar_pedido));
 			strcpy(msg_confirmar_pedido->restaurante, "N");//APP NO NECESITA ESTE PARAMETRO
 			msg_confirmar_pedido->id_pedido = atoi(parametros[1]);
@@ -134,10 +123,6 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		case PLATO_LISTO:{
-			if (parametros[1]==NULL || parametros[2]==NULL || parametros[3]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_plato_listo* msg_plato_listo = calloc(1,sizeof(t_plato_listo));
 			strcpy(msg_plato_listo->restaurante, parametros[1]);
 			msg_plato_listo->id_pedido = atoi(parametros[2]);
@@ -153,10 +138,6 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		case CONSULTAR_PEDIDO:{
-			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			uint32_t id_pedido = atoi(parametros[1]);
 			log_info(logger, "Parametro a enviar: ID_Pedido: %d", id_pedido);
 			enviar_entero(CONSULTAR_PEDIDO, id_pedido, socket_envio, logger);
@@ -189,10 +170,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 
 	switch(tipo_mensaje) {
 		case OBTENER_RESTAURANTE:{
-			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			char* msg_obtener_restaurante = malloc(L_ID);
 			strcpy(msg_obtener_restaurante, parametros[1]);
 			log_info(logger, "Parametro a enviar: Restaurante: %s", msg_obtener_restaurante);
@@ -217,10 +194,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case CONSULTAR_PLATOS:{
-			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			char* msg_consultar_platos = malloc(L_ID);
 			strcpy(msg_consultar_platos, parametros[1]);
 			log_info(logger, "Parametro a enviar: Restaurante: %s", msg_consultar_platos);
@@ -239,10 +212,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case GUARDAR_PEDIDO:{
-			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_guardar_pedido* msg_guardar_pedido = calloc(1,sizeof(t_guardar_pedido));
 			strcpy(msg_guardar_pedido->restaurante, parametros[1]);
 			msg_guardar_pedido->id_pedido = atoi(parametros[2]);
@@ -257,10 +226,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case GUARDAR_PLATO:{
-			if (parametros[1]==NULL || parametros [2]==NULL || parametros[3]==NULL || parametros [4]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_guardar_plato* msg_guardar_plato = calloc(1,sizeof(t_guardar_plato));
 			strcpy(msg_guardar_plato->restaurante, parametros[1]);
 			msg_guardar_plato->id_pedido = atoi(parametros[2]);
@@ -277,10 +242,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case CONFIRMAR_PEDIDO:{
-			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_confirmar_pedido* msg_confirmar_pedido = calloc(1,sizeof(t_confirmar_pedido));
 			strcpy(msg_confirmar_pedido->restaurante, parametros[1]);
 			msg_confirmar_pedido->id_pedido = atoi(parametros[2]);
@@ -295,10 +256,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case PLATO_LISTO:{
-			if (parametros[1]==NULL || parametros [2]==NULL || parametros [3]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_plato_listo* msg_plato_listo = calloc(1,sizeof(t_plato_listo));
 			strcpy(msg_plato_listo->restaurante, parametros[1]);
 			msg_plato_listo->id_pedido = atoi(parametros[2]);
@@ -314,10 +271,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case OBTENER_PEDIDO:{
-			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_obtener_pedido* msg_obtener_pedido = calloc(1,sizeof(t_obtener_pedido));
 			strcpy(msg_obtener_pedido->restaurante, parametros[1]);
 			msg_obtener_pedido->id_pedido = atoi(parametros[2]);
@@ -338,10 +291,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case FINALIZAR_PEDIDO:{
-			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_finalizar_pedido* msg_finalizar_pedido = calloc(1,sizeof(t_finalizar_pedido));
 			strcpy(msg_finalizar_pedido->restaurante, parametros[1]);
 			msg_finalizar_pedido->id_pedido = atoi(parametros[2]);
@@ -356,10 +305,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case TERMINAR_PEDIDO:{
-			if (parametros[1]==NULL || parametros [2]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			t_terminar_pedido* msg_terminar_pedido = calloc(1,sizeof(t_terminar_pedido));
 			strcpy(msg_terminar_pedido->restaurante, parametros[1]);
 			msg_terminar_pedido->id_pedido = atoi(parametros[2]);
@@ -374,10 +319,6 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		}
 		break;
 		case OBTENER_RECETA:{
-			if (parametros[1]==NULL){
-				puts("Faltan parametros para enviar el mensaje");
-				break;
-			}
 			char* msg_obtener_receta = malloc(L_PLATO);
 			strcpy(msg_obtener_receta, parametros[1]);
 			log_info(logger, "Parametro a enviar: Comida: %s", msg_obtener_receta);
@@ -409,6 +350,12 @@ int procesar_comando(char *line){
 
 	if(!validarPrimerParametro(parametros[0])){
 		printf("El servidor de %s no soporta el mensaje ingresado\n", get_nombre_proceso(tipo_proceso_server));
+		liberar_lista(parametros);
+		return -1;
+	}
+
+	if(!validar_parametros(parametros)){
+		puts("Faltan parametros para enviar el mensaje.");
 		liberar_lista(parametros);
 		return -1;
 	}
@@ -479,5 +426,79 @@ char* estado_string(uint32_t estado_num){
 		default:
 			return "FAILED";
 	}
+}
+
+int validar_parametros(char** parametros){
+
+	int validar_cantidad_parametros(int cantidad){
+		int validado = 1;
+		for(int i = 1; i <= cantidad; i++){
+			if (parametros[i] == NULL){
+				validado = 0;
+				break;
+			}
+		}
+		return validado;
+	}
+
+	int resultado;
+	t_tipoMensaje mensaje = tipo_mensaje_string_to_enum(parametros[0]);
+
+	switch(mensaje){
+		case CONSULTAR_RESTAURANTES:
+			resultado = 1;
+			break;
+		case SELECCIONAR_RESTAURANTE:
+			resultado = validar_cantidad_parametros(1);
+			break;
+		case CONSULTAR_PLATOS:
+			if(tipo_proceso_server == SINDICATO)
+				resultado = validar_cantidad_parametros(1);
+			else
+				resultado = 1;
+			break;
+		case CREAR_PEDIDO:
+			resultado = 1;
+			break;
+		case ANADIR_PLATO:
+			resultado = validar_cantidad_parametros(2);
+			break;
+		case CONFIRMAR_PEDIDO:
+			if(tipo_proceso_server == APP || tipo_proceso_server == RESTAURANTE)
+				resultado = validar_cantidad_parametros(1);
+			else
+				resultado = validar_cantidad_parametros(2);
+			break;
+		case PLATO_LISTO:
+			resultado = validar_cantidad_parametros(3);
+			break;
+		case CONSULTAR_PEDIDO:
+			resultado = validar_cantidad_parametros(1);
+			break;
+		case GUARDAR_PEDIDO:
+			resultado = validar_cantidad_parametros(2);
+			break;
+		case GUARDAR_PLATO:
+			resultado = validar_cantidad_parametros(4);
+			break;
+		case OBTENER_PEDIDO:
+			resultado = validar_cantidad_parametros(2);
+			break;
+		case FINALIZAR_PEDIDO:
+			resultado = validar_cantidad_parametros(2);
+			break;
+		case OBTENER_RESTAURANTE:
+			resultado = validar_cantidad_parametros(1);
+			break;
+		case TERMINAR_PEDIDO:
+			resultado = validar_cantidad_parametros(2);
+			break;
+		case OBTENER_RECETA:
+			resultado = validar_cantidad_parametros(1);
+			break;
+		default:
+			resultado = 0;
+	}
+	return resultado;
 }
 
