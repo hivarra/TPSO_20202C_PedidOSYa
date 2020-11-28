@@ -22,6 +22,8 @@ typedef struct{
 
 }t_cocinero;
 
+t_paso_receta* obtener_siguiente_paso(t_pcb* pcb);
+bool cocinero_esta_ejecutando(t_pcb* pcb);
 void hilo_cocinero(t_cocinero* cocinero);
 
 #endif /* AUXILIARES_COCINERO_H_ */

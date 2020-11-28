@@ -34,7 +34,7 @@ typedef struct{
 t_list* AFINIDADES_MAESTRO;
 t_list** lista_colas_ready;
 uint32_t id_pcb_global;
-t_list** lista_colas_hornos;
+t_list* cola_bloqueados_prehorno;
 t_algoritmo algoritmo_planificacion;
 
 int QUANTUM;
@@ -44,5 +44,6 @@ bool (*evaluar_desalojo)(t_pcb*,int);
 
 void inicializar_planificador(void);
 void inicializar_planificacion(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta);
+void pasar_pcb_a_estado(t_pcb* pcb, t_estado_pcb estado);
 
 #endif /* AUXILIARES_PLANIFICADOR_H_ */

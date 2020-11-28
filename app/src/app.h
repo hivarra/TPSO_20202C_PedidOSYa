@@ -13,14 +13,9 @@
 #include "Auxiliares/Configuracion.h"
 #include "Auxiliares/Conexion.h"
 #include "Auxiliares/Utils.h"
-
-typedef struct {
-	uint32_t id;
-	uint32_t posX;
-	uint32_t posY;
-	uint32_t frecuenciaDescanso;
-	uint32_t tiempoDescanso;
-}__attribute__((packed)) t_repartidor;
+#include "Auxiliares/Planificador_LP.h"
+#include "Auxiliares/Planificador_CP.h"
+#include "Auxiliares/Repartidor.h"
 
 typedef struct {
 	char* nombre;
@@ -29,13 +24,22 @@ typedef struct {
 }__attribute__((packed)) t_restaurante;
 
 pthread_t hilo_servidor;
+pthread_t thread_PLP;
+pthread_t thread_PCP;
+
 t_restaurante* restaurante_default;
+
+void prueba_planificacion();
 
 void inicializar();
 void iniciarListas();
 void iniciarSemaforos();
 void iniciarRestauranteDefault();
 void iniciarRepartidores();
-void imprimirRepartidor(t_repartidor* repartidor);
+//void imprimirRepartidor(t_repartidor* repartidor);
+//void imprimirPCB(t_pcb* pcb);
+
+void crear_hilo_PLP();
+void crear_hilo_PCP();
 
 #endif /* APP_H_ */
