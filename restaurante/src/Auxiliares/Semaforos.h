@@ -8,7 +8,7 @@
 #ifndef AUXILIARES_SEMAFOROS_H_
 #define AUXILIARES_SEMAFOROS_H_
 
-#include <pthread.h>
+#include <semaphore.h>
 
 sem_t sem_planificar_platos;
 sem_t finCPUbound;

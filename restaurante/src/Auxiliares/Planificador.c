@@ -16,13 +16,13 @@ uint32_t generar_id_pcb(){
 	return id_pcb;
 }
 t_pcb* generar_pcb(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta){
-	t_pcb* pcb = malloc(sizeof(t_pcb));
+	t_pcb* pcb = calloc(1,sizeof(t_pcb));
 	pcb->id = generar_id_pcb();
 	pcb->id_pedido = id_pedido;
 	pcb->lista_pasos = rta_obtener_receta->pasos;
 	strcpy(pcb->nombre_plato,rta_obtener_receta->nombre);
 	pcb->quantum = 0;
-	pcb->cocinero_asignado = -1;
+	pcb->cocinero_asignado = -1;//TODO: Cambiar tipo de dato
 
 	return pcb;
 }
@@ -31,7 +31,7 @@ void agregar_pcb_en_cola_ready_con_afinidad(t_pcb* pcb,int id_afinidad){
 	list_add(lista_colas_ready[id_afinidad],pcb);
 	pthread_mutex_unlock(&mutex_colas_ready[id_afinidad]);
 }
-int obtener_id_afinidad(char nombre_plato[L_PLATO]){
+int obtener_id_afinidad(char* nombre_plato){
 	bool igual_nombre_plato(t_afinidad* afinidad){
 		return string_equals_ignore_case(afinidad->nombre_afinidad,nombre_plato);
 	}
@@ -65,7 +65,7 @@ void agregar_a_cola_bloqueados_horno(t_pcb* pcb){
 }
 bool no_hay_hornos_disponibles(){
 	pthread_mutex_lock(&mutex_cola_bloqueados_prehorno);
-	bool no_hay_hornos_disponibles = list_size(cola_bloqueados_prehorno) >= metadata_restaurante->cantidad_hornos;
+	bool no_hay_hornos_disponibles = list_size(cola_bloqueados_prehorno) >= metadata_restaurante.cantidad_hornos;
 	pthread_mutex_unlock(&mutex_cola_bloqueados_prehorno);
 
 	return no_hay_hornos_disponibles;
@@ -108,7 +108,7 @@ void pasar_pcb_a_estado(t_pcb* pcb, t_estado_pcb estado){
 			/*TODO:*/
 		break;
 		default:;
-			log_info(logger, "[ERROR pasar_pcb_a_estado] Estado inexistente");
+			log_warning(logger, "[ERROR pasar_pcb_a_estado] Estado inexistente");
 		break;
 	}
 }
@@ -169,7 +169,7 @@ void inicializar_algoritmo(){
 	RETARDO_CICLO_CPU = restaurante_conf.retardo_ciclo_cpu;
 }
 void inicializar_colas_ready(){
-	t_list* afinidades_distinct = list_duplicate(metadata_restaurante->afinidades_cocineros);
+	t_list* afinidades_distinct = list_duplicate(metadata_restaurante.afinidades_cocineros);
 	//SE CREA LISTA CON AFINIDADES NO REPETIDAS
 	for(int i=0;i<list_size(afinidades_distinct);i++){
 		char* afinidad = list_get(afinidades_distinct,i);
@@ -205,9 +205,9 @@ void inicializar_colas_ready(){
 	}
 }
 void inicializar_colas_hornos(){
-	mutex_colas_hornos = malloc(sizeof(pthread_mutex_t)*metadata_restaurante->cantidad_hornos);
+	mutex_colas_hornos = malloc(sizeof(pthread_mutex_t)*metadata_restaurante.cantidad_hornos);
 
-	for(int i=0;i<=metadata_restaurante->cantidad_hornos;i++){
+	for(int i=0;i<=metadata_restaurante.cantidad_hornos;i++){
 		pthread_mutex_init(&mutex_colas_hornos[i],NULL);
 	}
 }
@@ -216,7 +216,7 @@ void inicializar_sem_mutex(){
 }
 void inicializar_sem_contadores(){
 	sem_init(&sem_planificar_platos,0,1);
-	sem_realizar_paso =malloc(sizeof(sem_t)*list_size(metadata_restaurante->afinidades_cocineros));
+	sem_realizar_paso =malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
 }
 //void inicializar_hilo_planificador(){
 //	int contar_sin_afinidad(char* afinidad){
@@ -232,9 +232,9 @@ void inicializar_sem_contadores(){
 //	}
 //}
 void inicializar_hilos_cocineros(){
-	for(int i=0;i<=list_size(metadata_restaurante->afinidades_cocineros);i++){
+	for(int i=0;i<=list_size(metadata_restaurante.afinidades_cocineros);i++){
 		t_cocinero* cocinero = malloc(sizeof(t_cocinero));
-		cocinero->afinidad = list_get(metadata_restaurante->afinidades_cocineros,i);
+		cocinero->afinidad = list_get(metadata_restaurante.afinidades_cocineros,i);
 		cocinero->id = i;
 
 		pthread_t thread_cocinero;

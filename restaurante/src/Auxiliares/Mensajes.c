@@ -72,7 +72,7 @@ uint32_t procesar_crear_pedido(){
 			if (!resultado)
 				id_pedidos--;
 			else
-				nuevo id = id_pedidos;
+				nuevo_id = id_pedidos;
 		}
 		pthread_mutex_unlock(&mutex_id_pedidos);
 		close(socket_sindicato);

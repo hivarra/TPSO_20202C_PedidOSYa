@@ -76,10 +76,6 @@ uint32_t obtener_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 	}
 	return resultado;
 }
-uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
-	uint32_t resultado = obtener_pedido(msg_confirmar_pedido);
-	return resultado;
-}
 
 void escuchar_app(){
 	while(1){
@@ -236,6 +232,7 @@ void connection_handler_cliente(int* socket_emisor){
 }
 
 void crear_socket_envio(){
+	socket_envio = -1;//Para saber si hay que cerrarlo
 
 	int socket_envio_aux = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
 	if (socket_envio_aux == -1)
@@ -255,6 +252,7 @@ void crear_socket_envio(){
 }
 
 void conectar_a_app(){
+	socket_escucha = -1;//Para saber si hay que cerrarlo
 
 	int socket_handshake = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
 	if (socket_handshake == -1)
@@ -263,8 +261,8 @@ void conectar_a_app(){
 		/*Realizo el handshake inicial (Para el socket de actualizaciones)*/
 		t_handshake_inicial* handshake_inicial = calloc(1,sizeof(t_handshake_inicial));
 		strcpy(handshake_inicial->id, restaurante_conf.nombre_restaurante);
-		handshake_inicial->posX = metadata_restaurante->pos_x;
-		handshake_inicial->posY = metadata_restaurante->pos_y;
+		handshake_inicial->posX = metadata_restaurante.pos_x;
+		handshake_inicial->posY = metadata_restaurante.pos_y;
 		handshake_inicial->tipoProceso = RESTAURANTE;
 		enviar_handshake_inicial(handshake_inicial, socket_handshake, logger);
 		free(handshake_inicial);
@@ -286,32 +284,38 @@ void conectar_a_app(){
 }
 void obtener_restaurante(){
 	int socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
-	if (socket_new == -1)
-		log_warning(logger, "[Obtener Restaurante] No se pudo conectar a Sindicato");
+	if (socket_new == -1){
+		log_error(logger, "[Obtener Restaurante] No se pudo conectar a Sindicato");
+		puts("[Obtener Restaurante] No se pudo conectar a Sindicato");
+		exit(-1);
+	}
 	else{
 		enviar_obtener_restaurante(restaurante_conf.nombre_restaurante, socket_new, logger);
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
 		if(tipo_mensaje == RTA_OBTENER_RESTAURANTE){
 			t_rta_obtener_restaurante* info_restaurante = recibir_rta_obtener_restaurante(socket_new, logger);
-			metadata_restaurante = malloc(sizeof(t_metadata_restaurante));
-			metadata_restaurante->pos_x = info_restaurante->posX;
-			metadata_restaurante->pos_y = info_restaurante->posY;
-			metadata_restaurante->cantidad_hornos = info_restaurante->cantHornos;
-			metadata_restaurante->cantidad_pedidos = info_restaurante->cantPedidos;
-			metadata_restaurante->afinidades_cocineros = info_restaurante->cocineros;
-			metadata_restaurante->platos = info_restaurante->platos;
+			metadata_restaurante.pos_x = info_restaurante->posX;
+			metadata_restaurante.pos_y = info_restaurante->posY;
+			metadata_restaurante.cantidad_hornos = info_restaurante->cantHornos;
+			id_pedidos = info_restaurante->cantPedidos;
+			metadata_restaurante.afinidades_cocineros = info_restaurante->cocineros;
+			metadata_restaurante.platos = info_restaurante->platos;
 			log_info(logger, "[Obtener Restaurante] Se obtuvo la metadata desde Sindicato");
-			log_info(logger,"POS_X:%d",metadata_restaurante->pos_x);
-			log_info(logger,"POS_Y:%d",metadata_restaurante->pos_y);
-			log_info(logger,"CANTIDAD_HORNOS:%d",metadata_restaurante->cantidad_hornos);
-			log_info(logger,"CANTIDAD_PEDIDOS:%d",metadata_restaurante->cantidad_pedidos);
-			imprimir_lista_strings(metadata_restaurante->afinidades_cocineros,"AFINIDAD_COCINEROS");
-			log_info(logger,"PLATOS:");
-			void imprimir_plato(t_plato* plato){
-				log_info(logger,"NOMBRE_PLATO:%s",plato->nombre);
-				log_info(logger,"PRECIO_PLATO:%d",plato->precio);
+			log_info(logger,"[Obtener Restaurante]PosX:%d",metadata_restaurante.pos_x);
+			log_info(logger,"[Obtener Restaurante]PosY:%d",metadata_restaurante.pos_y);
+			log_info(logger,"[Obtener Restaurante]Cant. Hornos:%d",metadata_restaurante.cantidad_hornos);
+			log_info(logger,"[Obtener Restaurante]Cant. Pedidos:%d",id_pedidos);
+			log_info(logger,"[Obtener Restaurante]Afinidades:");
+			void imprimir_afinidades(char* afinidad){
+				log_info(logger,"\tAfinidad:%s",afinidad);
 			}
-			list_iterate(metadata_restaurante->platos,(void*)imprimir_plato);
+			list_iterate(metadata_restaurante.afinidades_cocineros,(void*)imprimir_afinidades);
+			log_info(logger,"[Obtener Restaurante]Platos:");
+			void imprimir_plato(t_plato* plato){
+				log_info(logger,"\tNombre Plato:%s",plato->nombre);
+				log_info(logger,"\tPrecio Plato:%d",plato->precio);
+			}
+			list_iterate(metadata_restaurante.platos,(void*)imprimir_plato);
 
 			free(info_restaurante);
 			close(socket_new);
@@ -320,11 +324,12 @@ void obtener_restaurante(){
 }
 
 void conectar_a_sindicato(){
-
 	int socket_handshake = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
-	if (socket_handshake == -1)
-		log_warning(logger, "No se pudo conectar a Sindicato");
-		//TODO: DEBERIA CERRAR EL PROGRAMA XQ VA A ROMPER.
+	if (socket_handshake == -1){
+		log_error(logger, "No se pudo conectar a Sindicato");
+		puts("No se pudo conectar a Sindicato.");
+		exit(-1);//Termina el programa
+	}
 	else{
 		/*Realizo el handshake inicial*/
 		t_handshake_inicial* handshake_inicial = calloc(1,sizeof(t_handshake_inicial));
@@ -339,11 +344,15 @@ void conectar_a_sindicato(){
 		if(tipo_mensaje == RTA_HANDSHAKE){
 			uint32_t respuesta_entero = recibir_entero(socket_handshake, logger);
 			if (respuesta_entero == SINDICATO){
-				log_info(logger, "Fin Handshake con Sindicato");
+				log_info(logger, "Fin Handshake Inicial con Sindicato.");
 				obtener_restaurante();
 			}
-			else
-				log_warning(logger, "[Handshake] el proceso que respondio no es Sindicato");
+			else{
+				log_error(logger, "[Handshake] el proceso que respondio no es Sindicato");
+				puts("[Handshake] el proceso que respondio no es Sindicato");
+				exit(-1);//Termina el programa
+			}
+
 		}
 		close(socket_handshake);
 	}

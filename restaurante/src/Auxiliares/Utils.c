@@ -11,7 +11,8 @@ void signalHandler(int sig){
 	destruir_logger(logger);
 	destruir_config(config);
 
-	close(socket_servidor);
+	if(socket_servidor != -1)
+		close(socket_servidor);
 
 	list_destroy_and_destroy_elements(clientes_conectados, free);
 

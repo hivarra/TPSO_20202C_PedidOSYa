@@ -71,7 +71,7 @@ void cargar_configuracion_restaurante(char * path_config) {
 		exit(2);
 	}
 	else
-		restaurante_conf.nombre_restaurante = config_get_string_value(config, "NOMBRE_RESTAURANTE");
+		strcpy(restaurante_conf.nombre_restaurante, config_get_string_value(config, "NOMBRE_RESTAURANTE"));//Puede que valgrind tire warning, nada grave
 
 	if (!config_has_property(config, "RETARDO_CICLO_CPU")) {
 			puts("Error al leer RETARDO_CICLO_CPU de archivo de configuracion");
