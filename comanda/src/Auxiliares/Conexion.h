@@ -12,10 +12,11 @@
 
 #include <protocolo.h>
 #include "Config_y_log.h"
+#include "MMU.h"
 
-int socket_comanda;
+int socket_servidor;
 
 void escuchar_conexiones_comanda();
-void escuchar__conexiones_comanda();
+//void escuchar__conexiones_comanda();
 
 #endif /* AUXILIARES_CONEXION_H_ */

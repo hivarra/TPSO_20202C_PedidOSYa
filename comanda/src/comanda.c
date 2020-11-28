@@ -11,7 +11,7 @@
 #include "comanda.h"
 
 int main(int argc, char *argv[]) {
-	puts("Inicio COMANDA\n");
+	puts("Inicio COMANDA");
 
 	/* 1. Configuración */
 	char* path_config = getConfigPath(argv[1]);
@@ -24,6 +24,9 @@ int main(int argc, char *argv[]) {
 
 	/* 3. Inicializo memoria*/
 	inicializar_memoria();
+	init_bitmap_mp();
+	inicializar_memoria_swap();
+	init_bitmap_ms();
 
 	/*Extra. Liberar bien con ctrl+c*/
 	signal(SIGINT, &signalHandler);

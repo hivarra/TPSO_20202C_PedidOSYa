@@ -13,7 +13,8 @@
 #include "Auxiliares/Config_y_log.h"
 #include "Auxiliares/Conexion.h"
 #include "Auxiliares/Utils.h"
-#include "Auxiliares/MMU.h"
+#include "Auxiliares/MemoriaPrincipal.h"
+#include "Auxiliares/Swap.h"
 
 
 #endif /* COMANDA_H_ */

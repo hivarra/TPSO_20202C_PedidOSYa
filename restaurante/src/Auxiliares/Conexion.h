@@ -13,11 +13,20 @@
 #include <protocolo.h>
 #include "Configuracion.h"
 #include "Mensajes.h"
+#include "Metadata_restaurante.h"
+#include "Planificador.h"
+
+typedef struct{
+	t_rta_obtener_pedido* rta_obtener_pedido;
+	uint32_t id_pedido;
+}t_args_aux;
 
 int socket_servidor;
 int socket_envio;//POR ESTE SOCKET VAN A LLEVAR LAS CONSULTAS DE APP Y SE ENVIARAN SUS RESPUESTAS
 int socket_escucha;//POR ESTE SOCKET SE ENVIARAN ACTUALIZACIONES DE PEDIDOS A APP
 pthread_t hilo_escucha_app;
+
+t_list* clientes_conectados;
 
 void conectar_a_app(void);
 void conectar_a_sindicato(void);

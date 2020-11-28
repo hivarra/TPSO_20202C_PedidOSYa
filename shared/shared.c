@@ -19,9 +19,8 @@ char* procesos_str[] = {
 		"SINDICATO"};
 
 char* mensajes_str[] = {
+		"HANDSHAKE_INICIAL",
 		"HANDSHAKE",
-		"SOCKET_ENVIO",
-		"SOCKET_ESCUCHA",
 		"CONSULTAR_RESTAURANTES",
 		"SELECCIONAR_RESTAURANTE",
 		"OBTENER_RESTAURANTE",
@@ -218,7 +217,7 @@ t_tipoProceso tipo_proceso_string_to_enum(char *sval) {
 }
 
 t_tipoMensaje tipo_mensaje_string_to_enum(char *sval) {
-	t_tipoMensaje result = HANDSHAKE;
+	t_tipoMensaje result = HANDSHAKE_INICIAL;
 	for (int i = 0; mensajes_str[i] != NULL; ++i, ++result)
 		if (0 == strcmp(sval, mensajes_str[i]))
 			return result;

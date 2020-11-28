@@ -21,22 +21,49 @@ int main(int argc, char **argv) {
 	cargarConfigSindicato(path_config);
 
 	/* 2. Log */
-	char* path_log = getLogPath(PATH_LOG);
-	logger = configurar_logger(path_log, "sindicato");
+	cargar_logger_sindicato();
 	mostrar_propiedades();
+
 	/* 3. File System */
 	montarFileSystem();
 
-	/* 4. Hilos */
-	/* 4. Escuchando conexiones*/
-	//escuchar_conexiones_sindicato();
-	crearHiloConsola();
+	/* 4. Crear hilo para consola */
+	pthread_create(&thread_consola, NULL, (void*)crear_consola, NULL);
+	pthread_detach(thread_consola);
 
-//	destruir_config(config);
-//	destruir_logger(logger);
+	/*Extra. Liberar bien con ctrl+c*/
+	signal(SIGINT, &signalHandler);
 
-	sleep(30);
+	/* 5. Escuchando conexiones*/
+	escuchar_conexiones_sindicato();
+
+	return EXIT_FAILURE;
+}
+
+void signalHandler(int sig){
+
+	void _destruir_semaforos_pedidos(pthread_mutex_t* semaforo){
+		pthread_mutex_destroy(semaforo);
+		free(semaforo);
+	}
+
+	close(socket_servidor);
+
+	//bitarray_destroy(bitmap);
+	pthread_mutex_destroy(&mutex_bitmap);
+	pthread_mutex_destroy(&mutexSemaforosPedidos);
+	dictionary_destroy_and_destroy_elements(semaforos_pedidos, (void*)_destruir_semaforos_pedidos);
+	munmap(bmap, cantidad_bloques/8);
+
+	free(ruta_files);
+	free(ruta_bloques);
+	free(ruta_restaurantes);
+	free(ruta_recetas);
+
+	destruir_config(config);
+	destruir_logger(logger);
 
 	puts("Fin Proceso SINDICATO");
-	return EXIT_SUCCESS;
+
+	exit(EXIT_SUCCESS);
 }

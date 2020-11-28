@@ -409,18 +409,6 @@ t_rta_obtener_receta* deserializar_rta_obtener_receta(void* serializado){
 
 /************ENVIAR MENSAJES************/
 
-int enviar_handshake(int socketReceptor, t_log* logger) {
-
-	t_buffer* buffer = malloc(sizeof(t_buffer));
-
-	buffer->size = 0;
-	buffer->stream = NULL;
-
-	int resultado_envio = empaquetar_enviar_free_buffer(HANDSHAKE, buffer, socketReceptor, logger);
-
-	return resultado_envio;
-}
-
 int enviar_mensaje_vacio(t_tipoMensaje tipoMensaje, int socketReceptor, t_log* logger) {
 
 	t_buffer* buffer = malloc(sizeof(t_buffer));
@@ -446,28 +434,28 @@ int enviar_entero(t_tipoMensaje tipoMensaje, uint32_t numero, int socketReceptor
 	return resultado_envio;
 }
 
-int enviar_socket_envio(t_socket_envio* mensaje, int socketReceptor, t_log* logger) {
+int enviar_handshake_inicial(t_handshake_inicial* mensaje, int socketReceptor, t_log* logger) {
 
 	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-	buffer->size = sizeof(t_socket_envio);
+	buffer->size = sizeof(t_handshake_inicial);
 	buffer->stream = malloc(buffer->size);
 	memcpy(buffer->stream, mensaje, buffer->size);
 
-	int resultado_envio = empaquetar_enviar_free_buffer(SOCKET_ENVIO, buffer, socketReceptor, logger);
+	int resultado_envio = empaquetar_enviar_free_buffer(HANDSHAKE_INICIAL, buffer, socketReceptor, logger);
 
 	return resultado_envio;
 }
 
-int enviar_socket_escucha(t_socket_escucha* mensaje, int socketReceptor, t_log* logger) {
+int enviar_handshake(t_handshake* mensaje, int socketReceptor, t_log* logger) {
 
 	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-	buffer->size = sizeof(t_socket_escucha);
+	buffer->size = sizeof(t_handshake);
 	buffer->stream = malloc(buffer->size);
 	memcpy(buffer->stream, mensaje, buffer->size);
 
-	int resultado_envio = empaquetar_enviar_free_buffer(SOCKET_ESCUCHA, buffer, socketReceptor, logger);
+	int resultado_envio = empaquetar_enviar_free_buffer(HANDSHAKE, buffer, socketReceptor, logger);
 
 	return resultado_envio;
 }
@@ -724,15 +712,15 @@ uint32_t recibir_entero(int socketEmisor, t_log* logger) {
 	return entero;
 }
 
-t_socket_envio* recibir_socket_envio(int socketEmisor, t_log* logger) {
+t_handshake_inicial* recibir_handshake_inicial(int socketEmisor, t_log* logger) {
 
-	t_socket_envio* recibido = recibirMensaje(socketEmisor, logger);
+	t_handshake_inicial* recibido = recibirMensaje(socketEmisor, logger);
 	return recibido;
 }
 
-t_socket_escucha* recibir_socket_escucha(int socketEmisor, t_log* logger) {
+t_handshake* recibir_handshake(int socketEmisor, t_log* logger) {
 
-	t_socket_escucha* recibido = recibirMensaje(socketEmisor, logger);
+	t_handshake* recibido = recibirMensaje(socketEmisor, logger);
 	return recibido;
 }
 

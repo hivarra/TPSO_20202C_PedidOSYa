@@ -23,15 +23,6 @@ typedef struct {
 	uint32_t posY;
 }__attribute__((packed)) t_restaurante;
 
-//typedef struct {
-//	uint32_t id_pedido;
-//	uint32_t instruccion; // esto es para saber si tiene que ir a buscar el pedido o entregarlo
-//	uint32_t id_repartidor;
-//	uint32_t posX;
-//	uint32_t posY;
-//} t_pcb;
-
-
 pthread_t hilo_servidor;
 pthread_t thread_PLP;
 pthread_t thread_PCP;

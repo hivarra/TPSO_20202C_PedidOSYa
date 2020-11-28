@@ -21,11 +21,42 @@ typedef struct{
 	t_algoritmo_reemplazo algoritmo_reemplazo;
 }t_params_global_mem_principal;
 
-void* memoria_fisica;
-t_params_global_mem_principal* mem_principal_global;
+typedef struct{
+	char nombre_comida[24];
+	uint32_t cant_total;
+	uint32_t cant_lista;
+}__attribute__((packed)) t_pagina;
 
-void inicializar_memoria_principal();
-void setear_params_global_mem_principal();
-void liberar_memoria_principal();
+typedef struct{
+	uint32_t id_pedido;
+	uint32_t estado_pedido;
+	uint32_t cant_platos_listos;
+	t_list* tabla_paginas;
+}t_segmento;
+
+typedef struct{
+	uint32_t nro_frame_mp;
+	uint32_t nro_frame_ms;
+	bool uso;
+	bool modificado;
+	bool presencia;
+	uint64_t ultimo_uso;
+}t_entrada_pagina;
+
+void* memoria_fisica;
+t_params_global_mem_principal mem_principal_global;
+t_list* lista_entradas_paginas;
+t_dictionary *tablas_segmentos;//key:nombre_restaurante
+t_dictionary *semaforos_pedidos;//key:restaurante_idPedido
+
+pthread_mutex_t mutex_lista_global;
+pthread_mutex_t mutex_tablas;
+pthread_mutex_t mutexSemaforosPedidos;
+
+char* path_memoria_swap;
+
+void inicializar_memoria(void);
+void liberar_memoria(void);
+void liberar_memoria_swap(void);
 
 #endif /* AUXILIARES_MEMORIAPRINCIPAL_H_ */

@@ -1,21 +1,11 @@
 #ifndef CONSOLA_H_
 #define CONSOLA_H_
 
-#include "../sindicato.h"
 #include <readline/readline.h>
-#include <readline/history.h>
+#include "../sindicato.h"
 
-typedef enum t_tipoComando {
-	crearRestaurante_,
-	crearReceta_
-} t_tipoComando;
+pthread_t thread_consola;
 
-void *crear_consola();
-int procesar_comando(char *line);
-char **character_name_completion(const char *, int, int);
-char *character_name_generator(const char *, int);
-t_tipoComando buscar_enum_sfs(char *sval);
-
-
+void crear_consola();
 
 #endif /* CONSOLA_H_ */

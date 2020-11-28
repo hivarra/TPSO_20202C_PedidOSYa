@@ -7,9 +7,9 @@
 
 #include "Configuracion.h"
 
-void cargarConfigCliente() {
+void cargarConfigCliente(char* path_config) {
 
-	config = config_create(PATH);
+	config = config_create(path_config);
 
 	if (config_has_property(config, "IP"))
 		cliente_config.ip = config_get_string_value(config, "IP");
@@ -35,7 +35,7 @@ void cargar_logger_cliente() {
 
 	carpeta_creada = crear_carpeta_log(cliente_config.archivo_log);
 	if (carpeta_creada){
-		logger = log_create(cliente_config.archivo_log, "Cliente", 1, LOG_LEVEL_TRACE);
+		logger = log_create(cliente_config.archivo_log, "Cliente", 0, LOG_LEVEL_TRACE);
 		log_info(logger, "*************** NUEVO LOG ***************");
 	}
 	else{

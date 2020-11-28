@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 	conectar_a_app();
 
 	/* 4. Planificador*/
-	//incializar_planificador();
+	inicializar_planificador();
 
 	/*Extra. Liberar bien con ctrl+c*/
 	signal(SIGINT, &signalHandler);

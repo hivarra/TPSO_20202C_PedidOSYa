@@ -13,7 +13,6 @@
 #include "SocketEscucha.h"
 
 t_tipoProceso tipo_proceso_server;
-int socket_envio;
 int socket_escucha;
 
 int conectar_a_server();

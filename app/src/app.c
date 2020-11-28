@@ -127,7 +127,7 @@ void inicializar() {
 }
 
 void iniciarListas() {
-	restaurantes = list_create();
+//	restaurantes = list_create();
 	repartidores = list_create();
 	pedidos_planificables = list_create();
 	listos = list_create();
@@ -148,7 +148,9 @@ void iniciarSemaforos() {
 	pthread_mutex_init(&mutex_ejecutando, NULL);
 	pthread_mutex_init(&mutex_bloqueados, NULL);
 	pthread_mutex_init(&mutex_finalizados, NULL);
-	pthread_mutex_init(&mutexClientesRestaurantes, 0);
+//	pthread_mutex_init(&mutexClientesRestaurantes, 0);
+	pthread_mutex_init(&mutexClientes, NULL);
+	pthread_mutex_init(&mutexRestaurantes, NULL);
 }
 
 //void iniciarRestauranteDefault() {
@@ -183,6 +185,7 @@ void iniciarRepartidores() {
 
 		pthread_create(&thread_repartidor, NULL, (void*) correr_repartidor, repartidor);
 
+		liberar_lista(coordenada);
 		i++;
 
 //		imprimirRepartidor(repartidor);
