@@ -98,42 +98,42 @@ void escuchar_app(){
 
 			case CONSULTAR_PLATOS:{
 				char* nombre_restaurante = recibir_consultar_platos(socket_envio, logger);//No importa este nombre
-//				log_info(logger, "[CONSULTAR_PLATOS]Nombre restaurante: %s", nombre_restaurante);//TODO:BORRAR XQ NO IMPORTA ESTE PARAMETRO
-//				free(nombre_restaurante);
-//				t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
-//				enviar_rta_consultar_platos(respuesta, socket_envio, logger);
-//				free(respuesta);
-				enviar_consultar_platos(CONSULTAR_PLATOS, SINDICATO, logger);
+				free(nombre_restaurante);
+				t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
+				enviar_rta_consultar_platos(respuesta, socket_envio, logger);
+				list_destroy_and_destroy_elements(respuesta->platos, free);
+				free(respuesta);
 			}
 			break;
 			case CREAR_PEDIDO:{
 				recibir_mensaje_vacio(socket_envio, logger);
-				//uint32_t id_pedido = procesar_crear_pedido();TODO: Tiene que guardarse que el pedido lo pidio APP, para poder enviar actualizacion
-				//enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_envio, logger);
+				uint32_t id_pedido = procesar_crear_pedido();//TODO: Tiene que guardarse que el pedido lo pidio APP, para poder enviar actualizacion
+				enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_envio, logger);
 			}
 			break;
 			case ANADIR_PLATO:{
 				t_anadir_plato* msg_anadir_plato = recibir_anadir_plato(socket_envio, logger);
 				log_info(logger, "[ANADIR_PLATO]Plato: %s, ID_Pedido: %d", msg_anadir_plato->plato, msg_anadir_plato->id_pedido);
-				//uint32_t resultado = procesar_anadir_plato(msg_anadir_plato);
+				uint32_t resultado = procesar_anadir_plato(msg_anadir_plato);
 				free(msg_anadir_plato);
-				//enviar_entero(RTA_ANADIR_PLATO, resultado, socket_envio, logger);
+				enviar_entero(RTA_ANADIR_PLATO, resultado, socket_envio, logger);
 			}
 			break;
 			case CONFIRMAR_PEDIDO:{
 				t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(socket_envio, logger);
 				log_info(logger, "[CONFIRMAR_PEDIDO]ID_Pedido: %d", msg_confirmar_pedido->id_pedido);
-				//uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
+				uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
 				free(msg_confirmar_pedido);
-				//enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, socket_envio, logger);
+				enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, socket_envio, logger);
 			}
 			break;
 			case CONSULTAR_PEDIDO:{
 				uint32_t id_pedido = recibir_entero(socket_envio, logger);
 				log_info(logger, "[CONSULTAR_PEDIDO]ID_Pedido: %d", id_pedido);
-				//t_rta_consultar_pedido* respuesta = procesar_consultar_pedido(id_pedido);
-				//enviar_rta_consultar_pedido(respuesta, socket_envio, logger);
-				//free(respuesta);
+				t_rta_consultar_pedido* respuesta = procesar_consultar_pedido(id_pedido);
+				enviar_rta_consultar_pedido(respuesta, socket_envio, logger);
+				list_destroy_and_destroy_elements(respuesta->comidas, free);
+				free(respuesta);
 			}
 			break;
 			default:
@@ -152,29 +152,30 @@ void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
 	switch(tipo_mensaje){
 
 		case CONSULTAR_PLATOS:{
-			char* nombre_restaurante = recibir_consultar_platos(socket_envio, logger);//No importa este nombre
+			char* nombre_restaurante = recibir_consultar_platos(socket_cliente, logger);//No importa este nombre
 			free(nombre_restaurante);
-			//t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
-			//enviar_rta_consultar_platos(respuesta, socket_cliente, logger);
-			//free(respuesta);
+			t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
+			enviar_rta_consultar_platos(respuesta, socket_cliente, logger);
+			list_destroy_and_destroy_elements(respuesta->platos, free);
+			free(respuesta);
 		}
 		break;
 		case CREAR_PEDIDO:{
-			recibir_mensaje_vacio(socket_envio, logger);
-			//uint32_t id_pedido = procesar_crear_pedido();//TODO: Tiene que guardarse que el pedido es de tal cliente, para poder enviar actualizacion
-			//enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_cliente, logger);
+			recibir_mensaje_vacio(socket_cliente, logger);
+			uint32_t id_pedido = procesar_crear_pedido();//TODO: Tiene que guardarse que el pedido es de tal cliente, para poder enviar actualizacion
+			enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_cliente, logger);
 		}
 		break;
 		case ANADIR_PLATO:{
 			t_anadir_plato* msg_anadir_plato = recibir_anadir_plato(socket_envio, logger);
 			log_info(logger, "[ANADIR_PLATO]Plato: %s, ID_Pedido: %d", msg_anadir_plato->plato, msg_anadir_plato->id_pedido);
-			//uint32_t resultado = procesar_anadir_plato(msg_anadir_plato);
+			uint32_t resultado = procesar_anadir_plato(msg_anadir_plato);
 			free(msg_anadir_plato);
-			//enviar_entero(RTA_ANADIR_PLATO, resultado, socket_cliente, logger);
+			enviar_entero(RTA_ANADIR_PLATO, resultado, socket_cliente, logger);
 		}
 		break;
 		case CONFIRMAR_PEDIDO:{
-			t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(socket_envio, logger);
+			t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(socket_cliente, logger);
 			log_info(logger, "[CONFIRMAR_PEDIDO]ID_Pedido: %d", msg_confirmar_pedido->id_pedido);
 			uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
 			free(msg_confirmar_pedido);
@@ -182,11 +183,12 @@ void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
 		}
 		break;
 		case CONSULTAR_PEDIDO:{
-			uint32_t id_pedido = recibir_entero(socket_envio, logger);
+			uint32_t id_pedido = recibir_entero(socket_cliente, logger);
 			log_info(logger, "[CONSULTAR_PEDIDO]ID_Pedido: %d", id_pedido);
-			//t_rta_consultar_pedido* respuesta = procesar_consultar_pedido(id_pedido);
-			//enviar_rta_consultar_pedido(respuesta, socket_cliente, logger);
-			//free(respuesta);
+			t_rta_consultar_pedido* respuesta = procesar_consultar_pedido(id_pedido);
+			enviar_rta_consultar_pedido(respuesta, socket_cliente, logger);
+			list_destroy_and_destroy_elements(respuesta->comidas, free);
+			free(respuesta);
 		}
 		break;
 		default:
