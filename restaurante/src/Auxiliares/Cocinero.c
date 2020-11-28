@@ -25,12 +25,18 @@ void hornear(t_cocinero* cocinero){
 	pasar_pcb_a_estado(cocinero->pcb,BLOCKED_POR_HORNO);
 	sem_post(&finCPUbound);
 }
+void realizar_otro_paso(t_cocinero* cocinero){
+	pthread_mutex_lock(&mutex_platos[cocinero->pcb->id]);
+	t_paso_receta* paso_siguiente = obtener_siguiente_paso(cocinero->pcb);
+	aplicar_retardo(paso_siguiente->tiempo);
+	pthread_mutex_unlock(&mutex_platos[cocinero->pcb->id]);
+}
 void hilo_cocinero(t_cocinero* cocinero){
 	log_info(logger,"Cocinero con ID:%d creado",cocinero->id);
 
 	while(1){
 		sem_wait(&sem_realizar_paso[cocinero->id]);
-		sleep(RETARDO_CICLO_CPU);
+//		sleep(RETARDO_CICLO_CPU);
 
 		t_paso_receta* paso_siguiente = obtener_siguiente_paso(cocinero->pcb);
 		string_to_upper(paso_siguiente->accion);
@@ -42,7 +48,7 @@ void hilo_cocinero(t_cocinero* cocinero){
 			hornear(cocinero);
 		}
 		else{
-			/*TODO:PROCESAR OTRO PASO*/
+			realizar_otro_paso(cocinero);
 		}
 		eliminar_paso_realizado(paso_siguiente);
 	}
