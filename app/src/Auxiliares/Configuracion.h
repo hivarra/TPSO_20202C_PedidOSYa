@@ -16,6 +16,7 @@ typedef struct {
 	uint32_t puerto_escucha;
 	char* ip_comanda;
 	uint32_t puerto_comanda;
+	uint32_t retardo_ciclo_cpu;
 	uint32_t grado_multiprocesamiento;
 	char* algoritmo_planificacion;
 	double alpha;
