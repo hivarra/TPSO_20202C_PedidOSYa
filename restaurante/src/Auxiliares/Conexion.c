@@ -98,11 +98,12 @@ void escuchar_app(){
 
 			case CONSULTAR_PLATOS:{
 				char* nombre_restaurante = recibir_consultar_platos(socket_envio, logger);//No importa este nombre
-				log_info(logger, "[CONSULTAR_PLATOS]Nombre restaurante: %s", nombre_restaurante);//TODO:BORRAR XQ NO IMPORTA ESTE PARAMETRO
-				free(nombre_restaurante);
-				//t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
-				//enviar_rta_consultar_platos(respuesta, socket_envio, logger);
-				//free(respuesta);
+//				log_info(logger, "[CONSULTAR_PLATOS]Nombre restaurante: %s", nombre_restaurante);//TODO:BORRAR XQ NO IMPORTA ESTE PARAMETRO
+//				free(nombre_restaurante);
+//				t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
+//				enviar_rta_consultar_platos(respuesta, socket_envio, logger);
+//				free(respuesta);
+				enviar_consultar_platos(CONSULTAR_PLATOS, SINDICATO, logger);
 			}
 			break;
 			case CREAR_PEDIDO:{
