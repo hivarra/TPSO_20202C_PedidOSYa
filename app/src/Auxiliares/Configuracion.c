@@ -25,6 +25,11 @@ void cargar_configuracion_app(char * path_config) {
 	} else {
 		error_show("Error al cargar PUERTO_COMANDA de archivo de configuracion");
 	}
+	if (config_has_property(config, "RETARDO_CICLO_CPU")) {
+		app_conf.retardo_ciclo_cpu = config_get_int_value(config, "RETARDO_CICLO_CPU");
+	} else {
+		error_show("Error al cargar RETARDO_CICLO_CPU de archivo de configuracion");
+	}
 	if (config_has_property(config, "GRADO_DE_MULTIPROCESAMIENTO")) {
 		app_conf.grado_multiprocesamiento = config_get_int_value(config, "GRADO_DE_MULTIPROCESAMIENTO");
 	} else {

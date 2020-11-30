@@ -19,7 +19,6 @@ typedef struct{
 	uint32_t id;
 	char* afinidad;
 	t_pcb* pcb;
-
 }t_cocinero;
 
 t_paso_receta* obtener_siguiente_paso(t_pcb* pcb);

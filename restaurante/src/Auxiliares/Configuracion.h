@@ -16,7 +16,7 @@ typedef struct{
 	char* ip_sindicato;
 	char* puerto_sindicato;
 	int quantum;
-	char* nombre_restaurante;
+	char nombre_restaurante[L_ID];
 	int retardo_ciclo_cpu;
 }t_restaurante_conf;
 

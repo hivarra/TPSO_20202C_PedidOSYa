@@ -13,7 +13,6 @@
 #include "Metadata_restaurante.h"
 #include "Semaforos.h"
 #include "Hilos.h"
-
 #include <semaphore.h>
 
 typedef enum{

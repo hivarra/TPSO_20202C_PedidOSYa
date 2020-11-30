@@ -298,12 +298,16 @@ void obtener_restaurante(){
 			metadata_restaurante->afinidades_cocineros = info_restaurante->cocineros;
 			metadata_restaurante->platos = info_restaurante->platos;
 			log_info(logger, "[Obtener Restaurante] Se obtuvo la metadata desde Sindicato");
-			log_info(logger,"POS_X:%d",metadata_restaurante->pos_x);
-			log_info(logger,"POS_Y:%d",metadata_restaurante->pos_y);
-			log_info(logger,"CANTIDAD_HORNOS:%d",metadata_restaurante->cantidad_hornos);
-			log_info(logger,"CANTIDAD_PEDIDOS:%d",metadata_restaurante->cantidad_pedidos);
-			imprimir_lista_strings(metadata_restaurante->afinidades_cocineros,"AFINIDAD_COCINEROS");
-			log_info(logger,"PLATOS:");
+			log_info(logger,"[Obtener Restaurante]PosX:%d",metadata_restaurante.pos_x);
+			log_info(logger,"[Obtener Restaurante]PosY:%d",metadata_restaurante.pos_y);
+			log_info(logger,"[Obtener Restaurante]Cant. Hornos:%d",metadata_restaurante.cantidad_hornos);
+			log_info(logger,"[Obtener Restaurante]Cant. Pedidos:%d",id_pedidos);
+			log_info(logger,"[Obtener Restaurante]Afinidades:");
+			void imprimir_afinidades(char* afinidad){
+				log_info(logger,"\tAfinidad:%s",afinidad);
+			}
+			list_iterate(metadata_restaurante.afinidades_cocineros,(void*)imprimir_afinidades);
+			log_info(logger,"[Obtener Restaurante]Platos:");
 			void imprimir_plato(t_plato* plato){
 				log_info(logger,"NOMBRE_PLATO:%s",plato->nombre);
 				log_info(logger,"PRECIO_PLATO:%d",plato->precio);
@@ -319,9 +323,11 @@ void obtener_restaurante(){
 void conectar_a_sindicato(){
 
 	int socket_handshake = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
-	if (socket_handshake == -1)
-		log_warning(logger, "No se pudo conectar a Sindicato");
-		//TODO: DEBERIA CERRAR EL PROGRAMA XQ VA A ROMPER.
+	if (socket_handshake == -1){
+		log_error(logger, "No se pudo conectar a Sindicato");
+		puts("No se pudo conectar a Sindicato.");
+		exit(-1);//Termina el programa
+	}
 	else{
 		/*Realizo el handshake inicial*/
 		t_handshake_inicial* handshake_inicial = calloc(1,sizeof(t_handshake_inicial));
@@ -336,11 +342,15 @@ void conectar_a_sindicato(){
 		if(tipo_mensaje == RTA_HANDSHAKE){
 			uint32_t respuesta_entero = recibir_entero(socket_handshake, logger);
 			if (respuesta_entero == SINDICATO){
-				log_info(logger, "Fin Handshake con Sindicato");
+				log_info(logger, "Fin Handshake Inicial con Sindicato.");
 				obtener_restaurante();
 			}
-			else
-				log_warning(logger, "[Handshake] el proceso que respondio no es Sindicato");
+			else{
+				log_error(logger, "[Handshake] el proceso que respondio no es Sindicato");
+				puts("[Handshake] el proceso que respondio no es Sindicato");
+				exit(-1);//Termina el programa
+			}
+
 		}
 		close(socket_handshake);
 	}
