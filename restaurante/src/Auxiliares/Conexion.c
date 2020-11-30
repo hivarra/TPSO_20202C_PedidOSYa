@@ -260,8 +260,8 @@ void conectar_a_app(){
 		/*Realizo el handshake inicial (Para el socket de actualizaciones)*/
 		t_handshake_inicial* handshake_inicial = calloc(1,sizeof(t_handshake_inicial));
 		strcpy(handshake_inicial->id, restaurante_conf.nombre_restaurante);
-		handshake_inicial->posX = metadata_restaurante->pos_x;
-		handshake_inicial->posY = metadata_restaurante->pos_y;
+		handshake_inicial->posX = metadata_restaurante.pos_x;
+		handshake_inicial->posY = metadata_restaurante.pos_y;
 		handshake_inicial->tipoProceso = RESTAURANTE;
 		enviar_handshake_inicial(handshake_inicial, socket_handshake, logger);
 		free(handshake_inicial);
@@ -290,13 +290,12 @@ void obtener_restaurante(){
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
 		if(tipo_mensaje == RTA_OBTENER_RESTAURANTE){
 			t_rta_obtener_restaurante* info_restaurante = recibir_rta_obtener_restaurante(socket_new, logger);
-			metadata_restaurante = malloc(sizeof(t_metadata_restaurante));
-			metadata_restaurante->pos_x = info_restaurante->posX;
-			metadata_restaurante->pos_y = info_restaurante->posY;
-			metadata_restaurante->cantidad_hornos = info_restaurante->cantHornos;
-			metadata_restaurante->cantidad_pedidos = info_restaurante->cantPedidos;
-			metadata_restaurante->afinidades_cocineros = info_restaurante->cocineros;
-			metadata_restaurante->platos = info_restaurante->platos;
+			metadata_restaurante.pos_x = info_restaurante->posX;
+			metadata_restaurante.pos_y = info_restaurante->posY;
+			metadata_restaurante.cantidad_hornos = info_restaurante->cantHornos;
+			id_pedidos = info_restaurante->cantPedidos;
+			metadata_restaurante.afinidades_cocineros = info_restaurante->cocineros;
+			metadata_restaurante.platos = info_restaurante->platos;
 			log_info(logger, "[Obtener Restaurante] Se obtuvo la metadata desde Sindicato");
 			log_info(logger,"[Obtener Restaurante]PosX:%d",metadata_restaurante.pos_x);
 			log_info(logger,"[Obtener Restaurante]PosY:%d",metadata_restaurante.pos_y);
@@ -312,7 +311,7 @@ void obtener_restaurante(){
 				log_info(logger,"NOMBRE_PLATO:%s",plato->nombre);
 				log_info(logger,"PRECIO_PLATO:%d",plato->precio);
 			}
-			list_iterate(metadata_restaurante->platos,(void*)imprimir_plato);
+			list_iterate(metadata_restaurante.platos,(void*)imprimir_plato);
 
 			free(info_restaurante);
 			close(socket_new);

@@ -63,15 +63,6 @@ void agregar_a_cola_bloqueados_horno(t_pcb* pcb){
 	list_add(cola_bloqueados_prehorno,pcb);
 	pthread_mutex_unlock(&mutex_cola_bloqueados_prehorno);
 }
-<<<<<<< HEAD
-//bool no_hay_hornos_disponibles(){
-//	pthread_mutex_lock(&mutex_cola_bloqueados_prehorno);
-//	bool no_hay_hornos_disponibles = list_size(cola_bloqueados_prehorno) >= metadata_restaurante->cantidad_hornos;
-//	pthread_mutex_unlock(&mutex_cola_bloqueados_prehorno);
-//
-//	return no_hay_hornos_disponibles;
-//}
-=======
 bool no_hay_hornos_disponibles(){
 	pthread_mutex_lock(&mutex_cola_bloqueados_prehorno);
 	bool no_hay_hornos_disponibles = list_size(cola_bloqueados_prehorno) >= metadata_restaurante.cantidad_hornos;
@@ -79,7 +70,6 @@ bool no_hay_hornos_disponibles(){
 
 	return no_hay_hornos_disponibles;
 }
->>>>>>> f33e96140351a4f9470cf7ec89e5bde1b17b06d1
 void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
 	log_info(logger,"Se agrega pcb con plato:%s en cola E/S HORNO",pcb->nombre_plato);
 	pthread_mutex_lock(&mutex_platos[pcb->id]);
@@ -242,12 +232,8 @@ void inicializar_sem_mutex(){
 }
 void inicializar_sem_contadores(){
 	sem_init(&sem_planificar_platos,0,1);
-<<<<<<< HEAD
-	sem_init(&sem_hornos,0,metadata_restaurante->cantidad_hornos);
-	sem_realizar_paso =malloc(sizeof(sem_t)*list_size(metadata_restaurante->afinidades_cocineros));
-=======
+	sem_init(&sem_hornos,0,metadata_restaurante.cantidad_hornos);
 	sem_realizar_paso =malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
->>>>>>> f33e96140351a4f9470cf7ec89e5bde1b17b06d1
 }
 void inicializar_hilos_cocineros(){
 	for(int i=0;i<=list_size(metadata_restaurante.afinidades_cocineros);i++){
