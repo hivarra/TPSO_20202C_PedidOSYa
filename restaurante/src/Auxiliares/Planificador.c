@@ -247,14 +247,14 @@ void inicializar_sem_mutex(){
 }
 void inicializar_sem_contadores(){
 	log_info(logger,"[INICIALIZAR_SEM_CONTADORES]");
-	sem_init(&sem_planificar_platos,0,1);
+	sem_init(&sem_planificar_platos,0,0);
 	sem_init(&sem_hornos,0,metadata_restaurante.cantidad_hornos);
 	sem_realizar_paso =malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
 }
 void inicializar_hilos_cocineros(){
 	log_info(logger,"[INICIALIZAR_HILOS_COCINEROS]");
 
-	for(int i=0;i<=list_size(metadata_restaurante.afinidades_cocineros);i++){
+	for(int i=0;i<list_size(metadata_restaurante.afinidades_cocineros);i++){
 		t_cocinero* cocinero = malloc(sizeof(t_cocinero));
 		cocinero->afinidad = list_get(metadata_restaurante.afinidades_cocineros,i);
 		cocinero->id = i;
