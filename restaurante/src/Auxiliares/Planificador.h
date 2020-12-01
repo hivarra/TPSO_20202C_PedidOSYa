@@ -27,7 +27,7 @@ typedef struct{
 
 typedef struct{
 	int id_afinidad;
-	char* nombre_afinidad;
+	char nombre_afinidad[L_PLATO];
 }t_afinidad;
 
 t_list* AFINIDADES_MAESTRO;

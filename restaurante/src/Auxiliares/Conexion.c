@@ -294,6 +294,7 @@ void obtener_restaurante(){
 			metadata_restaurante.pos_y = info_restaurante->posY;
 			metadata_restaurante.cantidad_hornos = info_restaurante->cantHornos;
 			id_pedidos = info_restaurante->cantPedidos;
+			metadata_restaurante.afinidades_cocineros = list_create();
 			metadata_restaurante.afinidades_cocineros = info_restaurante->cocineros;
 			metadata_restaurante.platos = info_restaurante->platos;
 			log_info(logger, "[Obtener Restaurante] Se obtuvo la metadata desde Sindicato");
