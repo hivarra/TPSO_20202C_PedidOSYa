@@ -149,8 +149,9 @@ void finalizar_pcb(t_pcb* pcb){
 	pasar_pcb_a_estado(pcb,EXIT);
 }
 void planificar_platos(int* id_cola_ready){
+	sem_wait(&sem_planificar_platos);
+
 	while(1){
-		sem_wait(&sem_planificar_platos);
 		t_pcb* pcb = obtener_proximo_pcb_a_ejecutar(*id_cola_ready);
 
 		log_info(logger,"Se procede a ejecutar el PLATO:%s",pcb->nombre_plato);
@@ -249,14 +250,18 @@ void inicializar_sem_contadores(){
 	log_info(logger,"[INICIALIZAR_SEM_CONTADORES]");
 	sem_init(&sem_planificar_platos,0,0);
 	sem_init(&sem_hornos,0,metadata_restaurante.cantidad_hornos);
-	sem_realizar_paso =malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
+
+	sem_realizar_paso = malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
+	for(int i=0;i<list_size(metadata_restaurante.afinidades_cocineros);i++){
+		sem_init(&sem_realizar_paso[i],0,0);
+	}
 }
 void inicializar_hilos_cocineros(){
 	log_info(logger,"[INICIALIZAR_HILOS_COCINEROS]");
 
 	for(int i=0;i<list_size(metadata_restaurante.afinidades_cocineros);i++){
 		t_cocinero* cocinero = malloc(sizeof(t_cocinero));
-		cocinero->afinidad = list_get(metadata_restaurante.afinidades_cocineros,i);
+		strcpy(cocinero->afinidad,list_get(metadata_restaurante.afinidades_cocineros,i));
 		cocinero->id = i;
 
 		pthread_t thread_cocinero;
@@ -283,4 +288,7 @@ void inicializar_planificacion(uint32_t id_pedido,t_rta_obtener_receta* rta_obte
 void aplicar_retardo(int tiempo_a_consumir){
 	int retardo = RETARDO_CICLO_CPU*tiempo_a_consumir;
 	sleep(retardo);
+}
+void inicializar_ciclo_planificacion(){
+	sem_post(&sem_planificar_platos);
 }

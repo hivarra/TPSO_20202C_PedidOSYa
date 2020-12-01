@@ -78,6 +78,8 @@ uint32_t obtener_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 }
 uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 	uint32_t resultado = obtener_pedido(msg_confirmar_pedido);
+	inicializar_ciclo_planificacion();
+
 	return resultado;
 }
 
@@ -153,9 +155,15 @@ void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
 		case CONSULTAR_PLATOS:{
 			char* nombre_restaurante = recibir_consultar_platos(socket_envio, logger);//No importa este nombre
 			free(nombre_restaurante);
-			//t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
-			//enviar_rta_consultar_platos(respuesta, socket_cliente, logger);
-			//free(respuesta);
+			t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
+			log_info(logger,"[RTA_CONSULTAR_PLATOS] CANTIDAD PLATOS:%d",respuesta->cantPlatos);
+			void imprimir_plato(t_plato* plato){
+				log_info(logger,"[RTA_CONSULTAR_PLATOS] NOMBRE_PLATO:%s",plato->nombre);
+				log_info(logger,"[RTA_CONSULTAR_PLATOS] PRECIO_PLATO:%d",plato->precio);
+			}
+			list_iterate(respuesta->platos,(void*)imprimir_plato);
+			enviar_rta_consultar_platos(respuesta, socket_cliente, logger);
+			free(respuesta);
 		}
 		break;
 		case CREAR_PEDIDO:{

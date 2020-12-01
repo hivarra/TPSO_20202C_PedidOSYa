@@ -17,7 +17,7 @@
 
 typedef struct{
 	uint32_t id;
-	char* afinidad;
+	char afinidad[L_PLATO];
 	t_pcb* pcb;
 }t_cocinero;
 

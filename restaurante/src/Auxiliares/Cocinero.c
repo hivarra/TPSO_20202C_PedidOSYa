@@ -32,11 +32,9 @@ void realizar_otro_paso(t_cocinero* cocinero){
 	pthread_mutex_unlock(&mutex_platos[cocinero->pcb->id]);
 }
 void hilo_cocinero(t_cocinero* cocinero){
-	log_info(logger,"Cocinero con ID:%d creado",cocinero->id);
 
 	while(1){
 		sem_wait(&sem_realizar_paso[cocinero->id]);
-//		sleep(RETARDO_CICLO_CPU);
 
 		t_paso_receta* paso_siguiente = obtener_siguiente_paso(cocinero->pcb);
 		string_to_upper(paso_siguiente->accion);
