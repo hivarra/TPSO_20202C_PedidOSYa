@@ -21,6 +21,8 @@ typedef struct{
 	uint32_t id_pedido;
 }t_args_aux;
 
+t_list* lista_pedidos_app;
+
 int socket_servidor;
 int socket_envio;//POR ESTE SOCKET VAN A LLEVAR LAS CONSULTAS DE APP Y SE ENVIARAN SUS RESPUESTAS
 int socket_escucha;//POR ESTE SOCKET SE ENVIARAN ACTUALIZACIONES DE PEDIDOS A APP

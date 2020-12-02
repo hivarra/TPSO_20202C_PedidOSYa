@@ -76,12 +76,6 @@ uint32_t obtener_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 	}
 	return resultado;
 }
-uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
-	uint32_t resultado = obtener_pedido(msg_confirmar_pedido);
-	inicializar_ciclo_planificacion();
-
-	return resultado;
-}
 
 void escuchar_app(){
 	while(1){
@@ -100,41 +94,45 @@ void escuchar_app(){
 
 			case CONSULTAR_PLATOS:{
 				char* nombre_restaurante = recibir_consultar_platos(socket_envio, logger);//No importa este nombre
-				log_info(logger, "[CONSULTAR_PLATOS]Nombre restaurante: %s", nombre_restaurante);//TODO:BORRAR XQ NO IMPORTA ESTE PARAMETRO
 				free(nombre_restaurante);
-				//t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
-				//enviar_rta_consultar_platos(respuesta, socket_envio, logger);
-				//free(respuesta);
+				t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
+				enviar_rta_consultar_platos(respuesta, socket_envio, logger);
+				list_destroy_and_destroy_elements(respuesta->platos, free);
+				free(respuesta);
 			}
 			break;
 			case CREAR_PEDIDO:{
 				recibir_mensaje_vacio(socket_envio, logger);
-				//uint32_t id_pedido = procesar_crear_pedido();TODO: Tiene que guardarse que el pedido lo pidio APP, para poder enviar actualizacion
-				//enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_envio, logger);
+				uint32_t* id_pedido = malloc(sizeof(uint32_t));
+				*id_pedido = procesar_crear_pedido();
+				list_add(lista_pedidos_app,id_pedido);
+				//TODO: Tiene que guardarse que el pedido lo pidio APP, para poder enviar actualizacion
+				enviar_entero(RTA_CREAR_PEDIDO, *id_pedido, socket_envio, logger);
 			}
 			break;
 			case ANADIR_PLATO:{
 				t_anadir_plato* msg_anadir_plato = recibir_anadir_plato(socket_envio, logger);
 				log_info(logger, "[ANADIR_PLATO]Plato: %s, ID_Pedido: %d", msg_anadir_plato->plato, msg_anadir_plato->id_pedido);
-				//uint32_t resultado = procesar_anadir_plato(msg_anadir_plato);
+				uint32_t resultado = procesar_anadir_plato(msg_anadir_plato);
 				free(msg_anadir_plato);
-				//enviar_entero(RTA_ANADIR_PLATO, resultado, socket_envio, logger);
+				enviar_entero(RTA_ANADIR_PLATO, resultado, socket_envio, logger);
 			}
 			break;
 			case CONFIRMAR_PEDIDO:{
 				t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(socket_envio, logger);
 				log_info(logger, "[CONFIRMAR_PEDIDO]ID_Pedido: %d", msg_confirmar_pedido->id_pedido);
-				//uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
+				uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
 				free(msg_confirmar_pedido);
-				//enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, socket_envio, logger);
+				enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, socket_envio, logger);
 			}
 			break;
 			case CONSULTAR_PEDIDO:{
 				uint32_t id_pedido = recibir_entero(socket_envio, logger);
 				log_info(logger, "[CONSULTAR_PEDIDO]ID_Pedido: %d", id_pedido);
-				//t_rta_consultar_pedido* respuesta = procesar_consultar_pedido(id_pedido);
-				//enviar_rta_consultar_pedido(respuesta, socket_envio, logger);
-				//free(respuesta);
+				t_rta_consultar_pedido* respuesta = procesar_consultar_pedido(id_pedido);
+				enviar_rta_consultar_pedido(respuesta, socket_envio, logger);
+				list_destroy_and_destroy_elements(respuesta->comidas, free);
+				free(respuesta);
 			}
 			break;
 			default:
@@ -153,35 +151,30 @@ void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
 	switch(tipo_mensaje){
 
 		case CONSULTAR_PLATOS:{
-			char* nombre_restaurante = recibir_consultar_platos(socket_envio, logger);//No importa este nombre
+			char* nombre_restaurante = recibir_consultar_platos(socket_cliente, logger);//No importa este nombre
 			free(nombre_restaurante);
 			t_rta_consultar_platos* respuesta = procesar_consultar_platos();//Debe reenviar el msj a sindicato
-			log_info(logger,"[RTA_CONSULTAR_PLATOS] CANTIDAD PLATOS:%d",respuesta->cantPlatos);
-			void imprimir_plato(t_plato* plato){
-				log_info(logger,"[RTA_CONSULTAR_PLATOS] NOMBRE_PLATO:%s",plato->nombre);
-				log_info(logger,"[RTA_CONSULTAR_PLATOS] PRECIO_PLATO:%d",plato->precio);
-			}
-			list_iterate(respuesta->platos,(void*)imprimir_plato);
 			enviar_rta_consultar_platos(respuesta, socket_cliente, logger);
+			list_destroy_and_destroy_elements(respuesta->platos, free);
 			free(respuesta);
 		}
 		break;
 		case CREAR_PEDIDO:{
-			recibir_mensaje_vacio(socket_envio, logger);
-			//uint32_t id_pedido = procesar_crear_pedido();//TODO: Tiene que guardarse que el pedido es de tal cliente, para poder enviar actualizacion
-			//enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_cliente, logger);
+			recibir_mensaje_vacio(socket_cliente, logger);
+			uint32_t id_pedido = procesar_crear_pedido();//TODO: Tiene que guardarse que el pedido es de tal cliente, para poder enviar actualizacion
+			enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_cliente, logger);
 		}
 		break;
 		case ANADIR_PLATO:{
 			t_anadir_plato* msg_anadir_plato = recibir_anadir_plato(socket_envio, logger);
 			log_info(logger, "[ANADIR_PLATO]Plato: %s, ID_Pedido: %d", msg_anadir_plato->plato, msg_anadir_plato->id_pedido);
-			//uint32_t resultado = procesar_anadir_plato(msg_anadir_plato);
+			uint32_t resultado = procesar_anadir_plato(msg_anadir_plato);
 			free(msg_anadir_plato);
-			//enviar_entero(RTA_ANADIR_PLATO, resultado, socket_cliente, logger);
+			enviar_entero(RTA_ANADIR_PLATO, resultado, socket_cliente, logger);
 		}
 		break;
 		case CONFIRMAR_PEDIDO:{
-			t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(socket_envio, logger);
+			t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(socket_cliente, logger);
 			log_info(logger, "[CONFIRMAR_PEDIDO]ID_Pedido: %d", msg_confirmar_pedido->id_pedido);
 			uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
 			free(msg_confirmar_pedido);
@@ -189,11 +182,12 @@ void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
 		}
 		break;
 		case CONSULTAR_PEDIDO:{
-			uint32_t id_pedido = recibir_entero(socket_envio, logger);
+			uint32_t id_pedido = recibir_entero(socket_cliente, logger);
 			log_info(logger, "[CONSULTAR_PEDIDO]ID_Pedido: %d", id_pedido);
-			//t_rta_consultar_pedido* respuesta = procesar_consultar_pedido(id_pedido);
-			//enviar_rta_consultar_pedido(respuesta, socket_cliente, logger);
-			//free(respuesta);
+			t_rta_consultar_pedido* respuesta = procesar_consultar_pedido(id_pedido);
+			enviar_rta_consultar_pedido(respuesta, socket_cliente, logger);
+			list_destroy_and_destroy_elements(respuesta->comidas, free);
+			free(respuesta);
 		}
 		break;
 		default:
@@ -241,6 +235,7 @@ void connection_handler_cliente(int* socket_emisor){
 }
 
 void crear_socket_envio(){
+	socket_envio = -1;//Para saber si hay que cerrarlo
 
 	int socket_envio_aux = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
 	if (socket_envio_aux == -1)
@@ -256,10 +251,13 @@ void crear_socket_envio(){
 		/*Creo el hilo para escuchar a app*/
 		pthread_create(&hilo_escucha_app, NULL, (void*)escuchar_app, NULL);
 		pthread_detach(hilo_escucha_app);
+
+		lista_pedidos_app = list_create();
 	}
 }
 
 void conectar_a_app(){
+	socket_escucha = -1;//Para saber si hay que cerrarlo
 
 	int socket_handshake = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
 	if (socket_handshake == -1)
@@ -291,8 +289,11 @@ void conectar_a_app(){
 }
 void obtener_restaurante(){
 	int socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
-	if (socket_new == -1)
-		log_warning(logger, "[Obtener Restaurante] No se pudo conectar a Sindicato");
+	if (socket_new == -1){
+		log_error(logger, "[Obtener Restaurante] No se pudo conectar a Sindicato");
+		puts("[Obtener Restaurante] No se pudo conectar a Sindicato");
+		exit(-1);
+	}
 	else{
 		enviar_obtener_restaurante(restaurante_conf.nombre_restaurante, socket_new, logger);
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
@@ -302,7 +303,6 @@ void obtener_restaurante(){
 			metadata_restaurante.pos_y = info_restaurante->posY;
 			metadata_restaurante.cantidad_hornos = info_restaurante->cantHornos;
 			id_pedidos = info_restaurante->cantPedidos;
-			metadata_restaurante.afinidades_cocineros = list_create();
 			metadata_restaurante.afinidades_cocineros = info_restaurante->cocineros;
 			metadata_restaurante.platos = info_restaurante->platos;
 			log_info(logger, "[Obtener Restaurante] Se obtuvo la metadata desde Sindicato");
@@ -317,8 +317,8 @@ void obtener_restaurante(){
 			list_iterate(metadata_restaurante.afinidades_cocineros,(void*)imprimir_afinidades);
 			log_info(logger,"[Obtener Restaurante]Platos:");
 			void imprimir_plato(t_plato* plato){
-				log_info(logger,"NOMBRE_PLATO:%s",plato->nombre);
-				log_info(logger,"PRECIO_PLATO:%d",plato->precio);
+				log_info(logger,"\tNombre Plato:%s",plato->nombre);
+				log_info(logger,"\tPrecio Plato:%d",plato->precio);
 			}
 			list_iterate(metadata_restaurante.platos,(void*)imprimir_plato);
 
@@ -329,7 +329,6 @@ void obtener_restaurante(){
 }
 
 void conectar_a_sindicato(){
-
 	int socket_handshake = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
 	if (socket_handshake == -1){
 		log_error(logger, "No se pudo conectar a Sindicato");

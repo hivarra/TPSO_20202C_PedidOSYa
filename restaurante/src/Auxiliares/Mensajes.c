@@ -22,6 +22,7 @@ void procesar_handshake_inicial(t_handshake_inicial* msg_handshake_inicial, int 
 	t_cliente* new_client = calloc(1,sizeof(t_cliente));
 	strcpy(new_client->nombre, msg_handshake_inicial->id);
 	new_client->socket_escucha = socket_emisor;
+	new_client->pedidos = list_create();
 	list_add(clientes_conectados, new_client);
 }
 
@@ -111,11 +112,11 @@ uint32_t procesar_anadir_plato(t_anadir_plato* msg_anadir_plato){
 	return resultado;
 }
 
-//uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
-//	uint32_t resultado = 0;
-//	//TODO: Toda la logica para arrancar la planificacion de los platos
-//	return resultado;
-//}
+uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
+	uint32_t resultado = 0;
+	//TODO: Toda la logica para arrancar la planificacion de los platos
+	return resultado;
+}
 
 t_rta_consultar_pedido* procesar_consultar_pedido(uint32_t id_pedido){
 	t_rta_consultar_pedido* respuesta = calloc(1,sizeof(t_rta_consultar_pedido));
