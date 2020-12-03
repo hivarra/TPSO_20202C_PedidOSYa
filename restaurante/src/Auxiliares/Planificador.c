@@ -256,17 +256,9 @@ void inicializar_colas_ready(){
 	}
 	free(afinidades_distinct);
 }
-void inicializar_colas_hornos(){
-	mutex_colas_hornos = malloc(sizeof(pthread_mutex_t)*metadata_restaurante.cantidad_hornos);
-
-	for(int i=0;i<=metadata_restaurante.cantidad_hornos;i++){
-		pthread_mutex_init(&mutex_colas_hornos[i],NULL);
-	}
-}
 void inicializar_sem_mutex(){
 	log_info(logger,"[INICIALIZAR_SEM_MUTEX]");
 	pthread_mutex_init(&mutex_id_pcb,NULL);
-//	pthread_mutex_init(&mutex_hornos,NULL);
 	pthread_mutex_init(&mutex_id_pedidos,NULL);
 	pthread_mutex_init(&mutex_cola_bloqueados_prehorno,NULL);
 }
@@ -299,7 +291,6 @@ void inicializar_planificador(){
 
 	inicializar_algoritmo();
 	inicializar_colas_ready();
-	inicializar_colas_hornos();
 	inicializar_sem_contadores();
 	inicializar_sem_mutex();
 	inicializar_hilos_cocineros();
