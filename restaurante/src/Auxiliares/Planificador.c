@@ -16,6 +16,7 @@ uint32_t generar_id_pcb(){
 	return id_pcb;
 }
 t_pcb* generar_pcb(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta){
+	log_info(logger,"[GENERAR_PCB]");
 	t_pcb* pcb = calloc(1,sizeof(t_pcb));
 	pcb->id = generar_id_pcb();
 	pcb->id_pedido = id_pedido;
@@ -31,7 +32,8 @@ void agregar_pcb_en_cola_ready_con_afinidad(t_pcb* pcb,int id_afinidad){
 	list_add(lista_colas_ready[id_afinidad],pcb);
 	pthread_mutex_unlock(&mutex_colas_ready[id_afinidad]);
 }
-int obtener_id_afinidad(char* nombre_plato){
+int obtener_id_afinidad(char nombre_plato[L_PLATO]){
+	log_info(logger,"[OBTENER_ID_AFINIDAD]");
 	bool igual_nombre_plato(t_afinidad* afinidad){
 		return string_equals_ignore_case(afinidad->nombre_afinidad,nombre_plato);
 	}
@@ -40,6 +42,7 @@ int obtener_id_afinidad(char* nombre_plato){
 	return afinidad_buscada->id_afinidad;
 }
 void pasar_pcb_a_ready(t_pcb* pcb){
+	log_info(logger,"[PASAR_PCB_A_READY]");
 	int id_afinidad = obtener_id_afinidad(pcb->nombre_plato);
 	log_info(logger,"Se agrega pcb en cola READY con AFINIDAD:%s",pcb->nombre_plato);
 	agregar_pcb_en_cola_ready_con_afinidad(pcb,id_afinidad);
@@ -245,8 +248,6 @@ void inicializar_colas_ready(){
 		log_info(logger,"Se crea cola ready para afinidad:%s con id:%d",afinidad->nombre_afinidad,i);
 		//SE CREA MUTEX PARA CADA COLA READY
 		pthread_mutex_init(&mutex_colas_ready[i],NULL);
-
-		free(afinidad);
 	}
 	free(afinidades_distinct);
 }

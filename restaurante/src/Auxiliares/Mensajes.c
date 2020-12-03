@@ -135,12 +135,14 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 			if (socket_new == -1)
 				log_warning(logger, "[Obtener Receta] No se pudo conectar a Sindicato");
 			else{
+				log_info(logger,"PRUEBAAAA");
 				enviar_obtener_receta(plato->nombre,socket_new,logger);
 				t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
 				if(tipo_mensaje == RTA_OBTENER_RECETA){
 					t_rta_obtener_receta* rta_obtener_receta = recibir_rta_obtener_receta(socket_new,logger);
 					log_info(logger,"[RTA_OBTENER_RECETA] NOMBRE_PLATO:%s",rta_obtener_receta->nombre);
 					log_info(logger,"[RTA_OBTENER_RECETA] CANTIDAD_PASOS:%d",rta_obtener_receta->cantPasos);
+					log_info(logger,"[RTA_OBTENER_RECETA] LISTA PASOS:");
 					imprimir_lista_pasos(rta_obtener_receta->pasos);
 					crear_y_agregar_pcb_a_cola_ready(args_aux->id_pedido,rta_obtener_receta);
 					free(rta_obtener_receta);
@@ -149,6 +151,7 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 			}
 	}
 	list_iterate(args_aux->rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
+	free(args_aux);
 }
 uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 	t_resultado resultado = FAIL;
@@ -178,7 +181,6 @@ uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 			pthread_t hilo_enviar_obtener_receta;
 			pthread_create(&hilo_enviar_obtener_receta,NULL,(void*)enviar_obtener_pasos_receta,args_aux);
 			pthread_detach(hilo_enviar_obtener_receta);
-			free(args_aux);
 
 			resultado = OK;
 		}
