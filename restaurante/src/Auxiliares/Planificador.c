@@ -32,20 +32,28 @@ void agregar_pcb_en_cola_ready_con_afinidad(t_pcb* pcb,int id_afinidad){
 	list_add(lista_colas_ready[id_afinidad],pcb);
 	pthread_mutex_unlock(&mutex_colas_ready[id_afinidad]);
 }
-int obtener_id_afinidad(char nombre_plato[L_PLATO]){
+t_afinidad* obtener_id_afinidad(char nombre_plato[L_PLATO]){
 	log_info(logger,"[OBTENER_ID_AFINIDAD]");
 	bool igual_nombre_plato(t_afinidad* afinidad){
 		return string_equals_ignore_case(afinidad->nombre_afinidad,nombre_plato);
 	}
 	t_afinidad* afinidad_buscada = list_find(AFINIDADES_MAESTRO,(void*)igual_nombre_plato);
 
-	return afinidad_buscada->id_afinidad;
+	//Si no tiene afinidad, se debe agregar a cola ready sin afinidad ("N")
+	bool es_sin_afinidad(t_afinidad* afinidad){
+		return string_equals_ignore_case(afinidad->nombre_afinidad,"N");
+	}
+	if(afinidad_buscada == NULL)
+		afinidad_buscada = list_find(AFINIDADES_MAESTRO,(void*)es_sin_afinidad);
+
+	return afinidad_buscada;
 }
 void pasar_pcb_a_ready(t_pcb* pcb){
 	log_info(logger,"[PASAR_PCB_A_READY]");
-	int id_afinidad = obtener_id_afinidad(pcb->nombre_plato);
-	log_info(logger,"Se agrega pcb en cola READY con AFINIDAD:%s",pcb->nombre_plato);
-	agregar_pcb_en_cola_ready_con_afinidad(pcb,id_afinidad);
+	t_afinidad* afinidad = obtener_id_afinidad(pcb->nombre_plato);
+
+	log_info(logger,"Se agrega pcb en cola READY con AFINIDAD:%s",afinidad->nombre_afinidad);
+	agregar_pcb_en_cola_ready_con_afinidad(pcb,afinidad->id_afinidad);
 }
 void pasar_pcb_a_blocked_por_reposar(t_pcb* pcb){
 	log_info(logger,"Se agrega pcb con plato:%s en cola E/S REPOSAR",pcb->nombre_plato);
