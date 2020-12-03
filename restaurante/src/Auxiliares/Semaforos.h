@@ -10,7 +10,6 @@
 
 #include <semaphore.h>
 
-sem_t sem_planificar_platos;
 sem_t sem_planificar_hornos;
 sem_t finCPUbound;
 sem_t* sem_realizar_paso;

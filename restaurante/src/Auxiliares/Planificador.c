@@ -172,7 +172,6 @@ void finalizar_pcb(t_pcb* pcb){
 	pasar_pcb_a_estado(pcb,EXIT);
 }
 void planificar_platos(int* id_cola_ready){
-	sem_wait(&sem_planificar_platos);
 
 	while(1){
 		t_pcb* pcb = obtener_proximo_pcb_a_ejecutar(*id_cola_ready);
@@ -246,11 +245,6 @@ void inicializar_colas_ready(){
 		log_info(logger,"Se crea cola ready para afinidad:%s con id:%d",afinidad->nombre_afinidad,i);
 		//SE CREA MUTEX PARA CADA COLA READY
 		pthread_mutex_init(&mutex_colas_ready[i],NULL);
-		//SE CREA HILO PLANIFICADOR PARA CADA COLA READY
-		pthread_t hilo_planificador;
-		pthread_create(&hilo_planificador,NULL,(void*)planificar_platos,&i);
-		pthread_detach(hilo_planificador);
-		log_info(logger,"Se crea hilo planificador para cola ready con id:%d",i);
 
 		free(afinidad);
 	}
@@ -264,7 +258,6 @@ void inicializar_sem_mutex(){
 }
 void inicializar_sem_contadores(){
 	log_info(logger,"[INICIALIZAR_SEM_CONTADORES]");
-	sem_init(&sem_planificar_platos,0,0);
 	sem_init(&sem_planificar_hornos,0,0);
 
 	sem_realizar_paso = malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
@@ -295,15 +288,39 @@ void inicializar_planificador(){
 	inicializar_sem_mutex();
 	inicializar_hilos_cocineros();
 }
-void inicializar_planificacion(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta){
+void crear_y_agregar_pcb_a_cola_ready(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta){
 	t_pcb* pcb = generar_pcb(id_pedido,rta_obtener_receta);
 	pasar_pcb_a_estado(pcb,READY);
-	log_info(logger,"Creación de PLATO:%s con ID_PCB:%d",pcb->nombre_plato,pcb->id);
+	log_info(logger,"[CREAR_Y_AGREGAR_PCB_A_COLA_READY] Se crea PCB de PLATO:%s con ID_PCB:%d",pcb->nombre_plato,pcb->id);
 }
 void aplicar_retardo(int tiempo_a_consumir){
 	int retardo = RETARDO_CICLO_CPU*tiempo_a_consumir;
 	sleep(retardo);
 }
 void inicializar_ciclo_planificacion(){
-	sem_post(&sem_planificar_platos);
+	log_info(logger,"[INICIALIZAR_CICLO_PLANIFICACION]");
+	t_list* afinidades_distinct = list_duplicate(metadata_restaurante.afinidades_cocineros);
+	//SE CREA LISTA CON AFINIDADES NO REPETIDAS
+	for(int i=0;i<list_size(afinidades_distinct);i++){
+		char* afinidad = list_get(afinidades_distinct,i);
+
+		bool es_afinidad(char* una_afinidad){
+			return string_equals_ignore_case(afinidad,una_afinidad);
+		}
+		int cantidad_afinidad = list_count_satisfying(afinidades_distinct,(void*)es_afinidad);
+
+		while(cantidad_afinidad > 1){
+			list_remove_by_condition(afinidades_distinct,(void*)es_afinidad);
+			cantidad_afinidad = list_count_satisfying(afinidades_distinct,(void*)es_afinidad);
+		}
+	}
+
+	for(int i=0;i<list_size(afinidades_distinct);i++){
+		//SE CREA HILO PLANIFICADOR PARA CADA COLA READY
+		pthread_t hilo_planificador;
+		pthread_create(&hilo_planificador,NULL,(void*)planificar_platos,&i);
+		pthread_detach(hilo_planificador);
+		log_info(logger,"Se crea hilo planificador para cola ready con id:%d",i);
+	}
+	free(afinidades_distinct);
 }
