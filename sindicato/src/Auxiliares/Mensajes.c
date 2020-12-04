@@ -93,6 +93,7 @@ uint32_t procesar_guardar_pedido(t_guardar_pedido* msg_guardar_pedido){
 			persistirDatos(contenido, bloques);
 			/*Creo el archivo metadata*/
 			crearMetadataArchivo(path_pedido, file_mdata);
+			log_info(logger, "[Creacion nuevo archivo] Pedido creado: %s.", path_pedido);
 
 			free(contenido);
 			free(bloques);

@@ -159,7 +159,7 @@ int crearRestaurante(t_crear_restaurante* argsCrearRestaurante){
 		//aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
 		free(linea);
 		free(bloques_necesarios);
-		log_info(logger, "[Consola] Restaurante creado: %s.", argsCrearRestaurante->nombreRestaurante);
+		log_info(logger, "[Creacion nuevo archivo] Restaurante creado: %s.", argsCrearRestaurante->nombreRestaurante);
 		result = 1;
 	}
 	free(ruta_restaurante);
@@ -190,7 +190,7 @@ int crearReceta(t_crear_receta* argsCrearReceta){
 		//aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
 		free(linea);
 		free(bloques_necesarios);
-		log_info(logger, "[Consola] Receta creada: %s.", argsCrearReceta->nombre);
+		log_info(logger, "[Creacion nuevo archivo] Receta creada: %s.", argsCrearReceta->nombre);
 		result = 1;
 	}
 	free(ruta_receta);

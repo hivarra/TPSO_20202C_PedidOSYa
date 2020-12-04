@@ -10,24 +10,27 @@ void connection_handler(int* socket_emisor) {
 		pthread_exit(NULL);
 	}
 
-	log_trace(logger, "Se recibe tipo de mensaje: %s",
+	log_info(logger, "[Recepcion de mensaje] Se recibe tipo de mensaje: %s.",
 			get_nombre_mensaje(tipo_mensaje));
 
 	switch (tipo_mensaje) {
 
 	case HANDSHAKE_INICIAL:{
 		t_handshake_inicial* handshake_recibido = recibir_handshake_inicial(*socket_emisor, logger);
-		free(handshake_recibido);//NO ME IMPORTA QUIEN SE CONECTA
+		log_info(logger, "[Nueva Conexion] Se conecto un proceso %s con ID %s.", get_nombre_mensaje(handshake_recibido->tipoProceso), handshake_recibido->id);
 		uint32_t miTipoProceso = SINDICATO;
 		enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio el Handshake Inicial al proceso %s.", get_nombre_mensaje(handshake_recibido->tipoProceso));
+		free(handshake_recibido);
 		break;
 	}
 	case CONSULTAR_PLATOS: {
 		char* restaurante = recibir_consultar_platos(*socket_emisor, logger);
 		log_trace(logger, "Restaurante: %s", restaurante);
 		t_rta_consultar_platos* respuesta = procesar_consultar_platos(restaurante);
-		free(restaurante);
 		enviar_rta_consultar_platos(respuesta, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio CONSULTAR_PLATOS sobre el restaurante %s.", restaurante);
+		free(restaurante);
 		list_destroy_and_destroy_elements(respuesta->platos, free);
 		free(respuesta);
 		break;
@@ -42,6 +45,7 @@ void connection_handler(int* socket_emisor) {
 
 		free(msg_guardar_pedido);
 		enviar_entero(RTA_GUARDAR_PEDIDO, resultado_guardar_pedido, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio GUARDAR_PEDIDO con resultado %s.", resultado_guardar_pedido? "OK":"FAIL");
 		break;
 	}
 	case GUARDAR_PLATO: {
@@ -54,6 +58,7 @@ void connection_handler(int* socket_emisor) {
 
 		free(recibido);
 		enviar_entero(RTA_GUARDAR_PLATO, resultado_guardar_plato, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio GUARDAR_PLATO con resultado %s.", resultado_guardar_plato? "OK":"FAIL");
 		break;
 	}
 	case CONFIRMAR_PEDIDO: {
@@ -66,6 +71,7 @@ void connection_handler(int* socket_emisor) {
 
 		free(recibido);
 		enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio CONFIRMAR_PEDIDO con resultado %s.", resultado? "OK":"FAIL");
 		break;
 	}
 	case OBTENER_PEDIDO: {
@@ -78,6 +84,7 @@ void connection_handler(int* socket_emisor) {
 
 		free(recibido);
 		enviar_rta_obtener_pedido(respuesta, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio OBTENER_PEDIDO con %d platos dentro del pedido.", respuesta->cantComidas);
 		list_destroy_and_destroy_elements(respuesta->comidas, free);
 		free(respuesta);
 		break;
@@ -86,8 +93,9 @@ void connection_handler(int* socket_emisor) {
 		char* restaurante = recibir_obtener_restaurante(*socket_emisor, logger);
 		log_trace(logger, "Restaurante: %s", restaurante);
 		t_rta_obtener_restaurante* respuesta = procesar_obtener_restaurante(restaurante);
-		free(restaurante);
 		enviar_rta_obtener_restaurante(respuesta, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio OBTENER_RESTAURANTE sobre el restaurante %s.", restaurante);
+		free(restaurante);
 		list_destroy_and_destroy_elements(respuesta->cocineros, free);
 		list_destroy_and_destroy_elements(respuesta->platos, free);
 		free(respuesta);
@@ -103,14 +111,16 @@ void connection_handler(int* socket_emisor) {
 
 		free(recibido);
 		enviar_entero(RTA_PLATO_LISTO, resultado, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio PLATO_LISTO con resultado %s.", resultado? "OK":"FAIL");
 		break;
 	}
 	case OBTENER_RECETA: {
 		char* plato = recibir_obtener_receta(*socket_emisor, logger);
 		log_trace(logger, "Plato: %s", plato);
 		t_rta_obtener_receta* respuesta = procesar_obtener_receta(plato);
-		free(plato);
 		enviar_rta_obtener_receta(respuesta, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio OBTENER_RECETA sobre el plato %s.", plato);
+		free(plato);
 		list_destroy_and_destroy_elements(respuesta->pasos, free);
 		free(respuesta);
 		break;
@@ -125,6 +135,7 @@ void connection_handler(int* socket_emisor) {
 
 		free(recibido);
 		enviar_entero(RTA_TERMINAR_PEDIDO, resultado, *socket_emisor, logger);
+		log_info(logger, "[Respuesta] Se respondio TERMINAR_PEDIDO con resultado %s.", resultado? "OK":"FAIL");
 		break;
 	}
 	default:
