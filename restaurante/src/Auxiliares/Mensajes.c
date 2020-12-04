@@ -135,7 +135,6 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 			if (socket_new == -1)
 				log_warning(logger, "[Obtener Receta] No se pudo conectar a Sindicato");
 			else{
-				log_info(logger,"PRUEBAAAA");
 				enviar_obtener_receta(plato->nombre,socket_new,logger);
 				t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
 				if(tipo_mensaje == RTA_OBTENER_RECETA){
@@ -151,6 +150,8 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 			}
 	}
 	list_iterate(args_aux->rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
+	inicializar_ciclo_planificacion(args_aux->rta_obtener_pedido->comidas);
+
 	free(args_aux);
 }
 uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
