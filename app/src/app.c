@@ -23,10 +23,10 @@ int main(int argc, char **argv)  {
 
 	inicializar();
 	/* 3. Conexion*/
-	/*TODO:Conectarse a comanda*/
+	conectar_a_comanda();
 
 	/*TODO:Quedarse escuchando peticiones de cliente y repartidores*/
-//	pthread_create(&hilo_servidor,NULL,(void*)crearServidor,NULL);
+	pthread_create(&hilo_servidor,NULL,(void*)crearServidor,NULL);
 
 //	inicializar();
 
@@ -34,7 +34,7 @@ int main(int argc, char **argv)  {
 	crear_hilo_PCP();
 
 
-	prueba_planificacion();
+//	prueba_planificacion();
 
 	sleep(1000);
 //	pthread_join(hilo_servidor, NULL);

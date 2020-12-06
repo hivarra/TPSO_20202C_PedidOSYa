@@ -27,8 +27,6 @@ pthread_t hilo_servidor;
 pthread_t thread_PLP;
 pthread_t thread_PCP;
 
-t_restaurante* restaurante_default;
-
 void prueba_planificacion();
 
 void inicializar();
