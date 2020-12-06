@@ -11,7 +11,7 @@ void cargar_configuracion_app(char * path_config) {
 	t_config* config = config_create(path_config);
 
 	if (config_has_property(config, "PUERTO_ESCUCHA")) {
-		app_conf.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
+		app_conf.puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
 	} else {
 		error_show("Error al cargar PUERTO_ESCUCHA de archivo de configuracion");
 	}
@@ -21,7 +21,7 @@ void cargar_configuracion_app(char * path_config) {
 		error_show("Error al cargar IP_COMANDA de archivo de configuracion");
 	}
 	if (config_has_property(config, "PUERTO_COMANDA")) {
-		app_conf.puerto_comanda = config_get_int_value(config, "PUERTO_COMANDA");
+		app_conf.puerto_comanda = config_get_string_value(config, "PUERTO_COMANDA");
 	} else {
 		error_show("Error al cargar PUERTO_COMANDA de archivo de configuracion");
 	}

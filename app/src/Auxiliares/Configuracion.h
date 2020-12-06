@@ -13,9 +13,9 @@
 
 // Definición de tipos
 typedef struct {
-	uint32_t puerto_escucha;
+	char* puerto_escucha;
 	char* ip_comanda;
-	uint32_t puerto_comanda;
+	char* puerto_comanda;
 	uint32_t retardo_ciclo_cpu;
 	uint32_t grado_multiprocesamiento;
 	char* algoritmo_planificacion;
