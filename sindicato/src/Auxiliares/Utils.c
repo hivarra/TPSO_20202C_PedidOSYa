@@ -17,7 +17,7 @@ void liberar_bit_bloque(int pos){
 }
 
 int asignarBloqueLibre() {
-	int pos = 0;
+	int pos = -2;
 
 	pthread_mutex_lock(&mutex_bitmap);
 	for(int i = 0; i < cantidad_bloques; i++){
@@ -33,6 +33,12 @@ int asignarBloqueLibre() {
 	if (msync(bmap, cantidad_bloques/8, MS_SYNC) == -1)
 		log_warning(logger, "No se pudo actualizar el bitmap.");
 
+	if(pos == -2){
+		log_error(logger, "No hay mas bloques libres, va a rompeeer!!!!!");
+		puts("No hay mas bloques libres, va a rompeeer!!!!!");
+	}
+	else
+		log_info(logger, "[Asignacion Bloque] Se asigna el bloque %d a un archivo.", pos+1);
 	return pos+1;
 }
 
@@ -53,6 +59,7 @@ void liberar_bloque(int num_bloque){
 
 	vaciar_bloque(num_bloque);
 	liberar_bit_bloque(num_bloque);
+	log_info(logger, "[Desasignacion Bloque] Se desasigna el bloque %d a un archivo.", num_bloque);
 }
 
 int calcularBloquesNecesarios(int cant_bytes){
