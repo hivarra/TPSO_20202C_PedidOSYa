@@ -154,6 +154,37 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 
 	free(args_aux);
 }
+void obtener_pedido(uint32_t* id_pedido){
+	int socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
+		if (socket_new == -1)
+			log_warning(logger, "[OBTENER_PEDIDO] No se pudo conectar a Sindicato");
+		else{
+			t_obtener_pedido* msg_obtener_pedido = malloc(sizeof(t_obtener_pedido));
+			msg_obtener_pedido->id_pedido = *id_pedido;
+			strcpy(msg_obtener_pedido->restaurante,restaurante_conf.nombre_restaurante);
+			enviar_obtener_pedido(msg_obtener_pedido,socket_new,logger);
+			free(msg_obtener_pedido);
+
+			t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
+			if(tipo_mensaje == RTA_OBTENER_PEDIDO){
+				t_rta_obtener_pedido* rta_obtener_pedido = recibir_rta_obtener_pedido(socket_new,logger);
+				log_info(logger,"[RTA_OBTENER_PEDIDO] ESTADO_PEDIDO:%d",rta_obtener_pedido->estado);
+				log_info(logger,"[RTA_OBTENER_PEDIDO] CANTIDAD_COMIDAS:%d",rta_obtener_pedido->cantComidas);
+				log_info(logger,"[RTA_OBTENER_PEDIDO] LISTA_COMIDAS:");
+				imprimir_lista_comida(rta_obtener_pedido->comidas);
+
+				t_args_aux* args_aux = malloc(sizeof(t_args_aux));
+				args_aux->rta_obtener_pedido = rta_obtener_pedido;
+				args_aux->id_pedido = *id_pedido;
+
+				pthread_t hilo_enviar_obtener_receta;
+				pthread_create(&hilo_enviar_obtener_receta,NULL,(void*)enviar_obtener_pasos_receta,args_aux);
+				pthread_detach(hilo_enviar_obtener_receta);
+			}
+			close(socket_new);
+		}
+}
+
 uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 	t_resultado resultado = FAIL;
 
@@ -161,35 +192,22 @@ uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 	if (socket_new == -1)
 		log_warning(logger, "[PROCESAR_CONFIRMAR_PEDIDO] No se pudo conectar a Sindicato");
 	else{
-		t_obtener_pedido* msg_obtener_pedido = malloc(sizeof(t_obtener_pedido));
-		msg_obtener_pedido->id_pedido = msg_confirmar_pedido->id_pedido;
-		strcpy(msg_obtener_pedido->restaurante,restaurante_conf.nombre_restaurante);
-		enviar_obtener_pedido(msg_obtener_pedido,socket_new,logger);
-		free(msg_obtener_pedido);
-
+		//SE ENVIA CONFIRMAR_PEDIDO A SINDICATO
+		strcpy(msg_confirmar_pedido->restaurante,restaurante_conf.nombre_restaurante);
+		enviar_confirmar_pedido(msg_confirmar_pedido,socket_new,logger);
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
-		if(tipo_mensaje == RTA_OBTENER_PEDIDO){
-			t_rta_obtener_pedido* rta_obtener_pedido = recibir_rta_obtener_pedido(socket_new,logger);
-			log_info(logger,"[RTA_OBTENER_PEDIDO] ESTADO_PEDIDO:%d",rta_obtener_pedido->estado);
-			log_info(logger,"[RTA_OBTENER_PEDIDO] CANTIDAD_COMIDAS:%d",rta_obtener_pedido->cantComidas);
-			log_info(logger,"[RTA_OBTENER_PEDIDO] LISTA_COMIDAS:");
-			imprimir_lista_comida(rta_obtener_pedido->comidas);
+		if(tipo_mensaje == RTA_CONFIRMAR_PEDIDO){
+			uint32_t resultado = recibir_entero(socket_new,logger);
+			log_info(logger,"[RTA_CONFIRMAR_PEDIDO] RESULTADO:%s",resultado?"OK":"FAIL");
 
-			t_args_aux* args_aux = malloc(sizeof(t_args_aux));
-			args_aux->rta_obtener_pedido = rta_obtener_pedido;
-			args_aux->id_pedido = msg_confirmar_pedido->id_pedido;
-
-			pthread_t hilo_enviar_obtener_receta;
-			pthread_create(&hilo_enviar_obtener_receta,NULL,(void*)enviar_obtener_pasos_receta,args_aux);
-			pthread_detach(hilo_enviar_obtener_receta);
-
-			resultado = OK;
+			if(resultado){
+				pthread_t hilo_enviar_obtener_pedido;
+				pthread_create(&hilo_enviar_obtener_pedido,NULL,(void*)obtener_pedido,&msg_confirmar_pedido->id_pedido);
+				pthread_detach(hilo_enviar_obtener_pedido);
+			}
 		}
 		close(socket_new);
 	}
-//	if(resultado)
-//		inicializar_ciclo_planificacion();
-
 	return resultado;
 }
 
