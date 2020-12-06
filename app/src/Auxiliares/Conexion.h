@@ -47,22 +47,7 @@ void esperar_cliente(int socket_servidor);
 void inicializarListaClientesRest();
 void incializarRestoDefault();
 t_info_cliente* buscarClienteConectado(char* id);
-t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante) {
-	bool restaurante_igual(t_info_restaurante* info_restaurante) {
-		return string_equals_ignore_case(info_restaurante->id,
-				nombre_restaurante);
-	}
-	t_info_restaurante* restaurante;
-	if (list_size(restaurantesConectados) > 0) {
-		pthread_mutex_lock(&mutexRestaurantes);
-		restaurante = list_find(restaurantesConectados,
-				(void*) restaurante_igual);
-		pthread_mutex_unlock(&mutexRestaurantes);
-	} else {
-		restaurante = infoRestoDefault;
-	}
-	return restaurante;
-}
+t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante);
 //void imprimir_restaurante(t_restaurante* restaurante);
 //void agregarRestaurante(t_restaurante* restaurante);
 

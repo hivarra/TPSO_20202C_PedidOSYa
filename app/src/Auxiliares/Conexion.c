@@ -68,6 +68,23 @@ t_info_cliente* buscarClienteConectado(char* nombre_cliente){
 	return cliente;
 }
 
+t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante) {
+	bool restaurante_igual(t_info_restaurante* info_restaurante) {
+		return string_equals_ignore_case(info_restaurante->id,
+				nombre_restaurante);
+	}
+	t_info_restaurante* restaurante;
+	if (list_size(restaurantesConectados) > 0) {
+		pthread_mutex_lock(&mutexRestaurantes);
+		restaurante = list_find(restaurantesConectados,
+				(void*) restaurante_igual);
+		pthread_mutex_unlock(&mutexRestaurantes);
+	} else {
+		restaurante = infoRestoDefault;
+	}
+	return restaurante;
+}
+
 t_rta_consultar_restaurantes* obtenerRestaurantes(){
 	t_rta_consultar_restaurantes* respuesta_restaurantes = malloc(sizeof(t_rta_consultar_restaurantes));
 	respuesta_restaurantes->restaurantes = list_create();
@@ -139,14 +156,25 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 
 		case CONSULTAR_PLATOS:;
 			char* restaurante = recibir_consultar_platos(socket_cliente,logger);
-			log_info(logger,"RESTAURANTE:%s CONSULTA_PLATOS",restaurante);
+//			log_info(logger,"RESTAURANTE:%s CONSULTA_PLATOS",restaurante);
 			t_rta_consultar_platos* rta_consultar_platos = malloc(sizeof(t_rta_consultar_platos));
-			rta_consultar_platos->cantPlatos = 1;
 			t_list* listaPlatos = list_create();
-			t_plato* plato = malloc(sizeof(t_plato));
-			strcpy(plato->nombre,"Asado");
-			plato->precio = 1000;
-			list_add(listaPlatos,plato);
+
+			int j = 0;
+			if(list_size(restaurantesConectados) > 0) {
+				//TODO: Consultar al restaurante seleccionado
+
+			} else {
+				while(app_conf.platos_default[j]){
+					t_plato* plato = malloc(sizeof(t_plato));
+					strcpy(plato->nombre,app_conf.platos_default[j]);
+					plato->precio = 0;
+					list_add(listaPlatos,plato);
+					j++;
+				}
+			}
+
+			rta_consultar_platos->cantPlatos = j;
 			rta_consultar_platos->platos = listaPlatos;
 			enviar_rta_consultar_platos(rta_consultar_platos,socket_cliente,logger);
 
@@ -156,7 +184,32 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 
 		case CREAR_PEDIDO:;
 			recibir_mensaje_vacio(socket_cliente, logger);
-			uint32_t id_pedido = 10;
+
+			uint32_t id_pedido;
+
+			if(list_size(restaurantesConectados) > 0) {
+
+				//TODO: Buscar el restaurante seleccionado por el cliente
+				t_info_cliente* cliente = buscarClienteConectado(id_cliente);
+				t_info_restaurante* rest = buscarRestauranteConectado(cliente->restaurante_seleccionado);
+
+				//TODO: Enviar CREAR_PEDIDO al restaurante seleccionado por el cliente
+				enviar_mensaje_vacio(CREAR_PEDIDO, rest->socketEscucha, logger);
+				t_tipoMensaje tipo_rta = recibir_tipo_mensaje(rest->socketEscucha, logger);
+				if (tipo_rta == RTA_CREAR_PEDIDO){
+					uint32_t id_recibido = recibir_entero(rest->socketEscucha, logger);
+					log_info(logger, "[RTA_CREAR_PEDIDO]ID_Pedido: %d", id_recibido);
+					id_pedido = id_recibido;
+				}
+
+			} else {
+
+				id_pedido = 10;
+				log_info(logger, "ID_Pedido generado: %d", id_pedido);
+			}
+
+
+
 			enviar_entero(RTA_CREAR_PEDIDO,id_pedido,socket_cliente,logger);
 
 			break;
