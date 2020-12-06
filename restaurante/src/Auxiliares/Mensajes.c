@@ -143,7 +143,14 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 					log_info(logger,"[RTA_OBTENER_RECETA] CANTIDAD_PASOS:%d",rta_obtener_receta->cantPasos);
 					log_info(logger,"[RTA_OBTENER_RECETA] LISTA PASOS:");
 					imprimir_lista_pasos(rta_obtener_receta->pasos);
-					crear_y_agregar_pcb_a_cola_ready(args_aux->id_pedido,rta_obtener_receta);
+
+					int buscar_comida(t_comida* comida){
+						return string_equals_ignore_case(comida->nombre,rta_obtener_receta->nombre);
+					}
+
+					t_comida* comida_buscada = list_find(args_aux->rta_obtener_pedido->comidas,(void*)buscar_comida);
+
+					crear_y_agregar_pcb_a_cola_ready(args_aux->id_pedido,rta_obtener_receta,comida_buscada->cantTotal);
 					free(rta_obtener_receta);
 				}
 				close(socket_new);

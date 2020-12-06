@@ -342,10 +342,15 @@ void inicializar_planificador(){
 	inicializar_hilos_planificadores();
 	inicializar_hilos_cocineros();
 }
-void crear_y_agregar_pcb_a_cola_ready(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta){
-	t_pcb* pcb = generar_pcb(id_pedido,rta_obtener_receta);
-	pasar_pcb_a_estado(pcb,READY);
-	log_info(logger,"[CREAR_Y_AGREGAR_PCB_A_COLA_READY] Se crea PCB de PLATO:%s con ID_PCB:%d",pcb->nombre_plato,pcb->id);
+void crear_y_agregar_pcb_a_cola_ready(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta,uint32_t cantidad_total){
+	int i=0;
+
+	while(i<cantidad_total){
+		t_pcb* pcb = generar_pcb(id_pedido,rta_obtener_receta);
+		pasar_pcb_a_estado(pcb,READY);
+		log_info(logger,"[CREAR_Y_AGREGAR_PCB_A_COLA_READY] Se crea PCB de PLATO:%s con ID_PCB:%d",pcb->nombre_plato,pcb->id);
+		i++;
+	}
 }
 void aplicar_retardo(int tiempo_a_consumir){
 	int retardo = RETARDO_CICLO_CPU*tiempo_a_consumir;
