@@ -10,7 +10,8 @@
 
 #define IP_APP "127.0.0.1"
 
-#include <shared.h>
+//#include <shared.h>
+//#include <shared.h>
 #include <protocolo.h>
 #include "Configuracion.h"
 
@@ -48,6 +49,7 @@ void inicializarListaClientesRest();
 void incializarRestoDefault();
 t_info_cliente* buscarClienteConectado(char* id);
 t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante);
+uint32_t generar_id_pedido();
 //void imprimir_restaurante(t_restaurante* restaurante);
 //void agregarRestaurante(t_restaurante* restaurante);
 
