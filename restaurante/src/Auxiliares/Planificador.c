@@ -125,7 +125,7 @@ void enviar_pcb_a_horno(t_pcb* pcb){
 	t_paso_receta* paso = obtener_siguiente_paso(pcb);
 
 	aplicar_retardo(paso->tiempo);
-	eliminar_paso_realizado(paso);
+	eliminar_paso_realizado(pcb->lista_pasos);
 	pthread_mutex_unlock(&pcb->mutex_pcb);
 }
 void sacar_pcb_de_horno(t_pcb* pcb){
@@ -319,11 +319,14 @@ void planificar_platos(int* id_cola_ready){
 bool evaluar_desalojo_por_RR(t_pcb* pcb,int id_cola_ready){
 	return pcb->quantum > QUANTUM && !list_is_empty(lista_colas_ready[id_cola_ready]);
 }
+bool no_evalua_desalojo(){
+	return false;
+}
 void setear_algoritmo_FIFO(){
 	log_info(logger,"Se setea algoritmo FIFO");
 	algoritmo_planificacion = FIFO;
 	obtener_proximo_pcb_a_ejecutar = obtener_proximo_pcb_a_ejecutar_por_FIFO;
-	evaluar_desalojo = false;
+	evaluar_desalojo = no_evalua_desalojo;
 }
 void setear_algoritmo_RR(){
 	log_info(logger,"Se setea algoritmo RR");

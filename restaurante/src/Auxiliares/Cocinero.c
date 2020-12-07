@@ -12,10 +12,8 @@ t_paso_receta* obtener_siguiente_paso(t_pcb* pcb){
 	t_paso_receta* siguiente_paso = list_get(pcb->lista_pasos,0);
 	return siguiente_paso;
 }
-void eliminar_paso_realizado(t_paso_receta* paso){
-	free(paso->accion);
-	free(&paso->tiempo);
-	free(paso);
+void eliminar_paso_realizado(t_list* pasos){
+	list_remove_and_destroy_element(pasos,0,free);
 }
 void reposar(t_cocinero* cocinero){
 	pasar_pcb_a_estado(cocinero->pcb,BLOCKED_POR_REPOSAR);
@@ -38,10 +36,10 @@ void hilo_cocinero(t_cocinero* cocinero){
 
 	while(1){
 		sem_wait(&sem_realizar_paso[cocinero->id]);
-
+//		log_info(logger,"PRUEBAAAAAAAAAA");
 		t_paso_receta* paso_siguiente = obtener_siguiente_paso(cocinero->pcb);
 		string_to_upper(paso_siguiente->accion);
-		log_info(logger,"[HILO_COCINERO] Cocinero con ID:%d ejecuta PASO:%s del PLATO:%s del ID_PEDIDO:%d",cocinero->id,paso_siguiente->accion,cocinero->pcb->id_pedido);
+		log_info(logger,"[HILO_COCINERO] Cocinero con ID:%d ejecuta PASO:%s del PLATO:%s del ID_PEDIDO:%d",cocinero->id,paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id_pedido);
 
 		if(string_equals_ignore_case(paso_siguiente->accion,"REPOSAR")){
 			reposar(cocinero);
@@ -52,7 +50,7 @@ void hilo_cocinero(t_cocinero* cocinero){
 		else{
 			realizar_otro_paso(cocinero,paso_siguiente);
 		}
-		eliminar_paso_realizado(paso_siguiente);
+		eliminar_paso_realizado(cocinero->pcb->lista_pasos);
 	}
 }
 bool cocinero_esta_ejecutando(t_pcb* pcb){
