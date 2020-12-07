@@ -123,25 +123,33 @@ void enviar_pcb_a_horno(t_pcb* pcb){
 	pthread_mutex_lock(&pcb->mutex_pcb);
 	pcb->estado = BLOCKED_POR_HORNO;
 	t_paso_receta* paso = obtener_siguiente_paso(pcb);
-	int tiempo = paso->tiempo;
 
-	aplicar_retardo(tiempo);
+	aplicar_retardo(paso->tiempo);
 	eliminar_paso_realizado(paso);
-	pasar_pcb_a_ready(pcb);
 	pthread_mutex_unlock(&pcb->mutex_pcb);
 }
-void planificar_hornos(){
-	bool HAY_HORNOS_DISPONIBLES = hay_hornos_disponibles();
+void sacar_pcb_de_horno(t_pcb* pcb){
+	bool es_pcb(t_pcb* pcb_aux){
+		return pcb_aux->id == pcb->id;
+	}
+	pthread_mutex_lock(&mutex_cola_bloqueados_prehorno);
+	list_remove_by_condition(cola_bloqueados_prehorno,(void*)es_pcb);
+	pthread_mutex_unlock(&mutex_cola_bloqueados_prehorno);
 
-	while(HAY_HORNOS_DISPONIBLES){
+	pasar_pcb_a_ready(pcb);
+}
+void planificar_hornos(){
+
+	while(1){
 		sem_wait(&sem_hornear_plato);
+		sem_wait(&sem_hay_espacio_en_horno);
 		t_pcb* pcb = obtener_proximo_pcb_a_hornear();
 
 		log_info(logger,"El plato:%s llega a horno",pcb->nombre_plato);
 		enviar_pcb_a_horno(pcb);
+		sacar_pcb_de_horno(pcb);
 		log_info(logger,"El plato:%s sale del horno",pcb->nombre_plato);
-
-		HAY_HORNOS_DISPONIBLES = hay_hornos_disponibles();
+		sem_post(&sem_hay_espacio_en_horno);
 	}
 }
 void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
@@ -381,6 +389,7 @@ void inicializar_sem_mutex(){
 void inicializar_sem_contadores(){
 //	log_info(logger,"[INICIALIZAR_SEM_CONTADORES]");
 	sem_init(&sem_hornear_plato,0,0);
+	sem_init(&sem_hay_espacio_en_horno,0,metadata_restaurante.cantidad_hornos);
 
 	sem_realizar_paso = malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
 	for(int i=0;i<list_size(metadata_restaurante.afinidades_cocineros);i++){
