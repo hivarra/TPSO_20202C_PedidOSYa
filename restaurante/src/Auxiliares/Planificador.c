@@ -154,10 +154,17 @@ void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
 
 	sem_post(&sem_hornear_plato);
 }
+void agregar_pcb_a_cola_exit(t_pcb* pcb){
+	pthread_mutex_lock(&mutex_cola_exit);
+	list_add(cola_exit,pcb);
+	pthread_mutex_unlock(&mutex_cola_exit);
+}
 void pasar_pcb_a_exit(t_pcb* pcb){
 	pthread_mutex_lock(&pcb->mutex_pcb);
 	pcb->estado = EXIT;
 	pthread_mutex_unlock(&pcb->mutex_pcb);
+
+	agregar_pcb_a_cola_exit(pcb);
 }
 void pasar_pcb_a_exec(t_pcb* pcb){
 	pthread_mutex_lock(&pcb->mutex_pcb);
@@ -212,9 +219,6 @@ void ejecutar_pcb(t_pcb* pcb, int id_cola_ready){
 		log_info(logger,"Fin CPU Bound");
 	}
 }
-void finalizar_pcb(t_pcb* pcb){
-	pasar_pcb_a_estado(pcb,EXIT);
-}
 void inicializar_ciclo_planificacion(t_list* comidas){
 	//SE REALIZA SEM_POST DE SEMAFOROS DE COLAS READY
 	bool NO_EXISTEN_COCINEROS_CON_AFINIDAD = false;
@@ -266,8 +270,11 @@ void planificar_platos(int* id_cola_ready){
 		ejecutar_pcb(pcb,*id_cola_ready);
 //		log_info(logger,"[HILO PLANIFICAR_PLATOS] Se finaliza ejecución del PLATO:%s",pcb->nombre_plato);
 
-//		if(plato_sin_pasos_para_ejecutar(pcb))
-//			finalizar_pcb(pcb);
+		if(plato_sin_pasos_para_ejecutar(pcb)){
+			pasar_pcb_a_estado(pcb,EXIT);
+			informar_plato_listo(pcb->id_pedido,pcb->nombre_plato);
+			//TODO:CONSULTAR SI ACA ES DONDE EVALUO ENVIAR TERMINAR_PEDIDO
+		}
 	}
 }
 /**INICIALIZACIONES**/
@@ -339,6 +346,7 @@ void inicializar_sem_mutex(){
 	pthread_mutex_init(&mutex_id_pcb,NULL);
 	pthread_mutex_init(&mutex_id_pedidos,NULL);
 	pthread_mutex_init(&mutex_cola_bloqueados_prehorno,NULL);
+	pthread_mutex_init(&mutex_cola_exit,NULL);
 }
 void inicializar_sem_contadores(){
 //	log_info(logger,"[INICIALIZAR_SEM_CONTADORES]");
@@ -384,11 +392,19 @@ void inicializar_hilos_planificadores(){
 		log_info(logger,"Se crea hilo planificador para cola ready con afinidad:%s con id:%d",afinidad->nombre_afinidad,afinidad->id_afinidad);
 	}
 }
+void inicializar_cola_exit(){
+	cola_exit = list_create();
+}
+void inicializar_cola_bloqueados_prehorno(){
+	cola_bloqueados_prehorno = list_create();
+}
 void inicializar_planificador(){
 //	log_info(logger,"[INICIALIZAR_PLANIFICADOR]");
 
 	inicializar_algoritmo();
 	inicializar_colas_ready();
+	inicializar_cola_exit();
+	inicializar_cola_bloqueados_prehorno();
 	inicializar_sem_contadores();
 	inicializar_sem_mutex();
 	inicializar_hilos_planificadores();

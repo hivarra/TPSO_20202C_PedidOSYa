@@ -12,9 +12,10 @@ pthread_mutex_t mutex_id_pcb;
 pthread_mutex_t mutex_afinidades_maestro;
 //pthread_mutex_t mutex_hornos;
 pthread_mutex_t mutex_id_pedidos;//Semaforo para incrementar el id_pedidos
-pthread_mutex_t* mutex_colas_hornos;
 pthread_mutex_t mutex_cola_bloqueados_prehorno;
+pthread_mutex_t mutex_cola_exit;
 pthread_mutex_t* mutex_colas_ready;
-pthread_mutex_t* mutex_platos;
+
+//pthread_mutex_t* mutex_platos;
 
 #endif /* AUXILIARES_HILOS_H_ */

@@ -13,6 +13,7 @@
 #include "Metadata_restaurante.h"
 #include "Semaforos.h"
 #include "Hilos.h"
+#include "Mensajes.h"
 #include <semaphore.h>
 
 typedef enum{
@@ -32,8 +33,9 @@ typedef struct{
 
 t_list* AFINIDADES_MAESTRO;
 t_list** lista_colas_ready;
-uint32_t id_pcb_global;
+t_list* cola_exit;
 t_list* cola_bloqueados_prehorno;
+uint32_t id_pcb_global;
 t_algoritmo algoritmo_planificacion;
 
 int QUANTUM;

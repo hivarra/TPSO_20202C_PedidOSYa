@@ -31,5 +31,6 @@ typedef struct{
 	pthread_mutex_t mutex_pcb;
 }t_pcb;
 
+bool plato_sin_pasos_para_ejecutar(t_pcb* pcb);
 
 #endif /* AUXILIARES_PLATO_H_ */

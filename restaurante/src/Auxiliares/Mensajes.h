@@ -19,5 +19,6 @@ uint32_t procesar_crear_pedido(void);
 uint32_t procesar_anadir_plato(t_anadir_plato*);
 uint32_t procesar_confirmar_pedido(t_confirmar_pedido*);
 t_rta_consultar_pedido* procesar_consultar_pedido(uint32_t);
+void informar_plato_listo(uint32_t id_pedido,char plato[L_PLATO]);
 
 #endif /* AUXILIARES_MENSAJES_H_ */

@@ -249,3 +249,41 @@ t_rta_consultar_pedido* procesar_consultar_pedido(uint32_t id_pedido){
 	}
 	return respuesta;
 }
+void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
+	log_info(logger, "[ENVIAR_PLATO_LISTO_A_SINDICATO] Se envia actualizacion de PLATO_LISTO a modulo solicitante. Info enviada: restaurante:%s,plato:%s,id_pedido:%d.",plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
+	enviar_plato_listo(plato_listo,socket_escucha,logger);
+	recibir_entero(socket_escucha,logger);
+	free(plato_listo);
+}
+void enviar_plato_listo_a_modulo_solicitante(uint32_t id_pedido,char plato[L_PLATO]){
+	t_plato_listo* msg_plato_listo = calloc(1,sizeof(t_plato_listo));
+	strcpy(msg_plato_listo->restaurante, restaurante_conf.nombre_restaurante);
+	strcpy(msg_plato_listo->plato, plato);
+	msg_plato_listo->id_pedido = id_pedido;
+
+	pthread_t hilo_enviar_plato_listo;
+	pthread_create(&hilo_enviar_plato_listo,NULL,(void*)enviar_actualizacion_plato_listo,msg_plato_listo);
+	pthread_detach(hilo_enviar_plato_listo);
+}
+void informar_plato_listo(uint32_t id_pedido,char plato[L_PLATO]){
+	int socket_sindicato = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
+	if (socket_sindicato == -1)
+		log_warning(logger, "[ENVIAR_PLATO_LISTO_A_SINDICATO] No se pudo conectar a Sindicato");
+	else{
+		t_plato_listo* msg_plato_listo = calloc(1,sizeof(t_plato_listo));
+		strcpy(msg_plato_listo->restaurante, restaurante_conf.nombre_restaurante);
+		strcpy(msg_plato_listo->plato, plato);
+		msg_plato_listo->id_pedido = id_pedido;
+
+		log_info(logger, "[ENVIAR_PLATO_LISTO_A_SINDICATO] Se envia a Sindicato la info de PLATO_LISTO restaurante:%s,plato:%s,id_pedido:%d.",msg_plato_listo->restaurante,msg_plato_listo->plato,msg_plato_listo->id_pedido);
+		enviar_plato_listo(msg_plato_listo,socket_sindicato,logger);
+		free(msg_plato_listo);
+		t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_sindicato, logger);
+		if (tipo_rta == RTA_PLATO_LISTO){
+			uint32_t respuesta_plato_listo = recibir_entero(socket_sindicato, logger);
+			log_info(logger, "[RTA_PLATO_LISTO] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
+			enviar_plato_listo_a_modulo_solicitante(id_pedido,plato);
+		}
+		close(socket_sindicato);
+	}
+}
