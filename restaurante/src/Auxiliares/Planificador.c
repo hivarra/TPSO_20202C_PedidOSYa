@@ -145,10 +145,10 @@ void planificar_hornos(){
 		sem_wait(&sem_hay_espacio_en_horno);
 		t_pcb* pcb = obtener_proximo_pcb_a_hornear();
 
-		log_info(logger,"El plato:%s llega a horno",pcb->nombre_plato);
+		log_info(logger,"[PLANIFICAR_HORNOS] Se envia PLATO:%s de ID_PEDIDO:%d al horno",pcb->nombre_plato,pcb->id_pedido);
 		enviar_pcb_a_horno(pcb);
 		sacar_pcb_de_horno(pcb);
-		log_info(logger,"El plato:%s sale del horno",pcb->nombre_plato);
+		log_info(logger,"[PLANIFICAR_HORNOS] PLATO%s de ID_PEDIDO:%d sale del horno",pcb->nombre_plato,pcb->id_pedido);
 		sem_post(&sem_hay_espacio_en_horno);
 	}
 }

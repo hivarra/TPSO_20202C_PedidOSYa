@@ -6,6 +6,11 @@
  */
 #include "Conexion.h"
 
+void guardar_pedido_app(uint32_t id_pedido){
+	pthread_mutex_lock(&mutex_pedidos_app);
+	list_add(lista_pedidos_app,&id_pedido);
+	pthread_mutex_unlock(&mutex_pedidos_app);
+}
 void escuchar_app(){
 	while(1){
 
@@ -34,8 +39,7 @@ void escuchar_app(){
 				recibir_mensaje_vacio(socket_envio, logger);
 				uint32_t* id_pedido = malloc(sizeof(uint32_t));
 				*id_pedido = procesar_crear_pedido();
-				list_add(lista_pedidos_app,id_pedido);
-				//TODO: Tiene que guardarse que el pedido lo pidio APP, para poder enviar actualizacion
+				guardar_pedido_app(*id_pedido);
 				enviar_entero(RTA_CREAR_PEDIDO, *id_pedido, socket_envio, logger);
 			}
 			break;
@@ -70,7 +74,13 @@ void escuchar_app(){
 		}
 	}
 }
-
+void guardar_pedido_cliente(char id_cliente[L_ID],uint32_t id_pedido){
+	bool es_cliente(t_cliente* cliente){
+		return string_equals_ignore_case(cliente->nombre,id_cliente);
+	}
+	t_cliente* cliente_buscado = list_find(clientes_conectados,(void*)es_cliente);
+	list_add(cliente_buscado->pedidos,&id_pedido);
+}
 void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
 
 	t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_cliente, logger);
@@ -90,7 +100,8 @@ void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
 		break;
 		case CREAR_PEDIDO:{
 			recibir_mensaje_vacio(socket_cliente, logger);
-			uint32_t id_pedido = procesar_crear_pedido();//TODO: Tiene que guardarse que el pedido es de tal cliente, para poder enviar actualizacion
+			uint32_t id_pedido = procesar_crear_pedido();
+			guardar_pedido_cliente(cliente->id,id_pedido);
 			enviar_entero(RTA_CREAR_PEDIDO, id_pedido, socket_cliente, logger);
 		}
 		break;
@@ -178,10 +189,11 @@ void crear_socket_envio(){
 		free(handshake);
 		socket_envio = socket_envio_aux;//EL SOCKET PARA QUE APP ME ENVIE Y YO LE CONTESTE, ES ESTE
 		/*Creo el hilo para escuchar a app*/
+		lista_pedidos_app = list_create();
+		pthread_mutex_init(&mutex_pedidos_app,NULL);
+
 		pthread_create(&hilo_escucha_app, NULL, (void*)escuchar_app, NULL);
 		pthread_detach(hilo_escucha_app);
-
-		lista_pedidos_app = list_create();
 	}
 }
 
@@ -336,6 +348,7 @@ void escuchar_clientes(){
 
 	log_info(logger, "SERVIDOR | Escuchando clientes");
 	clientes_conectados = list_create();//INICALIZO LA LISTA DE CLIENTES
+	pthread_mutex_init(&mutex_cliente_conectados,NULL);
 
 	while(1)
 		esperar_cliente(socket_servidor);

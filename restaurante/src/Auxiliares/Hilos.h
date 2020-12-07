@@ -16,6 +16,8 @@ pthread_mutex_t mutex_cola_bloqueados_prehorno;
 pthread_mutex_t mutex_cola_exit;
 pthread_mutex_t* mutex_colas_ready;
 pthread_mutex_t mutex_pedidos_pcbs;
-//pthread_mutex_t* mutex_platos;
+
+pthread_mutex_t mutex_pedidos_app;
+pthread_mutex_t mutex_cliente_conectados;
 
 #endif /* AUXILIARES_HILOS_H_ */

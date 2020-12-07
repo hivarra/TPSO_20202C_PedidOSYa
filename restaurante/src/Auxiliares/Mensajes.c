@@ -23,7 +23,10 @@ void procesar_handshake_inicial(t_handshake_inicial* msg_handshake_inicial, int 
 	strcpy(new_client->nombre, msg_handshake_inicial->id);
 	new_client->socket_escucha = socket_emisor;
 	new_client->pedidos = list_create();
+
+	pthread_mutex_lock(&mutex_cliente_conectados);
 	list_add(clientes_conectados, new_client);
+	pthread_mutex_unlock(&mutex_cliente_conectados);
 }
 
 t_rta_consultar_platos* procesar_consultar_platos(){
@@ -156,6 +159,7 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 				close(socket_new);
 			}
 	}
+	pedidos_pcbs = list_create();
 	list_iterate(args_aux->rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
 
 	inicializar_ciclo_planificacion(args_aux->rta_obtener_pedido->comidas);
@@ -249,9 +253,30 @@ t_rta_consultar_pedido* procesar_consultar_pedido(uint32_t id_pedido){
 	}
 	return respuesta;
 }
+bool es_pedido_de_app(uint32_t id_pedido){
+	bool es_pedido(uint32_t* id_pedido_aux){
+			return *id_pedido_aux == id_pedido;
+	}
+	return list_any_satisfy(lista_pedidos_app,(void*)es_pedido);
+}
 void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
-	log_info(logger, "[ENVIAR_PLATO_LISTO_A_SINDICATO] Se envia actualizacion de PLATO_LISTO a modulo solicitante. Info enviada: restaurante:%s,plato:%s,id_pedido:%d.",plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
-	enviar_plato_listo(plato_listo,socket_escucha,logger);
+	log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a modulo solicitante. Info enviada: restaurante:%s,plato:%s,id_pedido:%d.",plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
+	bool tiene_pedido(uint32_t* id_pedido_cliente){
+		return *id_pedido_cliente == plato_listo->id_pedido;
+	}
+	bool es_pedido(t_cliente* cliente){
+		return list_any_satisfy(cliente->pedidos,(void*)tiene_pedido);
+	}
+
+	if(es_pedido_de_app(plato_listo->id_pedido))
+		enviar_plato_listo(plato_listo,socket_escucha,logger);
+	else{
+		t_cliente* cliente = list_find(clientes_conectados,(void*)es_pedido);
+		if(cliente != NULL)
+			enviar_plato_listo(plato_listo,socket_escucha,logger);
+		else
+			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Error al enviar actualizacion de PLATO_LISTO. No se encontró socket_escucha de app/cliente asociado a pedido");
+	}
 	recibir_entero(socket_escucha,logger);
 	free(plato_listo);
 }
