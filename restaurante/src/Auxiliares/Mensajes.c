@@ -157,6 +157,7 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 			}
 	}
 	list_iterate(args_aux->rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
+
 	inicializar_ciclo_planificacion(args_aux->rta_obtener_pedido->comidas);
 
 	free(args_aux);
