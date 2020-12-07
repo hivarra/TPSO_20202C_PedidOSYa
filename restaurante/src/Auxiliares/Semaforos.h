@@ -10,7 +10,7 @@
 
 #include <semaphore.h>
 
-sem_t sem_planificar_hornos;
+sem_t sem_hornear_plato;
 sem_t finCPUbound;
 sem_t* sem_realizar_paso;
 sem_t* sem_hilos_cocineros;
