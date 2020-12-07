@@ -31,12 +31,19 @@ typedef struct{
 	char nombre_afinidad[L_PLATO];
 }t_afinidad;
 
+typedef struct{
+	uint32_t id_pedido;
+	uint32_t id_pcb;
+}t_pedido_pcb;
+
 t_list* AFINIDADES_MAESTRO;
 t_list** lista_colas_ready;
 t_list* cola_exit;
 t_list* cola_bloqueados_prehorno;
 uint32_t id_pcb_global;
 t_algoritmo algoritmo_planificacion;
+
+t_list* pedidos_pcbs;//lista t_pedido_pcb;
 
 int QUANTUM;
 

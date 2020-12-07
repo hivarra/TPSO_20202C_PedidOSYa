@@ -287,3 +287,23 @@ void informar_plato_listo(uint32_t id_pedido,char plato[L_PLATO]){
 		close(socket_sindicato);
 	}
 }
+void enviar_terminar_pedido_a_sindicato(uint32_t id_pedido){
+	int socket_sindicato = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
+	if (socket_sindicato == -1)
+		log_warning(logger, "[ENVIAR_TERMINAR_PEDIDO_A_SINDICATO] No se pudo conectar a Sindicato");
+	else{
+		t_terminar_pedido* msg_terminar_pedido = calloc(1,sizeof(t_terminar_pedido));
+		strcpy(msg_terminar_pedido->restaurante, restaurante_conf.nombre_restaurante);
+		msg_terminar_pedido->id_pedido = id_pedido;
+
+		log_info(logger, "[ENVIAR_TERMINAR_PEDIDO_A_SINDICATO] Se envia a Sindicato TERMINAR_PEDIDO con restaurante:%s,plato:%s,id_pedido:%d.",msg_terminar_pedido->restaurante,msg_terminar_pedido->id_pedido);
+		enviar_terminar_pedido(msg_terminar_pedido,socket_sindicato,logger);
+		free(msg_terminar_pedido);
+		t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_sindicato, logger);
+		if (tipo_rta == RTA_TERMINAR_PEDIDO){
+			uint32_t respuesta_terminar_pedido = recibir_entero(socket_sindicato, logger);
+			log_info(logger, "[RTA_TERMINAR_PEDIDO] Se recibe respuesta:%s",respuesta_terminar_pedido?"OK":"FAIL");
+		}
+		close(socket_sindicato);
+	}
+}

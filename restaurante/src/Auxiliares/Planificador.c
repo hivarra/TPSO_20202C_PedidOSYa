@@ -258,6 +258,33 @@ void asignar_cocinero_a_pcb(t_pcb* pcb){
 	cocinero_a_asignar->pcb = pcb;
 	pthread_mutex_unlock(&cocinero_a_asignar->mutex_cocinero);
 }
+bool pedido_esta_terminado(uint32_t id_pedido){
+	bool pedido_terminado = false;
+
+	bool es_pedido(t_pedido_pcb* pedido_pcb){
+		return pedido_pcb->id_pedido == id_pedido;
+	}
+	t_list* lista_filtrada = list_filter(pedidos_pcbs,(void*)es_pedido);
+	for(int i=0;i<list_size(lista_filtrada);i++){
+		t_pedido_pcb* pedido_pcb = list_get(lista_filtrada,i);
+
+		bool pcb_esta_en_exit(t_pcb* pcb){
+			return pcb->id == pedido_pcb->id_pcb;
+		}
+		pedido_terminado = list_any_satisfy(cola_exit,(void*)pcb_esta_en_exit);
+	}
+	free(lista_filtrada);
+	return pedido_terminado;
+}
+void liberar_pcbs_de_pedido(uint32_t id_pedido){
+	bool es_pedido(t_pcb* pcb){
+			return pcb->id_pedido == id_pedido;
+	}
+	pthread_mutex_lock(&mutex_cola_exit);
+	t_list* lista_filtrada = list_filter(cola_exit,(void*)es_pedido);
+	list_destroy_and_destroy_elements(lista_filtrada,free);
+	pthread_mutex_unlock(&mutex_cola_exit);
+}
 void planificar_platos(int* id_cola_ready){
 	log_info(logger,"[HILO PLANIFICAR_PLATOS] Planificador con ID:%d corriendo",*id_cola_ready);
 	while(1){
@@ -273,7 +300,10 @@ void planificar_platos(int* id_cola_ready){
 		if(plato_sin_pasos_para_ejecutar(pcb)){
 			pasar_pcb_a_estado(pcb,EXIT);
 			informar_plato_listo(pcb->id_pedido,pcb->nombre_plato);
-			//TODO:CONSULTAR SI ACA ES DONDE EVALUO ENVIAR TERMINAR_PEDIDO
+			if(pedido_esta_terminado(pcb->id_pedido)){
+				enviar_terminar_pedido_a_sindicato(pcb->id_pedido);
+				liberar_pcbs_de_pedido(pcb->id_pedido);
+			}
 		}
 	}
 }
@@ -410,12 +440,22 @@ void inicializar_planificador(){
 	inicializar_hilos_planificadores();
 	inicializar_hilos_cocineros();
 }
+void agregar_a_lista_pedidos_pcbs(uint32_t id_pedido, uint32_t id_pcb){
+	t_pedido_pcb* pedido_pcb = malloc(sizeof(t_pedido_pcb));
+	pedido_pcb->id_pcb = id_pcb;
+	pedido_pcb->id_pedido = id_pedido;
+
+	pthread_mutex_lock(&mutex_pedidos_pcbs);
+	list_add(pedidos_pcbs,pedido_pcb);
+	pthread_mutex_unlock(&mutex_pedidos_pcbs);
+}
 void crear_y_agregar_pcb_a_cola_ready(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta,uint32_t cantidad_total){
 	int i=0;
 
 	while(i<cantidad_total){
 		t_pcb* pcb = generar_pcb(id_pedido,rta_obtener_receta);
 		pasar_pcb_a_estado(pcb,READY);
+		agregar_a_lista_pedidos_pcbs(pcb->id_pedido,pcb->id);
 //		log_info(logger,"[CREAR_Y_AGREGAR_PCB_A_COLA_READY] Se crea PCB de PLATO:%s con ID_PCB:%d",pcb->nombre_plato,pcb->id);
 		i++;
 	}
