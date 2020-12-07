@@ -204,7 +204,7 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 
 			} else {
 
-				id_pedido = 10;
+				id_pedido = generar_id_pedido();
 				log_info(logger, "ID_Pedido generado: %d", id_pedido);
 			}
 
@@ -427,6 +427,10 @@ void esperar_cliente(int socket_servidor){
 	pthread_detach(hilo_conexion);
 }
 
+uint32_t generar_id_pedido() {
+
+	return rand();
+}
 //void imprimir_restaurante(t_restaurante* restaurante) {
 //
 //	log_info(logger, "Restaurante: %s | PosX: %d | PosY: %d", restaurante->nombre, restaurante->posX, restaurante->posY);
