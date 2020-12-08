@@ -14,6 +14,7 @@
 #include "Semaforos.h"
 #include "Hilos.h"
 #include "Mensajes.h"
+#include "Utils.h"
 #include <semaphore.h>
 
 typedef enum{
@@ -25,11 +26,6 @@ typedef struct{
 	uint32_t id_afinidad;
 	t_list* cola;
 }t_cola_ready;
-
-typedef struct{
-	int id_afinidad;
-	char nombre_afinidad[L_PLATO];
-}t_afinidad;
 
 typedef struct{
 	uint32_t id_pedido;

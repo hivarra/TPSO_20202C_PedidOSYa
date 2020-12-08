@@ -12,16 +12,19 @@ t_paso_receta* obtener_siguiente_paso(t_pcb* pcb){
 	t_paso_receta* siguiente_paso = list_get(pcb->lista_pasos,0);
 	return siguiente_paso;
 }
-void eliminar_paso_realizado(t_list* pasos){
-	list_remove_and_destroy_element(pasos,0,free);
+void eliminar_paso_realizado(t_pcb* pcb){
+	pthread_mutex_lock(&pcb->mutex_pcb);
+	list_remove_and_destroy_element(pcb->lista_pasos,0,free);
+	pthread_mutex_unlock(&pcb->mutex_pcb);
+
 }
 void reposar(t_cocinero* cocinero){
 	pasar_pcb_a_estado(cocinero->pcb,BLOCKED_POR_REPOSAR);
-	sem_post(&finCPUbound);
+//	sem_post(&finCPUbound);
 }
 void hornear(t_cocinero* cocinero){
 	pasar_pcb_a_estado(cocinero->pcb,BLOCKED_POR_HORNO);
-	sem_post(&finCPUbound);
+//	sem_post(&finCPUbound);
 }
 void realizar_otro_paso(t_cocinero* cocinero,t_paso_receta* paso){
 	log_info(logger,"[REALIZAR_OTRO_PASO] Se ejecuta PASO:%s",paso->accion);
@@ -30,7 +33,7 @@ void realizar_otro_paso(t_cocinero* cocinero,t_paso_receta* paso){
 	aplicar_retardo(paso->tiempo);
 	pthread_mutex_unlock(&cocinero->mutex_cocinero);
 
-	sem_post(&finCPUbound);
+//	sem_post(&finCPUbound);
 }
 void hilo_cocinero(t_cocinero* cocinero){
 
@@ -49,8 +52,12 @@ void hilo_cocinero(t_cocinero* cocinero){
 		}
 		else{
 			realizar_otro_paso(cocinero,paso_siguiente);
+//			sem_post(&finCPUbound);
 		}
-		eliminar_paso_realizado(cocinero->pcb->lista_pasos);
+		eliminar_paso_realizado(cocinero->pcb);
+		sem_post(&finCPUbound);
+//		t_afinidad* afinidad = obtener_id_afinidad(cocinero->afinidad);
+//		sem_post(&sem_cola_ready[afinidad->id_afinidad]);
 	}
 }
 bool cocinero_esta_ejecutando(t_pcb* pcb){

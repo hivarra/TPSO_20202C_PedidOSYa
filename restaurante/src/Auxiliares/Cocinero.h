@@ -24,7 +24,7 @@ typedef struct{
 
 t_list* lista_cocineros;
 
-void eliminar_paso_realizado(t_list* pasos);
+void eliminar_paso_realizado(t_pcb* pcb);
 t_paso_receta* obtener_siguiente_paso(t_pcb* pcb);
 bool cocinero_esta_ejecutando(t_pcb* pcb);
 void hilo_cocinero(t_cocinero* cocinero);
