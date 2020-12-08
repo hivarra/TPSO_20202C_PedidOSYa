@@ -23,7 +23,11 @@ void procesar_handshake_inicial(t_handshake_inicial* msg_handshake_inicial, int 
 	strcpy(new_client->nombre, msg_handshake_inicial->id);
 	new_client->socket_escucha = socket_emisor;
 	new_client->pedidos = list_create();
+	pthread_mutex_init(&new_client->mutex_pedidos,NULL);
+
+	pthread_mutex_lock(&mutex_cliente_conectados);
 	list_add(clientes_conectados, new_client);
+	pthread_mutex_unlock(&mutex_cliente_conectados);
 }
 
 t_rta_consultar_platos* procesar_consultar_platos(){
@@ -156,6 +160,7 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 				close(socket_new);
 			}
 	}
+	pedidos_pcbs = list_create();
 	list_iterate(args_aux->rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
 
 	inicializar_ciclo_planificacion(args_aux->rta_obtener_pedido->comidas);
@@ -248,4 +253,113 @@ t_rta_consultar_pedido* procesar_consultar_pedido(uint32_t id_pedido){
 		close(socket_sindicato);
 	}
 	return respuesta;
+}
+bool es_pedido_de_app(uint32_t id_pedido){
+	bool es_pedido(uint32_t* id_pedido_aux){
+			return *id_pedido_aux == id_pedido;
+	}
+	return list_any_satisfy(lista_pedidos_app,(void*)es_pedido);
+}
+bool cliente_tiene_pedido(t_cliente* cliente,uint32_t id_pedido){
+	bool ret=false;
+
+	bool es_pedido(uint32_t* id_pedido_aux){
+
+		return *id_pedido_aux == id_pedido;
+	}
+	pthread_mutex_lock(&cliente->mutex_pedidos);
+	ret=list_any_satisfy(cliente->pedidos,(void*)es_pedido);
+	pthread_mutex_unlock(&cliente->mutex_pedidos);
+	return ret;
+}
+t_cliente* obtener_cliente_con_id_pedido(uint32_t id_pedido){
+	t_cliente* cliente_ret=NULL;
+
+	for(int i=0;i<list_size(clientes_conectados);i++){
+		t_cliente* cliente_aux = list_get(clientes_conectados,i);
+
+		if(cliente_tiene_pedido(cliente_aux,id_pedido)){
+			cliente_ret = cliente_aux;
+			break;
+		}
+	}
+	return cliente_ret;
+}
+void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
+	uint32_t respuesta_plato_listo = FAIL;
+	if(lista_pedidos_app != NULL){
+		if(es_pedido_de_app(plato_listo->id_pedido)){
+			enviar_plato_listo(plato_listo,socket_escucha,logger);
+			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a App. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
+					,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
+			respuesta_plato_listo = recibir_entero(socket_escucha,logger);
+			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
+		}
+	}
+	else{
+		pthread_mutex_lock(&mutex_cliente_conectados);
+		t_cliente* cliente = obtener_cliente_con_id_pedido(plato_listo->id_pedido);
+		pthread_mutex_unlock(&mutex_cliente_conectados);
+		if(cliente != NULL){
+			enviar_plato_listo(plato_listo,cliente->socket_escucha,logger);
+			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a Cliente:%s. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
+								,cliente->nombre,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
+			respuesta_plato_listo = recibir_entero(cliente->socket_escucha,logger);//RECIBO PARA RESPETAR PROTOCOLO, NO SE USA
+//			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
+		}
+		else
+			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Error al enviar actualizacion de PLATO_LISTO. No se encontró socket_escucha de app/cliente asociado a ID_PEDIDO:%d",plato_listo->id_pedido);
+	}
+	free(plato_listo);
+}
+void enviar_plato_listo_a_modulo_solicitante(uint32_t id_pedido,char plato[L_PLATO]){
+	t_plato_listo* msg_plato_listo = calloc(1,sizeof(t_plato_listo));
+	strcpy(msg_plato_listo->restaurante, restaurante_conf.nombre_restaurante);
+	strcpy(msg_plato_listo->plato, plato);
+	msg_plato_listo->id_pedido = id_pedido;
+	enviar_actualizacion_plato_listo(msg_plato_listo);
+
+//	pthread_t hilo_enviar_plato_listo;
+//	pthread_create(&hilo_enviar_plato_listo,NULL,(void*)enviar_actualizacion_plato_listo,msg_plato_listo);
+//	pthread_detach(hilo_enviar_plato_listo);
+}
+void enviar_plato_listo_a_sindicato(uint32_t id_pedido,char plato[L_PLATO]){
+	int socket_sindicato = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
+	if (socket_sindicato == -1)
+		log_warning(logger, "[ENVIAR_PLATO_LISTO_A_SINDICATO] No se pudo conectar a Sindicato");
+	else{
+		t_plato_listo* msg_plato_listo = calloc(1,sizeof(t_plato_listo));
+		strcpy(msg_plato_listo->restaurante, restaurante_conf.nombre_restaurante);
+		strcpy(msg_plato_listo->plato, plato);
+		msg_plato_listo->id_pedido = id_pedido;
+		log_info(logger, "[ENVIAR_PLATO_LISTO_A_SINDICATO] Se envia a Sindicato la info de PLATO_LISTO restaurante:%s,plato:%s,id_pedido:%d.",msg_plato_listo->restaurante,msg_plato_listo->plato,msg_plato_listo->id_pedido);
+		enviar_plato_listo(msg_plato_listo,socket_sindicato,logger);
+		free(msg_plato_listo);
+		t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_sindicato, logger);
+		if (tipo_rta == RTA_PLATO_LISTO){
+			uint32_t respuesta_plato_listo = recibir_entero(socket_sindicato, logger);
+			log_info(logger, "[RTA_PLATO_LISTO] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
+		}
+		close(socket_sindicato);
+	}
+}
+void enviar_terminar_pedido_a_sindicato(uint32_t id_pedido){
+	int socket_sindicato = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
+	if (socket_sindicato == -1)
+		log_warning(logger, "[ENVIAR_TERMINAR_PEDIDO_A_SINDICATO] No se pudo conectar a Sindicato");
+	else{
+		t_terminar_pedido* msg_terminar_pedido = calloc(1,sizeof(t_terminar_pedido));
+		strcpy(msg_terminar_pedido->restaurante, restaurante_conf.nombre_restaurante);
+		msg_terminar_pedido->id_pedido = id_pedido;
+
+		log_info(logger, "[ENVIAR_TERMINAR_PEDIDO_A_SINDICATO] Se envia a Sindicato TERMINAR_PEDIDO con RESTAURANTE:%s,ID_PEDIDO:%d.",msg_terminar_pedido->restaurante,msg_terminar_pedido->id_pedido);
+		enviar_terminar_pedido(msg_terminar_pedido,socket_sindicato,logger);
+		free(msg_terminar_pedido);
+		t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_sindicato, logger);
+		if (tipo_rta == RTA_TERMINAR_PEDIDO){
+			uint32_t respuesta_terminar_pedido = recibir_entero(socket_sindicato, logger);
+			log_info(logger, "[RTA_TERMINAR_PEDIDO] Se recibe respuesta:%s",respuesta_terminar_pedido?"OK":"FAIL");
+		}
+		close(socket_sindicato);
+	}
 }

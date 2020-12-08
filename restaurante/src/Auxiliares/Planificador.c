@@ -67,22 +67,7 @@ void agregar_pcb_en_cola_ready_con_afinidad(t_pcb* pcb,int id_afinidad){
 	list_add(lista_colas_ready[id_afinidad],pcb);
 	pthread_mutex_unlock(&mutex_colas_ready[id_afinidad]);
 }
-t_afinidad* obtener_id_afinidad(char nombre_plato[L_PLATO]){
-//	log_info(logger,"[OBTENER_ID_AFINIDAD]");
-	bool igual_nombre_plato(t_afinidad* afinidad){
-		return string_equals_ignore_case(afinidad->nombre_afinidad,nombre_plato);
-	}
-	t_afinidad* afinidad_buscada = list_find(AFINIDADES_MAESTRO,(void*)igual_nombre_plato);
 
-	//Si no tiene afinidad, se debe agregar a cola ready sin afinidad ("N")
-	bool es_sin_afinidad(t_afinidad* afinidad){
-		return string_equals_ignore_case(afinidad->nombre_afinidad,"N");
-	}
-	if(afinidad_buscada == NULL)
-		afinidad_buscada = list_find(AFINIDADES_MAESTRO,(void*)es_sin_afinidad);
-
-	return afinidad_buscada;
-}
 void pasar_pcb_a_ready(t_pcb* pcb){
 //	log_info(logger,"[PASAR_PCB_A_READY]");
 	t_afinidad* afinidad = obtener_id_afinidad(pcb->nombre_plato);
@@ -119,33 +104,43 @@ t_pcb* obtener_proximo_pcb_a_hornear(){
 	return pcb;
 }
 void enviar_pcb_a_horno(t_pcb* pcb){
-	log_info(logger,"Se agrega pcb con plato:%s en cola E/S HORNO",pcb->nombre_plato);
-	pthread_mutex_lock(&pcb->mutex_pcb);
-	pcb->estado = BLOCKED_POR_HORNO;
-	t_paso_receta* paso = obtener_siguiente_paso(pcb);
-	int tiempo = paso->tiempo;
+	t_paso_receta* paso = list_get(pcb->lista_pasos,0);
+	log_info(logger,"[enviar_pcb_a_horno] Se ejecuta PASO:%s",paso->accion);
 
-	aplicar_retardo(tiempo);
-	eliminar_paso_realizado(paso);
-	pasar_pcb_a_ready(pcb);
+	pthread_mutex_lock(&pcb->mutex_pcb);
+	aplicar_retardo(paso->tiempo);
 	pthread_mutex_unlock(&pcb->mutex_pcb);
 }
+void sacar_pcb_de_horno(t_pcb* pcb){
+	bool es_pcb(t_pcb* pcb_aux){
+		return pcb_aux->id == pcb->id;
+	}
+	pthread_mutex_lock(&mutex_cola_bloqueados_prehorno);
+	list_remove_by_condition(cola_bloqueados_prehorno,(void*)es_pcb);
+	pthread_mutex_unlock(&mutex_cola_bloqueados_prehorno);
+}
 void planificar_hornos(){
-	bool HAY_HORNOS_DISPONIBLES = hay_hornos_disponibles();
 
-	while(HAY_HORNOS_DISPONIBLES){
+	while(1){
 		sem_wait(&sem_hornear_plato);
+//		log_info(logger,"PRUEBAAAAAAAAAAAAAAAAA1");
+		sem_wait(&sem_hay_espacio_en_horno);
+//		log_info(logger,"PRUEBAAAAAAAAAAAAAAAAA2");
 		t_pcb* pcb = obtener_proximo_pcb_a_hornear();
 
-		log_info(logger,"El plato:%s llega a horno",pcb->nombre_plato);
+		log_info(logger,"[PLANIFICAR_HORNOS] Se envia PLATO:%s de ID_PEDIDO:%d al horno",pcb->nombre_plato,pcb->id_pedido);
 		enviar_pcb_a_horno(pcb);
-		log_info(logger,"El plato:%s sale del horno",pcb->nombre_plato);
-
-		HAY_HORNOS_DISPONIBLES = hay_hornos_disponibles();
+		sacar_pcb_de_horno(pcb);
+		log_info(logger,"[PLANIFICAR_HORNOS] PLATO:%s de ID_PEDIDO:%d sale del horno",pcb->nombre_plato,pcb->id_pedido);
+		pasar_pcb_a_estado(pcb,READY);
+		t_afinidad* afinidad = obtener_id_afinidad(pcb->nombre_plato);
+//		sem_post(&finCPUbound);
+		sem_post(&sem_cola_ready[afinidad->id_afinidad]);
+		sem_post(&sem_hay_espacio_en_horno);
 	}
 }
 void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
-	log_info(logger,"Se agrega pcb con plato:%s en cola E/S HORNO",pcb->nombre_plato);
+	log_info(logger,"[pasar_pcb_a_blocked_por_horno] Se agrega pcb con plato:%s en cola E/S HORNO",pcb->nombre_plato);
 	pthread_mutex_lock(&pcb->mutex_pcb);
 	pcb->estado = BLOCKED_POR_HORNO;
 	pthread_mutex_unlock(&pcb->mutex_pcb);
@@ -154,10 +149,17 @@ void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
 
 	sem_post(&sem_hornear_plato);
 }
+void agregar_pcb_a_cola_exit(t_pcb* pcb){
+	pthread_mutex_lock(&mutex_cola_exit);
+	list_add(cola_exit,pcb);
+	pthread_mutex_unlock(&mutex_cola_exit);
+}
 void pasar_pcb_a_exit(t_pcb* pcb){
 	pthread_mutex_lock(&pcb->mutex_pcb);
 	pcb->estado = EXIT;
 	pthread_mutex_unlock(&pcb->mutex_pcb);
+
+	agregar_pcb_a_cola_exit(pcb);
 }
 void pasar_pcb_a_exec(t_pcb* pcb){
 	pthread_mutex_lock(&pcb->mutex_pcb);
@@ -197,6 +199,33 @@ t_pcb* obtener_proximo_pcb_a_ejecutar_por_FIFO(int id_cola_ready){
 void desalojar_pcb(t_pcb* pcb){
 	pasar_pcb_a_estado(pcb,READY);
 }
+bool pedido_esta_terminado(uint32_t id_pedido){
+	bool pedido_terminado = false;
+
+	bool es_pedido(t_pedido_pcb* pedido_pcb){
+		return pedido_pcb->id_pedido == id_pedido;
+	}
+	t_list* lista_filtrada = list_filter(pedidos_pcbs,(void*)es_pedido);
+	for(int i=0;i<list_size(lista_filtrada);i++){
+		t_pedido_pcb* pedido_pcb = list_get(lista_filtrada,i);
+
+		bool pcb_esta_en_exit(t_pcb* pcb){
+			return pcb->id == pedido_pcb->id_pcb;
+		}
+		pedido_terminado = list_any_satisfy(cola_exit,(void*)pcb_esta_en_exit);
+	}
+	list_destroy(lista_filtrada);
+	return pedido_terminado;
+}
+void liberar_pcbs_de_pedido(uint32_t id_pedido){
+	bool es_pedido(t_pcb* pcb){
+			return pcb->id_pedido == id_pedido;
+	}
+	pthread_mutex_lock(&mutex_cola_exit);
+	t_list* lista_filtrada = list_filter(cola_exit,(void*)es_pedido);
+	list_destroy_and_destroy_elements(lista_filtrada,free);
+	pthread_mutex_unlock(&mutex_cola_exit);
+}
 void ejecutar_pcb(t_pcb* pcb, int id_cola_ready){
 	pasar_pcb_a_estado(pcb, EXEC);
 
@@ -207,13 +236,19 @@ void ejecutar_pcb(t_pcb* pcb, int id_cola_ready){
 		}
 		sem_post(&sem_realizar_paso[pcb->cocinero_asignado]);
 		log_info(logger,"[EJECUTAR_PCB] SEM_POST de cocinero con ID:%d para que ejecute PLATO:%s del pedido con ID_PEDIDO:%d",pcb->cocinero_asignado,pcb->nombre_plato,pcb->id_pedido);
-
 		sem_wait(&finCPUbound);
-		log_info(logger,"Fin CPU Bound");
+		log_info(logger,"[EJECUTAR_PCB] Fin ejecucion PCB con ID_PEDIDO:%d,NOMBRE_PLATO:%s",pcb->id_pedido,pcb->nombre_plato);
+		if(plato_sin_pasos_para_ejecutar(pcb)){
+			pasar_pcb_a_estado(pcb,EXIT);
+			enviar_plato_listo_a_sindicato(pcb->id_pedido,pcb->nombre_plato);
+			enviar_plato_listo_a_modulo_solicitante(pcb->id_pedido,pcb->nombre_plato);
+			if(pedido_esta_terminado(pcb->id_pedido)){
+				enviar_terminar_pedido_a_sindicato(pcb->id_pedido);
+				liberar_pcbs_de_pedido(pcb->id_pedido);
+			}
+			break;
+		}
 	}
-}
-void finalizar_pcb(t_pcb* pcb){
-	pasar_pcb_a_estado(pcb,EXIT);
 }
 void inicializar_ciclo_planificacion(t_list* comidas){
 	//SE REALIZA SEM_POST DE SEMAFOROS DE COLAS READY
@@ -238,7 +273,6 @@ void inicializar_ciclo_planificacion(t_list* comidas){
 		t_afinidad* sin_afinidad = list_find(AFINIDADES_MAESTRO,(void*)es_sin_afinidad);
 		sem_post(&sem_cola_ready[sin_afinidad->id_afinidad]);
 	}
-
 }
 void asignar_cocinero_a_pcb(t_pcb* pcb){
 	//SE ASIGNA COCINERO CON AFINIDAD PARA LUEGO EJECUTAR PLATO
@@ -262,23 +296,31 @@ void planificar_platos(int* id_cola_ready){
 
 		asignar_cocinero_a_pcb(pcb);
 
-		log_info(logger,"[HILO PLANIFICAR_PLATOS] Se procede a ejecutar PCB con ID_PEDIDO:%d,NOMBRE_PLATO:%s",pcb->id_pedido,pcb->nombre_plato);
+		log_info(logger,"[HILO PLANIFICAR_PLATOS] Se inicia ejecucion de PCB con ID_PEDIDO:%d,NOMBRE_PLATO:%s",pcb->id_pedido,pcb->nombre_plato);
 		ejecutar_pcb(pcb,*id_cola_ready);
-//		log_info(logger,"[HILO PLANIFICAR_PLATOS] Se finaliza ejecución del PLATO:%s",pcb->nombre_plato);
 
-//		if(plato_sin_pasos_para_ejecutar(pcb))
-//			finalizar_pcb(pcb);
+//		if(plato_sin_pasos_para_ejecutar(pcb)){
+//			pasar_pcb_a_estado(pcb,EXIT);
+//			informar_plato_listo(pcb->id_pedido,pcb->nombre_plato);
+//			if(pedido_esta_terminado(pcb->id_pedido)){
+//				enviar_terminar_pedido_a_sindicato(pcb->id_pedido);
+//				liberar_pcbs_de_pedido(pcb->id_pedido);
+//			}
+//		}
 	}
 }
 /**INICIALIZACIONES**/
 bool evaluar_desalojo_por_RR(t_pcb* pcb,int id_cola_ready){
 	return pcb->quantum > QUANTUM && !list_is_empty(lista_colas_ready[id_cola_ready]);
 }
+bool no_evalua_desalojo(){
+	return false;
+}
 void setear_algoritmo_FIFO(){
 	log_info(logger,"Se setea algoritmo FIFO");
 	algoritmo_planificacion = FIFO;
 	obtener_proximo_pcb_a_ejecutar = obtener_proximo_pcb_a_ejecutar_por_FIFO;
-	evaluar_desalojo = false;
+	evaluar_desalojo = no_evalua_desalojo;
 }
 void setear_algoritmo_RR(){
 	log_info(logger,"Se setea algoritmo RR");
@@ -339,10 +381,12 @@ void inicializar_sem_mutex(){
 	pthread_mutex_init(&mutex_id_pcb,NULL);
 	pthread_mutex_init(&mutex_id_pedidos,NULL);
 	pthread_mutex_init(&mutex_cola_bloqueados_prehorno,NULL);
+	pthread_mutex_init(&mutex_cola_exit,NULL);
 }
 void inicializar_sem_contadores(){
 //	log_info(logger,"[INICIALIZAR_SEM_CONTADORES]");
 	sem_init(&sem_hornear_plato,0,0);
+	sem_init(&sem_hay_espacio_en_horno,0,metadata_restaurante.cantidad_hornos);
 
 	sem_realizar_paso = malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
 	for(int i=0;i<list_size(metadata_restaurante.afinidades_cocineros);i++){
@@ -384,15 +428,38 @@ void inicializar_hilos_planificadores(){
 		log_info(logger,"Se crea hilo planificador para cola ready con afinidad:%s con id:%d",afinidad->nombre_afinidad,afinidad->id_afinidad);
 	}
 }
+void inicializar_hilo_horno(){
+	pthread_t hilo_horno;
+	pthread_create(&hilo_horno,NULL,(void*)planificar_hornos,NULL);
+	pthread_detach(hilo_horno);
+}
+void inicializar_cola_exit(){
+	cola_exit = list_create();
+}
+void inicializar_cola_bloqueados_prehorno(){
+	cola_bloqueados_prehorno = list_create();
+}
 void inicializar_planificador(){
 //	log_info(logger,"[INICIALIZAR_PLANIFICADOR]");
 
 	inicializar_algoritmo();
 	inicializar_colas_ready();
+	inicializar_cola_exit();
+	inicializar_cola_bloqueados_prehorno();
 	inicializar_sem_contadores();
 	inicializar_sem_mutex();
 	inicializar_hilos_planificadores();
 	inicializar_hilos_cocineros();
+	inicializar_hilo_horno();
+}
+void agregar_a_lista_pedidos_pcbs(uint32_t id_pedido, uint32_t id_pcb){
+	t_pedido_pcb* pedido_pcb = malloc(sizeof(t_pedido_pcb));
+	pedido_pcb->id_pcb = id_pcb;
+	pedido_pcb->id_pedido = id_pedido;
+
+	pthread_mutex_lock(&mutex_pedidos_pcbs);
+	list_add(pedidos_pcbs,pedido_pcb);
+	pthread_mutex_unlock(&mutex_pedidos_pcbs);
 }
 void crear_y_agregar_pcb_a_cola_ready(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta,uint32_t cantidad_total){
 	int i=0;
@@ -400,6 +467,7 @@ void crear_y_agregar_pcb_a_cola_ready(uint32_t id_pedido,t_rta_obtener_receta* r
 	while(i<cantidad_total){
 		t_pcb* pcb = generar_pcb(id_pedido,rta_obtener_receta);
 		pasar_pcb_a_estado(pcb,READY);
+		agregar_a_lista_pedidos_pcbs(pcb->id_pedido,pcb->id);
 //		log_info(logger,"[CREAR_Y_AGREGAR_PCB_A_COLA_READY] Se crea PCB de PLATO:%s con ID_PCB:%d",pcb->nombre_plato,pcb->id);
 		i++;
 	}

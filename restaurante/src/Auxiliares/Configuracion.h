@@ -24,6 +24,7 @@ typedef struct{
 	char nombre[L_ID];
 	int socket_escucha;//para enviarle al cliente actualizaciones
 	t_list* pedidos;
+	pthread_mutex_t mutex_pedidos;
 }t_cliente;
 
 // Variables globales
