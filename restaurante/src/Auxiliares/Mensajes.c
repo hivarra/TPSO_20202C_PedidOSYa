@@ -261,19 +261,24 @@ bool es_pedido_de_app(uint32_t id_pedido){
 	return list_any_satisfy(lista_pedidos_app,(void*)es_pedido);
 }
 bool cliente_tiene_pedido(t_cliente* cliente,uint32_t id_pedido){
+	bool ret=false;
+
 	bool es_pedido(uint32_t* id_pedido_aux){
+
 		return *id_pedido_aux == id_pedido;
 	}
-	return list_any_satisfy(cliente->pedidos,(void*)es_pedido);
+	pthread_mutex_lock(&cliente->mutex_pedidos);
+	ret=list_any_satisfy(cliente->pedidos,(void*)es_pedido);
+	pthread_mutex_unlock(&cliente->mutex_pedidos);
+	return ret;
 }
 t_cliente* obtener_cliente_con_id_pedido(uint32_t id_pedido){
 	t_cliente* cliente_ret=NULL;
 
 	for(int i=0;i<list_size(clientes_conectados);i++){
 		t_cliente* cliente_aux = list_get(clientes_conectados,i);
-		pthread_mutex_lock(&cliente_aux->mutex_pedidos);
+
 		if(cliente_tiene_pedido(cliente_aux,id_pedido)){
-			pthread_mutex_unlock(&cliente_aux->mutex_pedidos);
 			cliente_ret = cliente_aux;
 			break;
 		}
@@ -297,10 +302,10 @@ void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 		pthread_mutex_unlock(&mutex_cliente_conectados);
 		if(cliente != NULL){
 			enviar_plato_listo(plato_listo,cliente->socket_escucha,logger);
-			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a Cliente. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
-								,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
-			respuesta_plato_listo = recibir_entero(cliente->socket_escucha,logger);
-			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
+			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a Cliente:%s. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
+								,cliente->nombre,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
+			respuesta_plato_listo = recibir_entero(cliente->socket_escucha,logger);//RECIBO PARA RESPETAR PROTOCOLO, NO SE USA
+//			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
 		}
 		else
 			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Error al enviar actualizacion de PLATO_LISTO. No se encontró socket_escucha de app/cliente asociado a ID_PEDIDO:%d",plato_listo->id_pedido);
@@ -312,11 +317,11 @@ void enviar_plato_listo_a_modulo_solicitante(uint32_t id_pedido,char plato[L_PLA
 	strcpy(msg_plato_listo->restaurante, restaurante_conf.nombre_restaurante);
 	strcpy(msg_plato_listo->plato, plato);
 	msg_plato_listo->id_pedido = id_pedido;
-	log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia a actualizacion de PLATO_LISTO restaurante:%s,plato:%s,id_pedido:%d.",msg_plato_listo->restaurante,msg_plato_listo->plato,msg_plato_listo->id_pedido);
+	enviar_actualizacion_plato_listo(msg_plato_listo);
 
-	pthread_t hilo_enviar_plato_listo;
-	pthread_create(&hilo_enviar_plato_listo,NULL,(void*)enviar_actualizacion_plato_listo,msg_plato_listo);
-	pthread_detach(hilo_enviar_plato_listo);
+//	pthread_t hilo_enviar_plato_listo;
+//	pthread_create(&hilo_enviar_plato_listo,NULL,(void*)enviar_actualizacion_plato_listo,msg_plato_listo);
+//	pthread_detach(hilo_enviar_plato_listo);
 }
 void enviar_plato_listo_a_sindicato(uint32_t id_pedido,char plato[L_PLATO]){
 	int socket_sindicato = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);

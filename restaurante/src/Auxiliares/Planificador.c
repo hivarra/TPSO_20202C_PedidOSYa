@@ -214,7 +214,7 @@ bool pedido_esta_terminado(uint32_t id_pedido){
 		}
 		pedido_terminado = list_any_satisfy(cola_exit,(void*)pcb_esta_en_exit);
 	}
-	free(lista_filtrada);
+	list_destroy(lista_filtrada);
 	return pedido_terminado;
 }
 void liberar_pcbs_de_pedido(uint32_t id_pedido){

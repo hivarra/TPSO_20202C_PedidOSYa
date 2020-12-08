@@ -82,8 +82,10 @@ void guardar_pedido_cliente(char id_cliente[L_ID],uint32_t id_pedido){
 	t_cliente* cliente_buscado = list_find(clientes_conectados,(void*)es_cliente);
 	pthread_mutex_unlock(&mutex_cliente_conectados);
 
+	uint32_t* id_pedido_aux = malloc(sizeof(uint32_t));
+	*id_pedido_aux = id_pedido;
 	pthread_mutex_lock(&cliente_buscado->mutex_pedidos);
-	list_add(cliente_buscado->pedidos,&id_pedido);
+	list_add(cliente_buscado->pedidos,id_pedido_aux);
 	pthread_mutex_unlock(&cliente_buscado->mutex_pedidos);
 }
 void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
