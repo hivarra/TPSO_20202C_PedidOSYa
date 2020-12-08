@@ -21,7 +21,7 @@ typedef struct{
 	int socketEscucha;
 	int pos_x;
 	int pos_y;
-	//t_list* pedidos;//(Posiblemente necesario)Pedidos que realiza un cliente
+	t_list* pedidos;//(Posiblemente necesario)Pedidos que realiza un cliente
 }t_info_cliente;
 
 typedef struct{
@@ -43,6 +43,7 @@ t_list* restaurantesConectados;
 t_list* clientesConectados;
 
 void conectar_a_comanda();
+int conectar_a_comanda_simple();
 void crearServidor();
 void esperar_cliente(int socket_servidor);
 void inicializarListaClientesRest();
