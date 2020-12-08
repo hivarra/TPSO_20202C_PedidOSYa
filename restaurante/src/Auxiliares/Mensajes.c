@@ -160,7 +160,6 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 				close(socket_new);
 			}
 	}
-	pedidos_pcbs = list_create();
 	list_iterate(args_aux->rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
 
 	inicializar_ciclo_planificacion(args_aux->rta_obtener_pedido->comidas);
@@ -317,11 +316,10 @@ void enviar_plato_listo_a_modulo_solicitante(uint32_t id_pedido,char plato[L_PLA
 	strcpy(msg_plato_listo->restaurante, restaurante_conf.nombre_restaurante);
 	strcpy(msg_plato_listo->plato, plato);
 	msg_plato_listo->id_pedido = id_pedido;
-	enviar_actualizacion_plato_listo(msg_plato_listo);
 
-//	pthread_t hilo_enviar_plato_listo;
-//	pthread_create(&hilo_enviar_plato_listo,NULL,(void*)enviar_actualizacion_plato_listo,msg_plato_listo);
-//	pthread_detach(hilo_enviar_plato_listo);
+	pthread_t hilo_enviar_plato_listo;
+	pthread_create(&hilo_enviar_plato_listo,NULL,(void*)enviar_actualizacion_plato_listo,msg_plato_listo);
+	pthread_detach(hilo_enviar_plato_listo);
 }
 void enviar_plato_listo_a_sindicato(uint32_t id_pedido,char plato[L_PLATO]){
 	int socket_sindicato = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
@@ -362,4 +360,30 @@ void enviar_terminar_pedido_a_sindicato(uint32_t id_pedido){
 		}
 		close(socket_sindicato);
 	}
+}
+void enviar_actualizacion_finalizar_plato(t_finalizar_pedido* finalizar_plato){
+	uint32_t respuesta_finalizar_plato = FAIL;
+
+	pthread_mutex_lock(&mutex_cliente_conectados);
+	t_cliente* cliente = obtener_cliente_con_id_pedido(finalizar_plato->id_pedido);
+	pthread_mutex_unlock(&mutex_cliente_conectados);
+	if(cliente != NULL){
+		enviar_finalizar_pedido(finalizar_plato,cliente->socket_escucha,logger);
+		log_info(logger,"[ENVIAR_FINALIZAR_PLATO_A_CLIENTE] Se envia actualizacion de FINALIZAR_PLATO a Cliente:%s. Info enviada: RESTAURANTE:%s,ID_PEDIDO:%d."
+							,cliente->nombre,finalizar_plato->restaurante,finalizar_plato->id_pedido);
+		respuesta_finalizar_plato = recibir_entero(cliente->socket_escucha,logger);//RECIBO PARA RESPETAR PROTOCOLO, NO SE USA
+	}
+	else
+		log_info(logger,"[ENVIAR_FINALIZAR_PLATO_A_CLIENTE] No existe cliente al cual enviar FINALIZAR_PLATO.Info: RESTAURANTE:%s,ID_PEDIDO:%d",finalizar_plato->restaurante,finalizar_plato->id_pedido);
+
+	free(finalizar_plato);
+}
+void enviar_finalizar_pedido_a_cliente(uint32_t id_pedido){
+	t_finalizar_pedido* msg_finalizar_plato = calloc(1,sizeof(t_finalizar_pedido));
+	strcpy(msg_finalizar_plato->restaurante, restaurante_conf.nombre_restaurante);
+	msg_finalizar_plato->id_pedido = id_pedido;
+
+	pthread_t hilo_enviar_finalizar_plato;
+	pthread_create(&hilo_enviar_finalizar_plato,NULL,(void*)enviar_actualizacion_finalizar_plato,msg_finalizar_plato);
+	pthread_detach(hilo_enviar_finalizar_plato);
 }

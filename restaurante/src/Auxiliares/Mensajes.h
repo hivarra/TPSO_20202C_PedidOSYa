@@ -22,6 +22,7 @@ t_rta_consultar_pedido* procesar_consultar_pedido(uint32_t);
 void enviar_plato_listo_a_sindicato(uint32_t id_pedido,char plato[L_PLATO]);
 void enviar_terminar_pedido_a_sindicato(uint32_t id_pedido);
 void enviar_plato_listo_a_modulo_solicitante(uint32_t id_pedido,char plato[L_PLATO]);
+void enviar_finalizar_pedido_a_cliente(uint32_t id_pedido);
 t_cliente* obtener_cliente_con_id_pedido(uint32_t id_pedido);
 
 #endif /* AUXILIARES_MENSAJES_H_ */
