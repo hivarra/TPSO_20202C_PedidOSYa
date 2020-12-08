@@ -244,6 +244,7 @@ void ejecutar_pcb(t_pcb* pcb, int id_cola_ready){
 			enviar_plato_listo_a_modulo_solicitante(pcb->id_pedido,pcb->nombre_plato);
 			if(pedido_esta_terminado(pcb->id_pedido)){
 				enviar_terminar_pedido_a_sindicato(pcb->id_pedido);
+				enviar_finalizar_pedido_a_cliente(pcb->id_pedido);
 				liberar_pcbs_de_pedido(pcb->id_pedido);
 			}
 			break;
@@ -451,6 +452,8 @@ void inicializar_planificador(){
 	inicializar_hilos_planificadores();
 	inicializar_hilos_cocineros();
 	inicializar_hilo_horno();
+
+	pedidos_pcbs = list_create();
 }
 void agregar_a_lista_pedidos_pcbs(uint32_t id_pedido, uint32_t id_pcb){
 	t_pedido_pcb* pedido_pcb = malloc(sizeof(t_pedido_pcb));
