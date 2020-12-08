@@ -240,7 +240,8 @@ void ejecutar_pcb(t_pcb* pcb, int id_cola_ready){
 		log_info(logger,"[EJECUTAR_PCB] Fin ejecucion PCB con ID_PEDIDO:%d,NOMBRE_PLATO:%s",pcb->id_pedido,pcb->nombre_plato);
 		if(plato_sin_pasos_para_ejecutar(pcb)){
 			pasar_pcb_a_estado(pcb,EXIT);
-			informar_plato_listo(pcb->id_pedido,pcb->nombre_plato);
+			enviar_plato_listo_a_sindicato(pcb->id_pedido,pcb->nombre_plato);
+			enviar_plato_listo_a_modulo_solicitante(pcb->id_pedido,pcb->nombre_plato);
 			if(pedido_esta_terminado(pcb->id_pedido)){
 				enviar_terminar_pedido_a_sindicato(pcb->id_pedido);
 				liberar_pcbs_de_pedido(pcb->id_pedido);

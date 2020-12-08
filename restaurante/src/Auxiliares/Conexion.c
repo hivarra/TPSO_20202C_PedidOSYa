@@ -78,8 +78,13 @@ void guardar_pedido_cliente(char id_cliente[L_ID],uint32_t id_pedido){
 	bool es_cliente(t_cliente* cliente){
 		return string_equals_ignore_case(cliente->nombre,id_cliente);
 	}
+	pthread_mutex_lock(&mutex_cliente_conectados);
 	t_cliente* cliente_buscado = list_find(clientes_conectados,(void*)es_cliente);
+	pthread_mutex_unlock(&mutex_cliente_conectados);
+
+	pthread_mutex_lock(&cliente_buscado->mutex_pedidos);
 	list_add(cliente_buscado->pedidos,&id_pedido);
+	pthread_mutex_unlock(&cliente_buscado->mutex_pedidos);
 }
 void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
 
