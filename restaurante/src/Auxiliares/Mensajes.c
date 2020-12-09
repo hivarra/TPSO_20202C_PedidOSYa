@@ -287,7 +287,9 @@ t_cliente* obtener_cliente_con_id_pedido(uint32_t id_pedido){
 void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 	uint32_t respuesta_plato_listo = FAIL;
 	if(lista_pedidos_app != NULL){
+		log_info(logger, "ACA 1");
 		if(es_pedido_de_app(plato_listo->id_pedido)){
+			log_info(logger, "ACA 2");
 			enviar_plato_listo(plato_listo,socket_escucha,logger);
 			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a App. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
 					,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
@@ -296,10 +298,12 @@ void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 		}
 	}
 	else{
+		log_info(logger, "ACA 3");
 		pthread_mutex_lock(&mutex_cliente_conectados);
 		t_cliente* cliente = obtener_cliente_con_id_pedido(plato_listo->id_pedido);
 		pthread_mutex_unlock(&mutex_cliente_conectados);
 		if(cliente != NULL){
+			log_info(logger, "ACA 4");
 			enviar_plato_listo(plato_listo,cliente->socket_escucha,logger);
 			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a Cliente:%s. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
 								,cliente->nombre,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
@@ -307,6 +311,7 @@ void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 //			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
 		}
 		else
+			log_info(logger, "ACA 5");
 			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Error al enviar actualizacion de PLATO_LISTO. No se encontró socket_escucha de app/cliente asociado a ID_PEDIDO:%d",plato_listo->id_pedido);
 	}
 	free(plato_listo);
@@ -317,6 +322,7 @@ void enviar_plato_listo_a_modulo_solicitante(uint32_t id_pedido,char plato[L_PLA
 	strcpy(msg_plato_listo->plato, plato);
 	msg_plato_listo->id_pedido = id_pedido;
 
+	log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Creando hilo para enviar actualización");
 	pthread_t hilo_enviar_plato_listo;
 	pthread_create(&hilo_enviar_plato_listo,NULL,(void*)enviar_actualizacion_plato_listo,msg_plato_listo);
 	pthread_detach(hilo_enviar_plato_listo);

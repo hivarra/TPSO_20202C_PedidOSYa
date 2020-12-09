@@ -27,6 +27,7 @@ int main(int argc, char **argv)  {
 
 	/*TODO:Quedarse escuchando peticiones de cliente y repartidores*/
 	pthread_create(&hilo_servidor,NULL,(void*)crearServidor,NULL);
+	pthread_detach(hilo_servidor);
 
 //	inicializar();
 

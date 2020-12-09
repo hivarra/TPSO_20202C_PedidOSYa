@@ -6,9 +6,9 @@
  */
 #include "Conexion.h"
 
-void guardar_pedido_app(uint32_t id_pedido){
+void guardar_pedido_app(uint32_t* id_pedido){
 	pthread_mutex_lock(&mutex_pedidos_app);
-	list_add(lista_pedidos_app,&id_pedido);
+	list_add(lista_pedidos_app, id_pedido);
 	pthread_mutex_unlock(&mutex_pedidos_app);
 }
 void escuchar_app(){
@@ -39,7 +39,7 @@ void escuchar_app(){
 				recibir_mensaje_vacio(socket_envio, logger);
 				uint32_t* id_pedido = malloc(sizeof(uint32_t));
 				*id_pedido = procesar_crear_pedido();
-				guardar_pedido_app(*id_pedido);
+				guardar_pedido_app(id_pedido);
 				enviar_entero(RTA_CREAR_PEDIDO, *id_pedido, socket_envio, logger);
 			}
 			break;

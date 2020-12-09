@@ -309,13 +309,14 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 
 		t_info_restaurante* info_rest;
 		t_rta_obtener_pedido* respuesta;
-		uint32_t resultado_confirmar_pedido;
+		uint32_t resultado_confirmar_pedido, resultado_confirmar_pedido_rest;
 		if(list_size(restaurantesConectados) > 0)
 			//TODO: Enviar ANADIR_PLATO al restaurante seleccionado por el cliente
 			info_rest = buscarRestauranteConectado(cliente->restaurante_seleccionado);
 
 		t_confirmar_pedido* confirmarPedido = recibir_confirmar_pedido(socket_cliente,logger);
-		log_info(logger,"RESTAURANTE:%s",cliente->restaurante_seleccionado);
+		strcpy(confirmarPedido->restaurante, cliente->restaurante_seleccionado);
+		log_info(logger,"RESTAURANTE:%s",confirmarPedido->restaurante);
 		log_info(logger,"ID_PEDIDO:%d",confirmarPedido->id_pedido);
 
 		/* Obtener pedido de COMANDA */
@@ -334,16 +335,31 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 		if(respuesta->estado == PENDIENTE) {
 			log_info(logger, "Parametro a enviar: ID_Pedido: %d", confirmarPedido->id_pedido);
 			enviar_confirmar_pedido(confirmarPedido, info_rest->socketEnvio, logger);
+			socket_comanda = conectar_a_comanda_simple();
+			enviar_confirmar_pedido(confirmarPedido, socket_comanda, logger);
 			free(confirmarPedido);
+			tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
+			if (tipo_rta == RTA_CONFIRMAR_PEDIDO){
+				resultado_confirmar_pedido = recibir_entero(socket_comanda, logger);
+				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado de Comanda: %s",resultado_confirmar_pedido? "OK":"FAIL");
+			}
 			tipo_rta = recibir_tipo_mensaje(info_rest->socketEnvio, logger);
 			if (tipo_rta == RTA_CONFIRMAR_PEDIDO){
-				resultado_confirmar_pedido = recibir_entero(info_rest->socketEnvio, logger);
-				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado: %s",resultado_confirmar_pedido? "OK":"FAIL");
+				resultado_confirmar_pedido_rest = recibir_entero(info_rest->socketEnvio, logger);
+				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado de Restaurante: %s",resultado_confirmar_pedido? "OK":"FAIL");
 			}
+
+
 		}
 		free(respuesta);
-		enviar_entero(RTA_CONFIRMAR_PEDIDO,resultado_confirmar_pedido,socket_cliente,logger);
+		uint32_t resultado_final = 0;
+		if(resultado_confirmar_pedido && resultado_confirmar_pedido_rest) {
+			resultado_final = 1;
 
+			//TODO: Creación de PCB
+		}
+
+		enviar_entero(RTA_CONFIRMAR_PEDIDO,resultado_final,socket_cliente,logger);
 		break;
 	case CONSULTAR_PEDIDO:;
 		uint32_t idPedido = recibir_entero(socket_cliente,logger);
@@ -415,7 +431,8 @@ void procesar_handshake_inicial(t_handshake_inicial* handshake_inicial, int sock
 		new_resto->pos_y = handshake_inicial->posY;
 		new_resto->socketEscucha = socket_emisor;
 		pthread_t hilo_escucha;
-		pthread_create(&hilo_escucha, NULL, (void*) iniciar_conexion_escucha, &socket_emisor);
+		pthread_create(&hilo_escucha, NULL, (void*) iniciar_conexion_escucha, &new_resto->socketEscucha);
+		pthread_detach(hilo_escucha);
 		pthread_mutex_lock(&mutexRestaurantes);
 		list_add(restaurantesConectados, new_resto);
 		pthread_mutex_unlock(&mutexRestaurantes);
@@ -586,11 +603,11 @@ void iniciar_conexion_escucha(int *socket_escucha){
 
 	while(1){
 
-		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_escucha, logger);
+		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_escucha, logger);
 		if (tipo_mensaje == -1){
 			log_warning(logger, "Se desconecto del proceso server.");
 			puts("Se desconecto del proceso server.");
-			close(socket_escucha);
+			close(*socket_escucha);
 			pthread_exit(NULL);
 		}
 
@@ -599,10 +616,10 @@ void iniciar_conexion_escucha(int *socket_escucha){
 		switch(tipo_mensaje){
 
 			case PLATO_LISTO:{
-				t_plato_listo* recibido = recibir_plato_listo(socket_escucha, logger);
+				t_plato_listo* recibido = recibir_plato_listo(*socket_escucha, logger);
 				log_info(logger, "[PLATO_LISTO]Restaurante: %s, ID_Pedido: %d, Plato: %s", recibido->restaurante, recibido->id_pedido, recibido->plato);
 				free(recibido);
-				enviar_entero(RTA_PLATO_LISTO, 1, socket_escucha, logger);
+				enviar_entero(RTA_PLATO_LISTO, 1, *socket_escucha, logger);
 			}
 			break;
 //			case FINALIZAR_PEDIDO:{
@@ -615,6 +632,6 @@ void iniciar_conexion_escucha(int *socket_escucha){
 			default:
 				puts("No se reconoce el tipo de mensaje recibido");
 				break;
-//		}
+		}
 	}
 }
