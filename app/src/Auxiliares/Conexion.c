@@ -603,6 +603,7 @@ void iniciar_conexion_escucha(int *socket_escucha){
 
 	while(1){
 
+		int socket_comanda;
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(*socket_escucha, logger);
 		if (tipo_mensaje == -1){
 			log_warning(logger, "Se desconecto del proceso server.");
@@ -616,19 +617,42 @@ void iniciar_conexion_escucha(int *socket_escucha){
 		switch(tipo_mensaje){
 
 			case PLATO_LISTO:{
-				t_plato_listo* recibido = recibir_plato_listo(*socket_escucha, logger);
-				log_info(logger, "[PLATO_LISTO]Restaurante: %s, ID_Pedido: %d, Plato: %s", recibido->restaurante, recibido->id_pedido, recibido->plato);
-				free(recibido);
+				t_plato_listo* platoListo = recibir_plato_listo(*socket_escucha, logger);
+				log_info(logger, "[PLATO_LISTO]Restaurante: %s, ID_Pedido: %d, Plato: %s", platoListo->restaurante, platoListo->id_pedido, platoListo->plato);
 				enviar_entero(RTA_PLATO_LISTO, 1, *socket_escucha, logger);
+
+				// Informo a Comanda sobre PLATO_LISTO
+				socket_comanda = conectar_a_comanda_simple();
+				enviar_plato_listo(platoListo, socket_comanda, logger);
+				t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
+				if (tipo_rta == RTA_PLATO_LISTO){
+					uint32_t resultado = recibir_entero(socket_comanda, logger);
+					log_info(logger, "[RTA_PLATO_LISTO]Resultado Comanda: %s",resultado? "OK":"FAIL");
+				}
+
+				// Valido con Comanda si el pedido está finalizado
+				t_rta_obtener_pedido* respuesta;
+				t_obtener_pedido* msg_obtener_pedido_aux = calloc(1,sizeof(t_obtener_pedido));
+				strcpy(msg_obtener_pedido_aux->restaurante, platoListo->restaurante);
+				msg_obtener_pedido_aux->id_pedido = platoListo->id_pedido;
+				log_info(logger, "Parametros a enviar: Restaurante: %s, ID_Pedido: %d", msg_obtener_pedido_aux->restaurante, msg_obtener_pedido_aux->id_pedido);
+				socket_comanda = conectar_a_comanda_simple();
+				enviar_obtener_pedido(msg_obtener_pedido_aux, socket_comanda, logger);
+				tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
+				if (tipo_rta == RTA_OBTENER_PEDIDO){
+					respuesta = recibir_rta_obtener_pedido(socket_comanda, logger);
+				}
+
+				if(respuesta->estado == TERMINADO) {
+
+					// HABILITAR EL PEDIDO/PCB PARA SER RETIRADO
+					log_info(logger, "El Pedido: %d está Terminado", msg_obtener_pedido_aux->id_pedido);
+				}
+
+				free(platoListo);
+				free(msg_obtener_pedido_aux);
 			}
 			break;
-//			case FINALIZAR_PEDIDO:{
-//				t_finalizar_pedido* recibido = recibir_finalizar_pedido(socket_escucha, logger);
-//				log_info(logger, "[FINALIZAR_PEDIDO]Restaurante: %s, ID_Pedido: %d", recibido->restaurante, recibido->id_pedido);
-//				free(recibido);
-//				enviar_entero(RTA_FINALIZAR_PEDIDO, 1, socket_escucha, logger);
-//			}
-//			break;
 			default:
 				puts("No se reconoce el tipo de mensaje recibido");
 				break;
