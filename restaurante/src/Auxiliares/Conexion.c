@@ -189,7 +189,7 @@ void crear_socket_envio(){
 		log_warning(logger, "No se pudo conectar a App para el socket de envio y respuesta.");
 	else{
 		/*Realizo el handshake para el socket de envio y respuesta*/
-		t_handshake* handshake = calloc(1,sizeof(handshake));
+		t_handshake* handshake = calloc(1,sizeof(t_handshake));
 		strcpy(handshake->id, restaurante_conf.nombre_restaurante);
 		handshake->tipoProceso = RESTAURANTE;
 		enviar_handshake(handshake, socket_envio_aux, logger);

@@ -53,5 +53,7 @@ t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante);
 uint32_t generar_id_pedido();
 //void imprimir_restaurante(t_restaurante* restaurante);
 //void agregarRestaurante(t_restaurante* restaurante);
+char* estado_string(uint32_t estado_num);
+void iniciar_conexion_escucha();
 
 #endif /* AUXILIARES_CONEXION_H_ */

@@ -198,7 +198,7 @@ void obtener_pedido(uint32_t* id_pedido){
 }
 
 uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
-	t_resultado resultado = FAIL;
+	uint32_t resultado = FAIL;
 
 	int socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
 	if (socket_new == -1)
@@ -209,7 +209,7 @@ uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 		enviar_confirmar_pedido(msg_confirmar_pedido,socket_new,logger);
 		t_tipoMensaje tipo_mensaje = recibir_tipo_mensaje(socket_new, logger);
 		if(tipo_mensaje == RTA_CONFIRMAR_PEDIDO){
-			uint32_t resultado = recibir_entero(socket_new,logger);
+			resultado = recibir_entero(socket_new,logger);
 			log_info(logger,"[RTA_CONFIRMAR_PEDIDO] RESULTADO:%s",resultado?"OK":"FAIL");
 
 			if(resultado){
