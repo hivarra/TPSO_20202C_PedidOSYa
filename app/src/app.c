@@ -17,28 +17,22 @@ int main(int argc, char **argv)  {
 	/* 1. Configuración */
 	cargar_configuracion_app(path_config);
 	/* 2. Log */
-	char* path_log = getLogPath(app_conf.archivo_log);
-	logger = configurar_logger(path_log, "app");
+	cargar_logger_app();
 //	mostrar_propiedades();
 
-	inicializar();
-	/* 3. Conexion*/
+	/* 3. Conexion a Comanda */
 	conectar_a_comanda();
 
-	/*TODO:Quedarse escuchando peticiones de cliente y repartidores*/
-	pthread_create(&hilo_servidor,NULL,(void*)crearServidor,NULL);
-	pthread_detach(hilo_servidor);
-
-//	inicializar();
-
+	/* 4. Inicializaciones */
+	inicializar();
 	crear_hilo_PLP();
 	crear_hilo_PCP();
 
-
 //	prueba_planificacion();
 
-	sleep(1000);
-//	pthread_join(hilo_servidor, NULL);
+	/* 5. Servidor */
+	crearServidor();
+
 	destruir_logger(logger);
 	destruir_config(config);
 	puts("Fin APP");
@@ -164,9 +158,9 @@ void iniciarSemaforos() {
 
 void iniciarRepartidores() {
 
-	pthread_t thread_repartidor;
 	int i = 0;
 	while(app_conf.repartidores[i] != NULL) {
+		pthread_t thread_repartidor;
 
 		char** coordenada = string_split(app_conf.repartidores[i], "|");
 
@@ -185,6 +179,7 @@ void iniciarRepartidores() {
 		list_add(repartidores, repartidor);
 
 		pthread_create(&thread_repartidor, NULL, (void*) correr_repartidor, repartidor);
+		pthread_detach(thread_repartidor);
 
 		liberar_lista(coordenada);
 		i++;
@@ -209,9 +204,10 @@ void iniciarRepartidores() {
 void crear_hilo_PLP() {
 
 	int hilo_plp = pthread_create(&thread_PLP, NULL, (void*)planificador_largo_plazo, NULL);
+	pthread_detach(thread_PLP);
 
-		if (hilo_plp == -1)
-			log_error(logger, "No se pudo generar el hilo PLP");
+	if (hilo_plp == -1)
+		log_error(logger, "No se pudo generar el hilo PLP");
 }
 
 void crear_hilo_PCP(){
@@ -219,22 +215,25 @@ void crear_hilo_PCP(){
 	if(string_equals_ignore_case("FIFO", app_conf.algoritmo_planificacion)) {
 
 		int hilo_pcp = pthread_create(&thread_PCP, NULL, (void*)planificador_fifo, NULL);
+		pthread_detach(thread_PCP);
 
 		if (hilo_pcp == -1)
 			log_error(logger, "No se pudo generar el hilo PCP");
 	}
 
-	if(string_equals_ignore_case("HRRN", app_conf.algoritmo_planificacion)) {
+	else if(string_equals_ignore_case("HRRN", app_conf.algoritmo_planificacion)) {
 
 		int hilo_pcp = pthread_create(&thread_PCP, NULL, (void*)planificador_hrrn, NULL);
+		pthread_detach(thread_PCP);
 
 		if (hilo_pcp == -1)
 			log_error(logger, "No se pudo generar el hilo PCP");
 	}
 
-	if(string_equals_ignore_case("SJF", app_conf.algoritmo_planificacion)) {
+	else if(string_equals_ignore_case("SJF", app_conf.algoritmo_planificacion)) {
 
 		int hilo_pcp = pthread_create(&thread_PCP, NULL, (void*)planificador_sjf, NULL);
+		pthread_detach(thread_PCP);
 
 		if (hilo_pcp == -1)
 			log_error(logger, "No se pudo generar el hilo PCP");

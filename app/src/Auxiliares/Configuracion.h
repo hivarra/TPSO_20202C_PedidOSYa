@@ -36,6 +36,7 @@ t_app_conf app_conf;
 
 
 void cargar_configuracion_app(char *path_config);
+void cargar_logger_app(void);
 void mostrar_propiedades();
 
 #endif /* AUXILIARES_CONFIGURACION_H_ */

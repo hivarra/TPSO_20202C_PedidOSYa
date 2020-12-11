@@ -87,6 +87,21 @@ void cargar_configuracion_app(char * path_config) {
 	}
 	free(path_config);
 }
+
+void cargar_logger_app() {
+	int carpeta_creada;
+
+	carpeta_creada = crear_carpeta_log(app_conf.archivo_log);
+	if (carpeta_creada){
+		logger = log_create(config_get_string_value(config, "ARCHIVO_LOG"), "App", 0, LOG_LEVEL_TRACE);
+		log_info(logger, "*************** NUEVO LOG ***************");
+	}
+	else{
+		puts("Error al crear la carpera del log");
+		exit(2);
+	}
+}
+
 void mostrar_propiedades() {
 
 	log_info(logger,"Propiedades cargadas:");
