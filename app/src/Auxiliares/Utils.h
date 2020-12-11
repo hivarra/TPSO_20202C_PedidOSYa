@@ -32,7 +32,7 @@ typedef struct {
 	uint32_t objetivo_posX;
 	uint32_t objetivo_posY;
 	uint32_t quantum;
-}__attribute__((packed)) t_repartidor;
+} t_repartidor;
 
 typedef struct {
 	uint32_t id_pedido;

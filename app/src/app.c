@@ -114,15 +114,11 @@ void prueba_planificacion() {
 void inicializar() {
 
 	iniciarListas();
-	inicializarListaClientesRest();
-	incializarRestoDefault();
 	iniciarSemaforos();
-//	iniciarRestauranteDefault();
 	iniciarRepartidores();
 }
 
 void iniciarListas() {
-//	restaurantes = list_create();
 	repartidores = list_create();
 	pedidos_planificables = list_create();
 	listos = list_create();
@@ -143,7 +139,6 @@ void iniciarSemaforos() {
 	pthread_mutex_init(&mutex_ejecutando, NULL);
 	pthread_mutex_init(&mutex_bloqueados, NULL);
 	pthread_mutex_init(&mutex_finalizados, NULL);
-//	pthread_mutex_init(&mutexClientesRestaurantes, 0);
 	pthread_mutex_init(&mutexClientes, NULL);
 	pthread_mutex_init(&mutexRestaurantes, NULL);
 }

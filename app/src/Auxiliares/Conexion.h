@@ -11,7 +11,6 @@
 #define IP_APP "127.0.0.1"
 
 //#include <shared.h>
-//#include <shared.h>
 #include <protocolo.h>
 #include "Configuracion.h"
 
@@ -21,7 +20,7 @@ typedef struct{
 	int socketEscucha;
 	int pos_x;
 	int pos_y;
-	t_list* pedidos;//(Posiblemente necesario)Pedidos que realiza un cliente
+	t_list* pedidos;//Pedidos que realiza un cliente
 }t_info_cliente;
 
 typedef struct{
@@ -33,27 +32,23 @@ typedef struct{
 }t_info_restaurante;
 
 int socket_app;
-//t_list* restaurantes;
-pthread_mutex_t mutexRestaurantes;
-pthread_mutex_t mutexClientes;
+uint32_t id_rest_default;
+pthread_mutex_t mutexRestaurantes,
+				mutexClientes,
+				mutex_id_rest_default;
 
 t_info_restaurante* infoRestoDefault;
 
 t_list* restaurantesConectados;
 t_list* clientesConectados;
 
-void conectar_a_comanda();
-int conectar_a_comanda_simple();
-void crearServidor();
-void esperar_cliente(int socket_servidor);
-void inicializarListaClientesRest();
-void incializarRestoDefault();
+void conectar_a_comanda(void);
+int conectar_a_comanda_simple(void);
+void crearServidor(void);
 t_info_cliente* buscarClienteConectado(char* id);
 t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante);
-uint32_t generar_id_pedido();
 //void imprimir_restaurante(t_restaurante* restaurante);
 //void agregarRestaurante(t_restaurante* restaurante);
 char* estado_string(uint32_t estado_num);
-void iniciar_conexion_escucha();
 
 #endif /* AUXILIARES_CONEXION_H_ */
