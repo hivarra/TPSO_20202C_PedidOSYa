@@ -15,22 +15,19 @@ void* planificador_largo_plazo() {
 		sem_wait(&sem_repartidor_disponible);
 		sem_wait(&sem_pedidos);
 
+		pthread_mutex_lock(&mutex_nuevos);
 		t_pcb* pcb = list_remove(pedidos_planificables, 0);
-		log_info(logger, "Planificador Largo Plazo | Planificando");
+		pthread_mutex_unlock(&mutex_nuevos);
 		t_repartidor* repartidor1 = repartidor_mas_cercano(pcb->restaurante_posX, pcb->restaurante_posY);
 
-//		imprimirPCB(pcb);
-//		imprimirRepartidor(repartidor1);
-
-		// TODO: Asignar repartidor al PCB y pasar a READY
 		asignar_repartidor(repartidor1, pcb);
 
 		pthread_mutex_lock(&mutex_listos);
 		list_add(listos, pcb);
 		pthread_mutex_unlock(&mutex_listos);
+		log_info(logger, "Repartidor N°%d | Pasa a READY | Asignado a pedido N°%d", pcb->id_repartidor, pcb->id_pedido);
 
 		sem_post(&sem_ready);
 
 	}
-//	return NULL;
 }

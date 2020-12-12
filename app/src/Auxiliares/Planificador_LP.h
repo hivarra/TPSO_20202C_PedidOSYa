@@ -8,7 +8,6 @@
 #ifndef AUXILIARES_PLANIFICADOR_LP_H_
 #define AUXILIARES_PLANIFICADOR_LP_H_
 
-//#include "Logueo.h"
 #include "Utils.h"
 
 void* planificador_largo_plazo();

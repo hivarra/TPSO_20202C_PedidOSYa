@@ -46,7 +46,7 @@ void cargar_configuracion_app(char * path_config) {
 		error_show("Error al cargar ALPHA de archivo de configuracion");
 	}
 	if (config_has_property(config, "ESTIMACION_INICIAL")) {
-		app_conf.estimacion_inicial = config_get_int_value(config, "ESTIMACION_INICIAL");
+		app_conf.estimacion_inicial = config_get_double_value(config, "ESTIMACION_INICIAL");
 	} else {
 		error_show("Error al cargar ESTIMACION_INICIAL de archivo de configuracion");
 	}
@@ -93,7 +93,7 @@ void cargar_logger_app() {
 
 	carpeta_creada = crear_carpeta_log(app_conf.archivo_log);
 	if (carpeta_creada){
-		logger = log_create(config_get_string_value(config, "ARCHIVO_LOG"), "App", 0, LOG_LEVEL_TRACE);
+		logger = log_create(app_conf.archivo_log, "App", 0, LOG_LEVEL_TRACE);
 		log_info(logger, "*************** NUEVO LOG ***************");
 	}
 	else{
@@ -105,9 +105,9 @@ void cargar_logger_app() {
 void mostrar_propiedades() {
 
 	log_info(logger,"Propiedades cargadas:");
-	log_info(logger,"Puerto escucha: %d", app_conf.puerto_escucha);
+	log_info(logger,"Puerto escucha: %s", app_conf.puerto_escucha);
 	log_info(logger,"IP comanda: %s", app_conf.ip_comanda);
-	log_info(logger,"Puerto comanda: %d", app_conf.puerto_comanda);
+	log_info(logger,"Puerto comanda: %s", app_conf.puerto_comanda);
 	log_info(logger,"Grado multiprocesamiento: %d", app_conf.grado_multiprocesamiento);
 	log_info(logger,"Algoritmo planificacion: %s", app_conf.algoritmo_planificacion);
 	log_info(logger,"Alpha: %f", app_conf.alpha);
@@ -126,6 +126,34 @@ void mostrar_propiedades() {
 	int j=0;
 	while(app_conf.platos_default[j]){
 		log_info(logger, "Plato default:%s", app_conf.platos_default[j]);
+		j++;
+	}
+}
+
+void mostrar_propiedades_pantalla() {
+
+	printf("Propiedades cargadas:");
+	printf("Puerto escucha: %s", app_conf.puerto_escucha);
+	printf("IP comanda: %s", app_conf.ip_comanda);
+	printf("Puerto comanda: %s", app_conf.puerto_comanda);
+	printf("Grado multiprocesamiento: %d", app_conf.grado_multiprocesamiento);
+	printf("Algoritmo planificacion: %s", app_conf.algoritmo_planificacion);
+	printf("Alpha: %f", app_conf.alpha);
+	printf("Estimacion inicial: %f", app_conf.estimacion_inicial);
+	printf("Archivo log: %s", app_conf.archivo_log);
+	printf("Pos rest default x: %d", app_conf.pos_rest_default_x);
+	printf("Pos rest default y: %d", app_conf.pos_rest_default_y);
+	int i=0;
+	while(app_conf.repartidores[i]){
+		printf("REPARTIDOR %d", i+1);
+		printf("Posicion:%s", app_conf.repartidores[i]);
+		printf("Frecuencia de descanso:%s", app_conf.frecuencias_descanso[i]);
+		printf("Tiempo de descanso:%s", app_conf.tiempos_descanso[i]);
+		i++;
+	}
+	int j=0;
+	while(app_conf.platos_default[j]){
+		printf("Plato default:%s", app_conf.platos_default[j]);
 		j++;
 	}
 }

@@ -8,8 +8,7 @@
 #ifndef AUXILIARES_CONFIGURACION_H_
 #define AUXILIARES_CONFIGURACION_H_
 
-#include "shared.h"
-#include "Logueo.h"
+#include <shared.h>
 
 // Definición de tipos
 typedef struct {
@@ -20,7 +19,7 @@ typedef struct {
 	uint32_t grado_multiprocesamiento;
 	char* algoritmo_planificacion;
 	double alpha;
-	uint32_t estimacion_inicial;
+	double estimacion_inicial;
 	char** repartidores;
 	char** frecuencias_descanso;
 	char** tiempos_descanso;
@@ -34,9 +33,12 @@ typedef struct {
 t_config* config;
 t_app_conf app_conf;
 
+t_log* logger;
+
 
 void cargar_configuracion_app(char *path_config);
 void cargar_logger_app(void);
 void mostrar_propiedades(void);
+void mostrar_propiedades_pantalla();
 
 #endif /* AUXILIARES_CONFIGURACION_H_ */

@@ -12,5 +12,6 @@
 
 void* correr_repartidor(t_repartidor* repartidor);
 void mover_una_posicion(t_repartidor* repartidor);
+void aplicar_tiempo_espera_ready();
 
 #endif /* AUXILIARES_REPARTIDOR_H_ */
