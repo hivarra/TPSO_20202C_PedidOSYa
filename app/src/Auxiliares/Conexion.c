@@ -259,27 +259,29 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 
 		t_info_restaurante* info_rest;
 		t_rta_obtener_pedido* respuesta;
+
+		t_confirmar_pedido* confirmarPedido = recibir_confirmar_pedido(socket_cliente,logger);
+
 		uint32_t resultado_confirmar_pedido, resultado_confirmar_pedido_rest;
 		if(list_size(restaurantesConectados) > 0)
 			info_rest = buscarRestauranteConectado(cliente->restaurante_seleccionado);
 
-		t_confirmar_pedido* confirmarPedido = recibir_confirmar_pedido(socket_cliente,logger);
 		strcpy(confirmarPedido->restaurante, cliente->restaurante_seleccionado);
 //		log_info(logger,"RESTAURANTE:%s",confirmarPedido->restaurante);
 //		log_info(logger,"ID_PEDIDO:%d",confirmarPedido->id_pedido);
 
 		/* Obtener pedido de COMANDA */
 		socket_comanda = conectar_a_comanda_simple();
-		t_obtener_pedido* msg_obtener_pedido_aux = calloc(1,sizeof(t_obtener_pedido));
-		strcpy(msg_obtener_pedido_aux->restaurante, cliente->restaurante_seleccionado);
-		msg_obtener_pedido_aux->id_pedido = confirmarPedido->id_pedido;
-//		log_info(logger, "Parametros a enviar: Restaurante: %s, ID_Pedido: %d", msg_obtener_pedido_aux->restaurante, msg_obtener_pedido_aux->id_pedido);
-		enviar_obtener_pedido(msg_obtener_pedido_aux, socket_comanda, logger);
-		free(msg_obtener_pedido_aux);
+		t_obtener_pedido* msg_obtener_pedido = calloc(1,sizeof(t_obtener_pedido));
+		strcpy(msg_obtener_pedido->restaurante, confirmarPedido->restaurante);
+		msg_obtener_pedido->id_pedido = confirmarPedido->id_pedido;
+//		log_info(logger, "Parametros a enviar: Restaurante: %s, ID_Pedido: %d", msg_obtener_pedido->restaurante, msg_obtener_pedido->id_pedido);
+		enviar_obtener_pedido(msg_obtener_pedido, socket_comanda, logger);
+		free(msg_obtener_pedido);
 		tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
-		if (tipo_rta == RTA_OBTENER_PEDIDO){
+		if (tipo_rta == RTA_OBTENER_PEDIDO)
 			respuesta = recibir_rta_obtener_pedido(socket_comanda, logger);
-		}
+		close(socket_comanda);
 
 		if(respuesta->estado == PENDIENTE && list_size(restaurantesConectados) > 0) {
 //			log_info(logger, "Parametro a enviar: ID_Pedido: %d", confirmarPedido->id_pedido);
@@ -291,16 +293,16 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 				resultado_confirmar_pedido = recibir_entero(socket_comanda, logger);
 //				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado de Comanda: %s",resultado_confirmar_pedido? "OK":"FAIL");
 			}
+			close(socket_comanda);
 			tipo_rta = recibir_tipo_mensaje(info_rest->socketEnvio, logger);
 			if (tipo_rta == RTA_CONFIRMAR_PEDIDO){
 				resultado_confirmar_pedido_rest = recibir_entero(info_rest->socketEnvio, logger);
 //				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado de Restaurante: %s",resultado_confirmar_pedido? "OK":"FAIL");
 			}
-
-		} else {
+		}
+		else
 			// Acepto la respuesta de Comanda nada más porque uso el RESTO DEFAULT
 			resultado_confirmar_pedido_rest = 1;
-		}
 		uint32_t resultado_final = 0;
 		if(resultado_confirmar_pedido && resultado_confirmar_pedido_rest) {
 			resultado_final = 1;

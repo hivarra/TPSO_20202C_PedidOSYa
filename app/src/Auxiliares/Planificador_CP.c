@@ -33,6 +33,11 @@ void* planificador_fifo() {
 
 void* planificador_hrrn() {
 
+	pthread_t hilo_espera_cpu;
+	pthread_create(&hilo_espera_cpu, NULL, (void*)NULL, NULL);
+	pthread_detach(&hilo_espera_cpu);
+
+
 	while(1) {
 
 		sem_wait(&sem_ready);
@@ -165,4 +170,31 @@ t_pcb* sacar_pcb_de_listos_por_HRRN() {
 	pthread_mutex_unlock(&mutex_listos);
 	log_info(logger, "PCP | Repartidor N°%d eliminado de LISTOS", pcb_SJF->id_repartidor);
 	return pcb_SJF;
+}
+
+void aplicar_tiempo_espera_ready() {
+
+	void incrementar_tiempo_espera(t_pcb* pcb) {
+		pcb->tiempo_espera_ready++;
+	}
+
+	pthread_mutex_lock(&mutex_listos);
+	if(list_size(listos)> 0) {
+		list_iterate(listos, (void*)incrementar_tiempo_espera);
+	}
+	pthread_mutex_unlock(&mutex_listos);
+}
+
+void incrementar_espera_cpu() {
+
+	while(1) {
+
+
+
+		//TODO: Semaforo
+		sleep(app_conf.retardo_ciclo_cpu);
+
+		//TODO: Aplicar estimaciones a lista
+		aplicar_tiempo_espera_ready();
+	}
 }

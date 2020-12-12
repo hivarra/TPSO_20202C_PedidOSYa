@@ -322,10 +322,28 @@ void finalizarPCB(t_repartidor* repartidor) {
 			log_info(logger, "[RTA_FINALIZAR_PEDIDO]Resultado Cliente: %s",resultado? "OK":"FAIL");
 		}
 	}
+	free(finalizar_pedido);
 
 	log_info(logger, "Repartidor N°%d | Pasa a EXIT | Pedido N°%d entregado", pcb->id_repartidor, pcb->id_pedido);
 
 	disponibilizar_repartidor(repartidor);
+
+	liberarPCB(pcb);
+}
+
+void liberarPCB(t_pcb* pcb_a_liberar) {
+
+	int esElPCB(t_pcb* pcb) {
+
+		return pcb->id_pedido == pcb_a_liberar->id_pedido;
+	}
+
+	pthread_mutex_lock(&mutex_finalizados);
+	list_remove_by_condition(finalizados, (void*)esElPCB);
+	pthread_mutex_unlock(&mutex_finalizados);
+
+	sem_destroy(&pcb_a_liberar->sem_pedido_listo);
+	free(pcb_a_liberar);
 }
 
 void notificar_pedido_listo(int id_pedido) {

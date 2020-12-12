@@ -115,6 +115,7 @@ void bloquearPCB(t_repartidor* repartidor, t_instruccion instruccion_anterior);
 void retirarPedido(t_pcb* pcb);
 t_pcb* sacarPCBDeEjecutando(t_repartidor* repartidor);
 void finalizarPCB(t_repartidor* repartidor);
+void liberarPCB(t_pcb* pcb_a_liberar);
 void notificar_pedido_listo(int id_pedido);
 t_pcb* buscarPCB(int id_pedido);
 int conectar_a_comanda_simple();
