@@ -152,7 +152,7 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 						return string_equals_ignore_case(comida->nombre,rta_obtener_receta->nombre);
 					}
 
-					t_comida* comida_buscada = list_find(args_aux->rta_obtener_pedido->comidas,(void*)buscar_comida);
+					t_comida* comida_buscada = list_find(args_aux->comidas,(void*)buscar_comida);
 
 					crear_y_agregar_pcb_a_cola_ready(args_aux->id_pedido,rta_obtener_receta,comida_buscada->cantTotal);
 					free(rta_obtener_receta);
@@ -160,14 +160,14 @@ void enviar_obtener_pasos_receta(t_args_aux* args_aux){
 				close(socket_new);
 			}
 	}
-	list_iterate(args_aux->rta_obtener_pedido->comidas,(void*)obtener_pasos_receta_de_comida);
+	list_iterate(args_aux->comidas,(void*)obtener_pasos_receta_de_comida);
 
-	inicializar_ciclo_planificacion(args_aux->rta_obtener_pedido->comidas);
-
-	free(args_aux);
+	inicializar_ciclo_planificacion(args_aux->comidas);
+	list_destroy_and_destroy_elements(args_aux->comidas,free);
 }
 void obtener_pedido(uint32_t* id_pedido){
-	int socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
+		int socket_new = -1;
+		socket_new = crear_conexion(restaurante_conf.ip_sindicato, restaurante_conf.puerto_sindicato);
 		if (socket_new == -1)
 			log_warning(logger, "[OBTENER_PEDIDO] No se pudo conectar a Sindicato");
 		else{
@@ -184,9 +184,10 @@ void obtener_pedido(uint32_t* id_pedido){
 				log_info(logger,"[RTA_OBTENER_PEDIDO] CANTIDAD_COMIDAS:%d",rta_obtener_pedido->cantComidas);
 				log_info(logger,"[RTA_OBTENER_PEDIDO] LISTA_COMIDAS:");
 				imprimir_lista_comida(rta_obtener_pedido->comidas);
+				free(rta_obtener_pedido);
 
 				t_args_aux* args_aux = malloc(sizeof(t_args_aux));
-				args_aux->rta_obtener_pedido = rta_obtener_pedido;
+				args_aux->comidas = list_duplicate(rta_obtener_pedido->comidas);
 				args_aux->id_pedido = *id_pedido;
 
 				pthread_t hilo_enviar_obtener_receta;
@@ -287,7 +288,6 @@ t_cliente* obtener_cliente_con_id_pedido(uint32_t id_pedido){
 void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 	uint32_t respuesta_plato_listo = FAIL;
 	if(lista_pedidos_app != NULL){
-		log_info(logger, "ACA 1");
 		if(es_pedido_de_app(plato_listo->id_pedido)){
 			log_info(logger, "ACA 2");
 			enviar_plato_listo(plato_listo,socket_escucha,logger);
@@ -298,12 +298,10 @@ void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 		}
 	}
 	else{
-		log_info(logger, "ACA 3");
 		pthread_mutex_lock(&mutex_cliente_conectados);
 		t_cliente* cliente = obtener_cliente_con_id_pedido(plato_listo->id_pedido);
 		pthread_mutex_unlock(&mutex_cliente_conectados);
 		if(cliente != NULL){
-			log_info(logger, "ACA 4");
 			enviar_plato_listo(plato_listo,cliente->socket_escucha,logger);
 			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a Cliente:%s. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
 								,cliente->nombre,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
@@ -311,7 +309,6 @@ void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 //			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
 		}
 		else
-			log_info(logger, "ACA 5");
 			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Error al enviar actualizacion de PLATO_LISTO. No se encontró socket_escucha de app/cliente asociado a ID_PEDIDO:%d",plato_listo->id_pedido);
 	}
 	free(plato_listo);
