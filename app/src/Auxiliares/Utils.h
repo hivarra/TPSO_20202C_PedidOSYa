@@ -9,7 +9,6 @@
 #define AUXILIARES_UTILS_H_
 
 #include "shared.h"
-#include "Logueo.h"
 #include "Configuracion.h"
 #include <math.h>
 #include <protocolo.h>
@@ -59,10 +58,11 @@ typedef struct {
 	char restaurante[L_ID];
 	uint32_t restaurante_posX;
 	uint32_t restaurante_posY;
-	// TODO: Lo de abajo cambiarlo porque tiene que salir de otra estructura
 	uint32_t cliente_posX;
 	uint32_t cliente_posY;
 	sem_t sem_pedido_listo;
+	double ultima_estimacion;
+	uint32_t tiempo_espera_ready;
 } t_pcb;
 
 sem_t
@@ -117,5 +117,6 @@ t_pcb* sacarPCBDeEjecutando(t_repartidor* repartidor);
 void finalizarPCB(t_repartidor* repartidor);
 void notificar_pedido_listo(int id_pedido);
 t_pcb* buscarPCB(int id_pedido);
+int conectar_a_comanda_simple();
 
 #endif /* AUXILIARES_UTILS_H_ */

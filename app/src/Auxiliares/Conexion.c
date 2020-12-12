@@ -43,17 +43,6 @@ void conectar_a_comanda(){
 	}
 }
 
-int conectar_a_comanda_simple(){
-
-	int socket_comanda = crear_conexion(app_conf.ip_comanda, app_conf.puerto_comanda);
-	if (socket_comanda == -1){
-		log_error(logger, "No se pudo conectar a Comanda");
-		puts("No se pudo conectar a Comanda.");
-		exit(-1);//Termina el programa
-	}
-	return socket_comanda;
-}
-
 void incializarRestoDefault(){
 	infoRestoDefault = calloc(1,sizeof(t_info_restaurante));
 	strcpy(infoRestoDefault->id, "RESTO_DEFAULT");
@@ -70,61 +59,6 @@ void inicializarListaClientesRest(){
 	pthread_mutex_init(&mutex_id_rest_default, NULL);
 	id_rest_default = 0;
 }
-
-//t_info_cliente* buscarClienteConectado(char* nombre_cliente){
-//	bool cliente_igual(t_info_cliente* info_cliente){
-//		return string_equals_ignore_case(info_cliente->id, nombre_cliente);
-//	}
-//
-//	pthread_mutex_lock(&mutexClientes);
-//	t_info_cliente* cliente = list_find(clientesConectados,(void*)cliente_igual);
-//	pthread_mutex_unlock(&mutexClientes);
-//
-//	return cliente;
-//}
-//
-//t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante) {
-//	bool restaurante_igual(t_info_restaurante* info_restaurante) {
-//		return string_equals_ignore_case(info_restaurante->id,
-//				nombre_restaurante);
-//	}
-//	t_info_restaurante* restaurante;
-//	pthread_mutex_lock(&mutexRestaurantes);
-//	if (list_size(restaurantesConectados) > 0)
-//		restaurante = list_find(restaurantesConectados, (void*)restaurante_igual);
-//	else
-//		restaurante = NULL;
-//	pthread_mutex_unlock(&mutexRestaurantes);
-//
-//	return restaurante;
-//}
-
-//t_rta_consultar_restaurantes* obtenerRestaurantes(){
-//	t_rta_consultar_restaurantes* respuesta_restaurantes = malloc(sizeof(t_rta_consultar_restaurantes));
-//	respuesta_restaurantes->restaurantes = list_create();
-//
-//	void* obtenerIdChar(t_info_restaurante* info_restaurante){
-//		char* nombre_restraurante = malloc(L_ID);
-//		strcpy(nombre_restraurante, info_restaurante->id);
-//		return nombre_restraurante;
-//	}
-//
-//	pthread_mutex_lock(&mutexRestaurantes);
-//	if(list_size(restaurantesConectados) > 0) {
-//		/*MAPPING  t_info_cliente -> char[L_ID] */
-//		respuesta_restaurantes->restaurantes = list_map(restaurantesConectados,(void*)obtenerIdChar);
-//		respuesta_restaurantes->cantRestaurantes = list_size(restaurantesConectados);
-//	} else {
-//		// Cargo el restaurante default
-//		char* resto_default = calloc(1, L_ID);
-//		strcpy(resto_default, infoRestoDefault->id);
-//		list_add(respuesta_restaurantes->restaurantes, resto_default);
-//		respuesta_restaurantes->cantRestaurantes = 1;
-//	}
-//	pthread_mutex_unlock(&mutexRestaurantes);
-//
-//	return respuesta_restaurantes;
-//}
 
 void procesarMensaje(int socket_cliente, char* id_cliente){
 
@@ -327,7 +261,6 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 		t_rta_obtener_pedido* respuesta;
 		uint32_t resultado_confirmar_pedido, resultado_confirmar_pedido_rest;
 		if(list_size(restaurantesConectados) > 0)
-			//TODO: Enviar ANADIR_PLATO al restaurante seleccionado por el cliente
 			info_rest = buscarRestauranteConectado(cliente->restaurante_seleccionado);
 
 		t_confirmar_pedido* confirmarPedido = recibir_confirmar_pedido(socket_cliente,logger);
@@ -369,7 +302,6 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 		if(resultado_confirmar_pedido && resultado_confirmar_pedido_rest) {
 			resultado_final = 1;
 
-			//TODO: Creación de PCB
 			crearPCB(cliente, confirmarPedido->id_pedido);
 		}
 
@@ -393,7 +325,6 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 		t_rta_consultar_pedido* rta_consultar_pedido;
 		if (tipo_rta == RTA_OBTENER_PEDIDO){
 			t_rta_obtener_pedido* respuesta = recibir_rta_obtener_pedido(socket_comanda, logger);
-			//TODO:De momento se deja para tradear
 			log_trace(logger, "[RTA_OBTENER_PEDIDO] Estado del pedido: %s", estado_string(respuesta->estado));
 			for(int i = 0; i < respuesta->cantComidas; i++){
 				t_comida* comida_i = list_get(respuesta->comidas, i);

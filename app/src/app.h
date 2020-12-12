@@ -9,7 +9,6 @@
 #define APP_H_
 
 #include <shared.h>
-#include "Auxiliares/Logueo.h"
 #include "Auxiliares/Configuracion.h"
 #include "Auxiliares/Conexion.h"
 #include "Auxiliares/Utils.h"
@@ -21,7 +20,7 @@ typedef struct {
 	char* nombre;
 	uint32_t posX;
 	uint32_t posY;
-}__attribute__((packed)) t_restaurante;
+} t_restaurante;
 
 pthread_t hilo_servidor;
 pthread_t thread_PLP;
@@ -34,8 +33,6 @@ void iniciarListas();
 void iniciarSemaforos();
 void iniciarRestauranteDefault();
 void iniciarRepartidores();
-//void imprimirRepartidor(t_repartidor* repartidor);
-//void imprimirPCB(t_pcb* pcb);
 
 void crear_hilo_PLP();
 void crear_hilo_PCP();

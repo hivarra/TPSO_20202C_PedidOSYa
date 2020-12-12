@@ -46,7 +46,7 @@ void cargar_configuracion_app(char * path_config) {
 		error_show("Error al cargar ALPHA de archivo de configuracion");
 	}
 	if (config_has_property(config, "ESTIMACION_INICIAL")) {
-		app_conf.estimacion_inicial = config_get_int_value(config, "ESTIMACION_INICIAL");
+		app_conf.estimacion_inicial = config_get_double_value(config, "ESTIMACION_INICIAL");
 	} else {
 		error_show("Error al cargar ESTIMACION_INICIAL de archivo de configuracion");
 	}
@@ -139,7 +139,7 @@ void mostrar_propiedades_pantalla() {
 	printf("Grado multiprocesamiento: %d", app_conf.grado_multiprocesamiento);
 	printf("Algoritmo planificacion: %s", app_conf.algoritmo_planificacion);
 	printf("Alpha: %f", app_conf.alpha);
-	printf("Estimacion inicial: %d", app_conf.estimacion_inicial);
+	printf("Estimacion inicial: %f", app_conf.estimacion_inicial);
 	printf("Archivo log: %s", app_conf.archivo_log);
 	printf("Pos rest default x: %d", app_conf.pos_rest_default_x);
 	printf("Pos rest default y: %d", app_conf.pos_rest_default_y);

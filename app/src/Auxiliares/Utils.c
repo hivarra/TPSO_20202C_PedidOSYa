@@ -106,7 +106,11 @@ void crearPCB(t_info_cliente* cliente, int id_pedido) {
 	pcb->restaurante_posY = info_rest->pos_x;
 	pcb->cliente_posX = cliente->pos_x;
 	pcb->cliente_posY = cliente->pos_y;
+	pcb->ultima_estimacion = app_conf.estimacion_inicial;
+	pcb->tiempo_espera_ready = 0;
+	pthread_mutex_lock(&mutex_nuevos);
 	list_add(pedidos_planificables, pcb);
+	pthread_mutex_unlock(&mutex_nuevos);
 	sem_init(&pcb->sem_pedido_listo, 0, 0);
 	sem_post(&sem_pedidos);
 	log_info(logger, "Se creo PCB para el pedido: %d", pcb->id_pedido);
@@ -333,4 +337,15 @@ t_pcb* buscarPCB(int id_pedido) {
 	}
 
 	return pcb;
+}
+
+int conectar_a_comanda_simple(){
+
+	int socket_comanda = crear_conexion(app_conf.ip_comanda, app_conf.puerto_comanda);
+	if (socket_comanda == -1){
+		log_error(logger, "No se pudo conectar a Comanda");
+		puts("No se pudo conectar a Comanda.");
+		exit(-1);//Termina el programa
+	}
+	return socket_comanda;
 }

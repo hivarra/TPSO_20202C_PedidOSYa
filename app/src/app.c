@@ -39,78 +39,6 @@ int main(int argc, char **argv)  {
 	return EXIT_SUCCESS;
 }
 
-// TODO: Inicio Prueba
-void prueba_planificacion() {
-
-	//TODO: Crear función para que genere un pcb/pedido a partir de un ID de pedido confirmado
-	// Esta funcionalidad debería:
-	// - Crear un t_pcb con id_repartidor = -1
-	// - Mover el t_pcb a NEW
-	// - Setear las coordenadas destino (del restaurante elegido por el cliente)
-	// - Setear la instrucción: BUSCAR_PEDIDO
-
-	// PEDIDO 1
-	t_pcb* pcb1 = malloc(sizeof(t_pcb));
-
-	pcb1->id_pedido = 1;
-	pcb1->id_repartidor = -1;
-	pcb1->instruccion = -1;
-	pcb1->restaurante_posX = app_conf.pos_rest_default_x;
-	pcb1->restaurante_posY = app_conf.pos_rest_default_y;
-	pcb1->cliente_posX = 2;
-	pcb1->cliente_posY = 2;
-	list_add(pedidos_planificables, pcb1);
-	sem_post(&sem_pedidos);
-	log_info(logger, "Se recibió el pedido: %d", pcb1->id_pedido);
-//	imprimirPCB(pcb1);
-
-	//	PEDIDO 2
-	t_pcb* pcb2 = malloc(sizeof(t_pcb));
-
-	pcb2->id_pedido = 2;
-	pcb2->id_repartidor = -1;
-	pcb2->instruccion = -1;
-	pcb2->restaurante_posX = 9;
-	pcb2->restaurante_posY = 9;
-	pcb2->cliente_posX = 6;
-	pcb2->cliente_posY = 6;
-	list_add(pedidos_planificables, pcb2);
-	sem_post(&sem_pedidos);
-	log_info(logger, "Se recibió el pedido: %d", pcb2->id_pedido);
-//	imprimirPCB(pcb2);
-
-	//	PEDIDO 3
-	t_pcb* pcb3 = malloc(sizeof(t_pcb));
-
-	pcb3->id_pedido = 3;
-	pcb3->id_repartidor = -1;
-	pcb3->instruccion = -1;
-	pcb3->restaurante_posX = 1;
-	pcb3->restaurante_posY = 1;
-	pcb3->cliente_posX = 8;
-	pcb3->cliente_posY = 9;
-	list_add(pedidos_planificables, pcb3);
-	sem_post(&sem_pedidos);
-	log_info(logger, "Se recibió el pedido: %d", pcb3->id_pedido);
-//	imprimirPCB(pcb3);
-
-	sleep(20);
-	log_info(logger, "LOS PEDIDOS 1 y 2 ESTAN LISTOS");
-
-
-//	retirarPedido(pcb1);
-//	retirarPedido(pcb2);
-	pthread_t thread_retirar_pedido;
-	pthread_create(&thread_retirar_pedido, NULL, (void*) retirarPedido, pcb1);
-	pthread_create(&thread_retirar_pedido, NULL, (void*) retirarPedido, pcb2);
-
-	sleep(40);
-	log_info(logger, "EL PEDIDO 3 ESTA LISTO");
-	pthread_create(&thread_retirar_pedido, NULL, (void*) retirarPedido, pcb3);
-}
-
-// TODO: Fin Prueba
-
 void inicializar() {
 
 	iniciarListas();
@@ -143,14 +71,6 @@ void iniciarSemaforos() {
 	pthread_mutex_init(&mutexRestaurantes, NULL);
 }
 
-//void iniciarRestauranteDefault() {
-//
-//	restaurante_default = malloc(sizeof(t_restaurante));
-//	strcpy(restaurante_default->nombre, "DEFAULT");
-//	restaurante_default->posX = app_conf.pos_rest_default_x;
-//	restaurante_default->posY = app_conf.pos_rest_default_y;
-//}
-
 void iniciarRepartidores() {
 
 	int i = 0;
@@ -165,7 +85,6 @@ void iniciarRepartidores() {
 		repartidor->posY = atoi(coordenada[1]);
 		repartidor->frecuenciaDescanso = atoi(app_conf.frecuencias_descanso[i]);
 		repartidor->tiempoDescanso = atoi(app_conf.tiempos_descanso[i]);
-//		repartidor->instruccion = BUSCAR_PEDIDO;
 		sem_init(&repartidor->sem_moverse, 0, 0);
 		repartidor->objetivo_posX = -1;
 		repartidor->objetivo_posY = -1;
@@ -178,23 +97,9 @@ void iniciarRepartidores() {
 
 		liberar_lista(coordenada);
 		i++;
-
-//		imprimirRepartidor(repartidor);
-
 	}
 
 }
-
-//void imprimirRepartidor(t_repartidor* repartidor) {
-//
-//	log_info(logger, "Repartidor N° %d | PosX: %d | PosY: %d | Descanso: %d | Duración: %d", repartidor->id, repartidor->posX, repartidor->posY, repartidor->frecuenciaDescanso, repartidor->tiempoDescanso);
-//
-//}
-
-//void imprimirPCB(t_pcb* pcb) {
-//
-//	log_info(logger, "PCB | Pedido: %d | Repartidor: %d | Instrucción: %d |PosX: %d | PosY: %d", pcb->id_pedido, pcb->id_repartidor, pcb->instruccion, pcb->posX, pcb->posY);
-//}
 
 void crear_hilo_PLP() {
 

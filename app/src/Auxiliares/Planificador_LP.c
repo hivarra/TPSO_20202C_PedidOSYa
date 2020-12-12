@@ -15,11 +15,12 @@ void* planificador_largo_plazo() {
 		sem_wait(&sem_repartidor_disponible);
 		sem_wait(&sem_pedidos);
 
+		pthread_mutex_lock(&mutex_nuevos);
 		t_pcb* pcb = list_remove(pedidos_planificables, 0);
+		pthread_mutex_unlock(&mutex_nuevos);
 		log_info(logger, "Planificador Largo Plazo | Planificando");
 		t_repartidor* repartidor1 = repartidor_mas_cercano(pcb->restaurante_posX, pcb->restaurante_posY);
 
-		// TODO: Asignar repartidor al PCB y pasar a READY
 		asignar_repartidor(repartidor1, pcb);
 
 		pthread_mutex_lock(&mutex_listos);
