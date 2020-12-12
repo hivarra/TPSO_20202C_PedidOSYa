@@ -28,5 +28,6 @@ void eliminar_paso_realizado(t_pcb* pcb);
 t_paso_receta* obtener_siguiente_paso(t_pcb* pcb);
 bool cocinero_esta_ejecutando(t_pcb* pcb);
 void hilo_cocinero(t_cocinero* cocinero);
+void eliminar_paso(t_paso_receta* paso,t_pcb* plato);
 
 #endif /* AUXILIARES_COCINERO_H_ */

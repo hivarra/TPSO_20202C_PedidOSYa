@@ -17,9 +17,19 @@ typedef struct{
 	char nombre_afinidad[L_PLATO];
 }t_afinidad;
 
+typedef enum{
+	FIFO,
+	RR
+}t_algoritmo;
+
+t_algoritmo algoritmo_planificacion;
+
 uint32_t RETARDO_CICLO_CPU;
+
+
 
 void signalHandler(int);
 t_afinidad* obtener_id_afinidad(char nombre_plato[L_PLATO]);
+int min(int num1, int num2);
 
 #endif /* AUXILIARES_UTILS_H_ */

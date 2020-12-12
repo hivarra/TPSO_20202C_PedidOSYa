@@ -13,9 +13,9 @@ t_paso_receta* obtener_siguiente_paso(t_pcb* pcb){
 	return siguiente_paso;
 }
 void eliminar_paso_realizado(t_pcb* pcb){
-	pthread_mutex_lock(&pcb->mutex_pcb);
+	pthread_mutex_lock(&pcb->mutex_pasos);
 	list_remove_and_destroy_element(pcb->lista_pasos,0,free);
-	pthread_mutex_unlock(&pcb->mutex_pcb);
+	pthread_mutex_unlock(&pcb->mutex_pasos);
 
 }
 void reposar(t_cocinero* cocinero){
@@ -27,37 +27,59 @@ void hornear(t_cocinero* cocinero){
 //	sem_post(&finCPUbound);
 }
 void realizar_otro_paso(t_cocinero* cocinero,t_paso_receta* paso){
-	log_info(logger,"[REALIZAR_OTRO_PASO] Se ejecuta PASO:%s",paso->accion);
+	log_info(logger,"[REALIZAR_OTRO_PASO] Se ejecuta PASO:%s de PLATO:%s,ID_PEDIDO:%d",paso->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id_pedido);
+	uint32_t tiempo=0;
+
+	if(algoritmo_planificacion == FIFO)
+		tiempo=paso->tiempo;
+	else{
+		tiempo = min(QUANTUM,paso->tiempo);
+		paso->tiempo -= tiempo;
+		log_info(logger,"PRUEBA TIEMPO:%d",tiempo);
+		log_info(logger,"PRUEBA PASO_TIEMPO:%d",paso->tiempo);
+	}
 
 	pthread_mutex_lock(&cocinero->mutex_cocinero);
-	aplicar_retardo(paso->tiempo);
+	aplicar_retardo(tiempo);
 	pthread_mutex_unlock(&cocinero->mutex_cocinero);
-
-//	sem_post(&finCPUbound);
+}
+void eliminar_paso(t_paso_receta* paso,t_pcb* plato){
+	if(algoritmo_planificacion==FIFO)
+		eliminar_paso_realizado(plato);
+	else{
+		if(string_equals_ignore_case(paso->accion,"HORNEAR") || string_equals_ignore_case(paso->accion,"REPOSAR"))
+			eliminar_paso_realizado(plato);
+		else if (paso->tiempo==0)
+			eliminar_paso_realizado(plato);
+	}
 }
 void hilo_cocinero(t_cocinero* cocinero){
 
 	while(1){
 		sem_wait(&sem_realizar_paso[cocinero->id]);
-//		log_info(logger,"PRUEBAAAAAAAAAA");
 		t_paso_receta* paso_siguiente = obtener_siguiente_paso(cocinero->pcb);
 		string_to_upper(paso_siguiente->accion);
-		log_info(logger,"[HILO_COCINERO] Cocinero con ID:%d ejecuta PASO:%s del PLATO:%s del ID_PEDIDO:%d",cocinero->id,paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id_pedido);
+//		log_info(logger,"[HILO_COCINERO] Cocinero con ID:%d ejecuta PASO:%s del PLATO:%s del ID_PEDIDO:%d",cocinero->id,paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id_pedido);
 
 		if(string_equals_ignore_case(paso_siguiente->accion,"REPOSAR")){
 			reposar(cocinero);
+			log_info(logger,"[HILO_COCINERO] Fin de ejecución de PASO:%s de PLATO:%s del ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id_pedido);
+			pthread_mutex_lock(&cocinero->pcb->mutex_pasos);
+			eliminar_paso(paso_siguiente,cocinero->pcb);
+			pthread_mutex_unlock(&cocinero->pcb->mutex_pasos);
+			sem_post(&finCPUbound);
 		}
 		else if(string_equals_ignore_case(paso_siguiente->accion,"HORNEAR")){
 			hornear(cocinero);
 		}
 		else{
 			realizar_otro_paso(cocinero,paso_siguiente);
-//			sem_post(&finCPUbound);
+			log_info(logger,"[HILO_COCINERO] Fin de ejecución de PASO:%s de PLATO:%s del ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id_pedido);
+//			pthread_mutex_lock(&cocinero->pcb->mutex_pasos);
+			eliminar_paso(paso_siguiente,cocinero->pcb);
+//			pthread_mutex_unlock(&cocinero->pcb->mutex_pasos);
+			sem_post(&finCPUbound);
 		}
-		eliminar_paso_realizado(cocinero->pcb);
-		sem_post(&finCPUbound);
-//		t_afinidad* afinidad = obtener_id_afinidad(cocinero->afinidad);
-//		sem_post(&sem_cola_ready[afinidad->id_afinidad]);
 	}
 }
 bool cocinero_esta_ejecutando(t_pcb* pcb){

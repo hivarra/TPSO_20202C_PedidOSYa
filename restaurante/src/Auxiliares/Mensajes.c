@@ -289,7 +289,6 @@ void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 	uint32_t respuesta_plato_listo = FAIL;
 	if(lista_pedidos_app != NULL){
 		if(es_pedido_de_app(plato_listo->id_pedido)){
-			log_info(logger, "ACA 2");
 			enviar_plato_listo(plato_listo,socket_escucha,logger);
 			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a App. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
 					,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
@@ -306,7 +305,7 @@ void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a Cliente:%s. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
 								,cliente->nombre,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
 			respuesta_plato_listo = recibir_entero(cliente->socket_escucha,logger);//RECIBO PARA RESPETAR PROTOCOLO, NO SE USA
-//			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
+			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
 		}
 		else
 			log_info(logger,"[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Error al enviar actualizacion de PLATO_LISTO. No se encontró socket_escucha de app/cliente asociado a ID_PEDIDO:%d",plato_listo->id_pedido);
@@ -319,7 +318,6 @@ void enviar_plato_listo_a_modulo_solicitante(uint32_t id_pedido,char plato[L_PLA
 	strcpy(msg_plato_listo->plato, plato);
 	msg_plato_listo->id_pedido = id_pedido;
 
-	log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Creando hilo para enviar actualización");
 	pthread_t hilo_enviar_plato_listo;
 	pthread_create(&hilo_enviar_plato_listo,NULL,(void*)enviar_actualizacion_plato_listo,msg_plato_listo);
 	pthread_detach(hilo_enviar_plato_listo);
@@ -364,7 +362,7 @@ void enviar_terminar_pedido_a_sindicato(uint32_t id_pedido){
 		close(socket_sindicato);
 	}
 }
-void enviar_actualizacion_finalizar_plato(t_finalizar_pedido* finalizar_plato){
+void enviar_actualizacion_finalizar_pedido(t_finalizar_pedido* finalizar_plato){
 	uint32_t respuesta_finalizar_plato = FAIL;
 
 	pthread_mutex_lock(&mutex_cliente_conectados);
@@ -372,12 +370,12 @@ void enviar_actualizacion_finalizar_plato(t_finalizar_pedido* finalizar_plato){
 	pthread_mutex_unlock(&mutex_cliente_conectados);
 	if(cliente != NULL){
 		enviar_finalizar_pedido(finalizar_plato,cliente->socket_escucha,logger);
-		log_info(logger,"[ENVIAR_FINALIZAR_PLATO_A_CLIENTE] Se envia actualizacion de FINALIZAR_PLATO a Cliente:%s. Info enviada: RESTAURANTE:%s,ID_PEDIDO:%d."
+		log_info(logger,"[ENVIAR_FINALIZAR_PEDIDO_A_CLIENTE] Se envia actualizacion de FINALIZAR_PEDIDO a Cliente:%s. Info enviada: RESTAURANTE:%s,ID_PEDIDO:%d."
 							,cliente->nombre,finalizar_plato->restaurante,finalizar_plato->id_pedido);
 		respuesta_finalizar_plato = recibir_entero(cliente->socket_escucha,logger);//RECIBO PARA RESPETAR PROTOCOLO, NO SE USA
 	}
 	else
-		log_info(logger,"[ENVIAR_FINALIZAR_PLATO_A_CLIENTE] No existe cliente al cual enviar FINALIZAR_PLATO.Info: RESTAURANTE:%s,ID_PEDIDO:%d",finalizar_plato->restaurante,finalizar_plato->id_pedido);
+		log_info(logger,"[ENVIAR_FINALIZAR_PEDIDO_A_CLIENTE] No existe cliente al cual enviar FINALIZAR_PEDIDO.Info: RESTAURANTE:%s,ID_PEDIDO:%d",finalizar_plato->restaurante,finalizar_plato->id_pedido);
 
 	free(finalizar_plato);
 }
@@ -387,6 +385,6 @@ void enviar_finalizar_pedido_a_cliente(uint32_t id_pedido){
 	msg_finalizar_plato->id_pedido = id_pedido;
 
 	pthread_t hilo_enviar_finalizar_plato;
-	pthread_create(&hilo_enviar_finalizar_plato,NULL,(void*)enviar_actualizacion_finalizar_plato,msg_finalizar_plato);
+	pthread_create(&hilo_enviar_finalizar_plato,NULL,(void*)enviar_actualizacion_finalizar_pedido,msg_finalizar_plato);
 	pthread_detach(hilo_enviar_finalizar_plato);
 }

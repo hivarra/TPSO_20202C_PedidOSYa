@@ -17,11 +17,6 @@
 #include "Utils.h"
 #include <semaphore.h>
 
-typedef enum{
-	FIFO,
-	RR
-}t_algoritmo;
-
 typedef struct{
 	uint32_t id_afinidad;
 	t_list* cola;
@@ -37,7 +32,6 @@ t_list** lista_colas_ready;
 t_list* cola_exit;
 t_list* cola_bloqueados_prehorno;
 uint32_t id_pcb_global;
-t_algoritmo algoritmo_planificacion;
 
 t_list* pedidos_pcbs;//lista t_pedido_pcb;
 
