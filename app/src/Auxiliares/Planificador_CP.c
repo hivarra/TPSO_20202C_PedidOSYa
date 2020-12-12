@@ -34,8 +34,8 @@ void* planificador_fifo() {
 void* planificador_hrrn() {
 
 	pthread_t hilo_espera_cpu;
-	pthread_create(&hilo_espera_cpu, NULL, (void*)NULL, NULL);
-	pthread_detach(&hilo_espera_cpu);
+	pthread_create(&hilo_espera_cpu, NULL, (void*)incrementar_espera_cpu, NULL);
+	pthread_detach(hilo_espera_cpu);
 
 
 	while(1) {

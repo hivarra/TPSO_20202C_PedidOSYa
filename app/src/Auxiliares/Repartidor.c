@@ -31,7 +31,8 @@ void* correr_repartidor(t_repartidor* repartidor) {
 
 		}
 
-		if(repartidor->quantum != 0) {
+//		if(repartidor->quantum != 0) {
+		if(repartidor->frecuenciaDescanso == 0) {
 			// Está descansando
 			repartidor->instruccion = DESCANSAR;
 		} else if (repartidor->instruccion == BUSCAR_PEDIDO){
