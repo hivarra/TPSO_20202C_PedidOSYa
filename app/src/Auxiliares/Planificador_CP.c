@@ -9,14 +9,10 @@
 
 void* planificador_fifo() {
 
-	log_info(logger, "Planificador Corto Plazo | Algoritmo: FIFO");
-
 	while(1) {
 
 		sem_wait(&sem_ready);
 		sem_wait(&sem_limite_exec);
-
-		log_info(logger, "PCP | Planificando");
 
 		pthread_mutex_lock(&mutex_listos);
 		t_pcb* pcb = list_remove(listos, 0);
@@ -25,7 +21,7 @@ void* planificador_fifo() {
 		int distancia = distancia_a_posicion(repartidor, repartidor->objetivo_posX, repartidor->objetivo_posY);
 		repartidor->quantum = distancia;
 
-		log_info(logger, "PCP | Repartidor N°%d tiene que moverse %d posiciones", repartidor->id, distancia);
+//		log_info(logger, "PCP | Repartidor N°%d tiene que moverse %d posiciones", repartidor->id, distancia);
 
 		ejecutarPCB(pcb);
 		sem_post(&repartidor->sem_moverse);
@@ -37,14 +33,10 @@ void* planificador_fifo() {
 
 void* planificador_hrrn() {
 
-	log_info(logger, "PLANIFICACION | Algoritmo: HRRN");
-
 	while(1) {
 
 		sem_wait(&sem_ready);
 		sem_wait(&sem_limite_exec);
-
-		log_info(logger, "PCP | Planificando");
 
 		t_pcb* pcb = sacar_pcb_de_listos_por_HRRN();
 		pcb->tiempo_espera_ready = 0;
@@ -52,7 +44,7 @@ void* planificador_hrrn() {
 		int distancia = distancia_a_posicion(repartidor, repartidor->objetivo_posX, repartidor->objetivo_posY);
 		repartidor->quantum = distancia;
 
-		log_info(logger, "PCP | Repartidor N°%d tiene que moverse %d posiciones", repartidor->id, distancia);
+//		log_info(logger, "PCP | Repartidor N°%d tiene que moverse %d posiciones", repartidor->id, distancia);
 
 		ejecutarPCB(pcb);
 		sem_post(&repartidor->sem_moverse);
@@ -63,21 +55,17 @@ void* planificador_hrrn() {
 
 void* planificador_sjf() {
 
-	log_info(logger, "PLANIFICACION | Algoritmo: SJF sin desalojo");
-
 	while(1) {
 
 		sem_wait(&sem_ready);
 		sem_wait(&sem_limite_exec);
-
-		log_info(logger, "PCP | Planificando");
 
 		t_pcb* pcb = sacar_pcb_de_listos_por_SJF();
 		t_repartidor* repartidor = obtener_repartidor(pcb->id_repartidor);
 		int distancia = distancia_a_posicion(repartidor, repartidor->objetivo_posX, repartidor->objetivo_posY);
 		repartidor->quantum = distancia;
 
-		log_info(logger, "PCP | Repartidor N°%d tiene que moverse %d posiciones", repartidor->id, distancia);
+//		log_info(logger, "PCP | Repartidor N°%d tiene que moverse %d posiciones", repartidor->id, distancia);
 
 		ejecutarPCB(pcb);
 		sem_post(&repartidor->sem_moverse);
@@ -128,7 +116,7 @@ t_pcb* sacar_pcb_de_listos_por_SJF() {
 	list_iterate(listos, (void*)asignar);
 	list_remove_by_condition(listos, (void*)comparar);
 	pthread_mutex_unlock(&mutex_listos);
-	log_info(logger, "PCP | Repartidor N°%d eliminado de LISTOS", pcb_SJF->id_repartidor);
+//	log_info(logger, "PCP | Repartidor N°%d eliminado de LISTOS", pcb_SJF->id_repartidor);
 	return pcb_SJF;
 }
 

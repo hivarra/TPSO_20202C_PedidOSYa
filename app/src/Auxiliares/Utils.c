@@ -88,7 +88,6 @@ void imprimirRepartidor(t_repartidor* repartidor) {
 
 void imprimirPCB(t_pcb* pcb) {
 
-//	log_info(logger, "PCB | Pedido: %d | Repartidor: %d | Instrucción: %d |PosX: %d | PosY: %d", pcb->id_pedido, pcb->id_repartidor, pcb->instruccion, pcb->posX, pcb->posY);
 	log_info(logger, "PCB | Pedido: %d | Repartidor: %d | Instrucción: %d | Posición: %d-%d", pcb->id_pedido, pcb->id_repartidor, pcb->instruccion, pcb->restaurante_posX, pcb->restaurante_posY);
 }
 
@@ -174,7 +173,7 @@ void asignar_repartidor(t_repartidor* repartidor, t_pcb* pcb) {
 	repartidor->objetivo_posX = pcb->restaurante_posX;
 	repartidor->objetivo_posY = pcb->restaurante_posY;
 
-	log_info(logger, "Repartidor N°%d asignado a pedido N°%d", repartidor->id, pcb->id_pedido);
+//	log_info(logger, "Repartidor N°%d asignado a pedido N°%d", repartidor->id, pcb->id_pedido);
 }
 
 t_repartidor* obtener_repartidor(int id_repartidor) {
@@ -201,7 +200,13 @@ void ejecutarPCB(t_pcb* pcb) {
 	pthread_mutex_lock(&mutex_ejecutando);
 	list_add(ejecutando, pcb);
 	pthread_mutex_unlock(&mutex_ejecutando);
-	log_info(logger, "PCB | Pedido N°%d paso a Ejecutando por Repartidor N°%d", pcb->id_pedido, pcb->id_repartidor);
+	t_repartidor* repartidor = obtener_repartidor(pcb->id_repartidor);
+
+	if(repartidor->instruccion == BUSCAR_PEDIDO) {
+		log_info(logger, "Repartidor N°%d | Pasa a EXEC | Buscar pedido N°%d", pcb->id_repartidor, pcb->id_pedido);
+	} else if (repartidor->instruccion == ENTREGAR_PEDIDO){
+		log_info(logger, "Repartidor N°%d | Pasa a EXEC | Entregar pedido N°%d", pcb->id_repartidor, pcb->id_pedido);
+	}
 }
 
 void bloquearPCB(t_repartidor* repartidor, t_instruccion instruccion_anterior) {
@@ -212,12 +217,13 @@ void bloquearPCB(t_repartidor* repartidor, t_instruccion instruccion_anterior) {
 	list_add(bloqueados, pcb);
 	pthread_mutex_unlock(&mutex_bloqueados);
 
-	log_info(logger, "PCB | Pedido N°%d bloqueado por Repartidor N°%d en Estado %s", pcb->id_pedido, repartidor->id, get_nombre_instruccion(repartidor->instruccion));
+//	log_info(logger, "PCB | Pedido N°%d bloqueado por Repartidor N°%d en Estado %s", pcb->id_pedido, repartidor->id, get_nombre_instruccion(repartidor->instruccion));
 
 	if(repartidor->instruccion == DESCANSAR) {
 
 		// Descansa, y pasa a READY
-		log_info(logger, "Repartidor N°%d | Entra en descanso %d segundos", repartidor->id, repartidor->tiempoDescanso);
+//		log_info(logger, "Repartidor N°%d | Entra en descanso %d segundos", repartidor->id, repartidor->tiempoDescanso);
+		log_info(logger, "Repartidor N°%d | Pasa a BLOCK | Por descanso", pcb->id_repartidor);
 		sleep(repartidor->tiempoDescanso);
 		repartidor->frecuenciaDescanso = atoi(app_conf.frecuencias_descanso[repartidor->id - 1]);
 		repartidor->instruccion = instruccion_anterior;
@@ -232,10 +238,11 @@ void bloquearPCB(t_repartidor* repartidor, t_instruccion instruccion_anterior) {
 
 	if(repartidor->instruccion == ESPERAR_PEDIDO) {
 
-		if(list_size(restaurantesConectados) > 0) {
-			log_info(logger, "Repartidor N°%d | Esperando el pedido %d", repartidor->id, pcb->id_pedido);
+		log_info(logger, "Repartidor N°%d | Pasa a BLOCK | Esperar pedido N°%d", pcb->id_repartidor, pcb->id_pedido);
 
-			sem_wait(&pcb->sem_pedido_listo); // Esto va a bloquear el hilo hasta que esté listo
+		if(list_size(restaurantesConectados) > 0) {
+
+			sem_wait(&pcb->sem_pedido_listo);
 
 		}
 
@@ -251,9 +258,6 @@ void retirarPedido(t_pcb* pcb) {
 	repartidor->objetivo_posX = pcb->cliente_posX;
 	repartidor->objetivo_posY = pcb->cliente_posY;
 
-	log_info(logger, "Repartidor N°%d retiró el Pedido N°%d", repartidor->id, pcb->id_pedido);
-//	imprimirRepartidor(repartidor);
-
 	int esElPCB(t_pcb* pcb) {
 		return pcb->id_repartidor == repartidor->id;
 	}
@@ -265,6 +269,8 @@ void retirarPedido(t_pcb* pcb) {
 	pthread_mutex_lock(&mutex_listos);
 	list_add(listos, pcb);
 	pthread_mutex_unlock(&mutex_listos);
+
+	log_info(logger, "Repartidor N°%d | Pasa a READY | Retiró pedido N°%d", pcb->id_repartidor, pcb->id_pedido);
 
 	sem_post(&sem_ready);
 
@@ -310,9 +316,14 @@ void finalizarPCB(t_repartidor* repartidor) {
 	if(resultado) {
 		t_info_cliente* cliente = buscarClientePorPedido(pcb->id_pedido);
 		enviar_finalizar_pedido(finalizar_pedido, cliente->socketEscucha, logger);
+		tipo_rta = recibir_tipo_mensaje(cliente->socketEscucha, logger);
+		if (tipo_rta == RTA_FINALIZAR_PEDIDO){
+			resultado = recibir_entero(cliente->socketEscucha, logger);
+			log_info(logger, "[RTA_FINALIZAR_PEDIDO]Resultado Cliente: %s",resultado? "OK":"FAIL");
+		}
 	}
 
-	log_info(logger, "PCB | Pedido N°%d finalizado", pcb->id_pedido);
+	log_info(logger, "Repartidor N°%d | Pasa a EXIT | Pedido N°%d entregado", pcb->id_repartidor, pcb->id_pedido);
 
 	disponibilizar_repartidor(repartidor);
 }

@@ -17,15 +17,15 @@ void* correr_repartidor(t_repartidor* repartidor) {
 
 		int descansar = 0;
 		t_instruccion instruccion_anterior = repartidor->instruccion;
-		log_info(logger, "Repartidor N°%d | Estado %s", repartidor->id, get_nombre_instruccion(repartidor->instruccion));
-		log_info(logger, "Repartidor N°%d | Se va a mover %d", repartidor->id , repartidor->quantum);
+//		log_info(logger, "Repartidor N°%d | Estado %s", repartidor->id, get_nombre_instruccion(repartidor->instruccion));
+//		log_info(logger, "Repartidor N°%d | Se va a mover %d", repartidor->id , repartidor->quantum);
 
 		while(repartidor->quantum > 0 && !descansar) {
 			mover_una_posicion(repartidor);
 
 			if(repartidor->frecuenciaDescanso == 0) {
 				descansar = 1;
-				log_info(logger, "Repartidor N°%d tiene que descansar", repartidor->id);
+//				log_info(logger, "Repartidor N°%d tiene que descansar", repartidor->id);
 				break;
 			}
 
