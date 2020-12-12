@@ -322,6 +322,7 @@ void finalizarPCB(t_repartidor* repartidor) {
 			log_info(logger, "[RTA_FINALIZAR_PEDIDO]Resultado Cliente: %s",resultado? "OK":"FAIL");
 		}
 	}
+	free(finalizar_pedido);
 
 	log_info(logger, "Repartidor N°%d | Pasa a EXIT | Pedido N°%d entregado", pcb->id_repartidor, pcb->id_pedido);
 
