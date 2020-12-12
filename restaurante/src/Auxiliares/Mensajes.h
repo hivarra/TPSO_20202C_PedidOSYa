@@ -17,7 +17,7 @@ void procesar_handshake_inicial(t_handshake_inicial*, int socket_emisor);
 t_rta_consultar_platos* procesar_consultar_platos(void);
 uint32_t procesar_crear_pedido(void);
 uint32_t procesar_anadir_plato(t_anadir_plato*);
-uint32_t procesar_confirmar_pedido(t_confirmar_pedido*);
+uint32_t procesar_confirmar_pedido(uint32_t);
 t_rta_consultar_pedido* procesar_consultar_pedido(uint32_t);
 void enviar_plato_listo_a_sindicato(uint32_t id_pedido,char plato[L_PLATO]);
 void enviar_terminar_pedido_a_sindicato(uint32_t id_pedido);

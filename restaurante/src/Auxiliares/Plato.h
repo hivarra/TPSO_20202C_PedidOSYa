@@ -26,7 +26,6 @@ typedef struct{
 	char nombre_plato[L_PLATO];
 	t_estado_pcb estado;
 	uint32_t cocinero_asignado;
-	uint32_t quantum;
 	t_list* lista_pasos;//lista de t_paso_receta
 	pthread_mutex_t mutex_pasos;
 	pthread_mutex_t mutex_pcb;

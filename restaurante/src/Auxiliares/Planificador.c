@@ -42,7 +42,6 @@ t_pcb* generar_pcb(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta){
 	pcb->lista_pasos = rta_obtener_receta->pasos;
 	strcpy(pcb->nombre_plato,rta_obtener_receta->nombre);
 	pcb->estado = NEW;
-	pcb->quantum = 0;
 	pcb->cocinero_asignado = -1;//TODO: Cambiar tipo de dato
 	pthread_mutex_init(&pcb->mutex_pcb,NULL);
 	pthread_mutex_init(&pcb->mutex_pasos,NULL);
@@ -52,7 +51,6 @@ t_pcb* generar_pcb(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta){
 	log_info(logger,"[CREACION PLATO] ID_PEDIDO:%d",pcb->id_pedido);
 	log_info(logger,"[CREACION PLATO] NOMBRE_PLATO:%s",pcb->nombre_plato);
 	log_info(logger,"[CREACION PLATO] ESTADO:%s",estado_pcb_enum_a_string(pcb->estado));
-	log_info(logger,"[CREACION PLATO] QUANTUM:%d",pcb->quantum);
 	log_info(logger,"[CREACION PLATO] LISTA_PASOS:");
 
 	list_iterate(pcb->lista_pasos,(void*)loggear_pasos);
@@ -123,17 +121,19 @@ void planificar_hornos(){
 		log_info(logger,"[PLANIFICAR_HORNOS] Se envia PLATO:%s de ID_PEDIDO:%d al horno",pcb->nombre_plato,pcb->id_pedido);
 		enviar_pcb_a_horno(pcb);
 		sacar_pcb_de_horno(pcb);
-		sem_post(&sem_hay_espacio_en_horno);
+//		sem_post(&sem_hay_espacio_en_horno);
 		log_info(logger,"[PLANIFICAR_HORNOS] Se saca PLATO:%s de ID_PEDIDO:%d del horno",pcb->nombre_plato,pcb->id_pedido);
-		pasar_pcb_a_estado(pcb,READY);
-		t_afinidad* afinidad = obtener_id_afinidad(pcb->nombre_plato);
-
 		pthread_mutex_lock(&pcb->mutex_pasos);
-		eliminar_paso(list_get(pcb->lista_pasos,0),pcb);
+		t_paso_receta*paso=list_get(pcb->lista_pasos,0);
 		pthread_mutex_unlock(&pcb->mutex_pasos);
 
+		eliminar_paso(paso,pcb);
 		sem_post(&finCPUbound);
+
+		pasar_pcb_a_estado(pcb,READY);
+		t_afinidad* afinidad = obtener_id_afinidad(pcb->nombre_plato);
 		sem_post(&sem_cola_ready[afinidad->id_afinidad]);
+		sem_post(&sem_hay_espacio_en_horno);
 	}
 }
 void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
@@ -219,12 +219,19 @@ bool pedido_esta_terminado(uint32_t id_pedido){
 	return pedido_terminado;
 }
 void liberar_pcbs_de_pedido(uint32_t id_pedido){
-	bool es_pedido(t_pcb* pcb){
-			return pcb->id_pedido == id_pedido;
-	}
+//	bool es_pedido(t_pcb* pcb){
+//			return pcb->id_pedido == id_pedido;
+//	}
+//	pthread_mutex_lock(&mutex_cola_exit);
+//	t_list* lista_filtrada = list_filter(cola_exit,(void*)es_pedido);
+//	list_destroy_and_destroy_elements(lista_filtrada,free);
+//	pthread_mutex_unlock(&mutex_cola_exit);
 	pthread_mutex_lock(&mutex_cola_exit);
-	t_list* lista_filtrada = list_filter(cola_exit,(void*)es_pedido);
-	list_destroy_and_destroy_elements(lista_filtrada,free);
+	for(int i=0;i<list_size(cola_exit);i++){
+		t_pcb* pcb = list_get(cola_exit,i);
+		if(pcb->id_pedido == id_pedido)
+			list_remove_and_destroy_element(cola_exit,i,free);
+	}
 	pthread_mutex_unlock(&mutex_cola_exit);
 }
 void ejecutar_pcb(t_pcb* pcb, int id_cola_ready){

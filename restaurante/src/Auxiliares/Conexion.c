@@ -54,7 +54,7 @@ void escuchar_app(){
 			case CONFIRMAR_PEDIDO:{
 				t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(socket_envio, logger);
 				log_info(logger, "[CONFIRMAR_PEDIDO]ID_Pedido: %d", msg_confirmar_pedido->id_pedido);
-				uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
+				uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido->id_pedido);
 				free(msg_confirmar_pedido);
 				enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, socket_envio, logger);
 			}
@@ -123,7 +123,7 @@ void escuchar_cliente_existente(int socket_cliente, t_handshake* cliente){
 		case CONFIRMAR_PEDIDO:{
 			t_confirmar_pedido* msg_confirmar_pedido = recibir_confirmar_pedido(socket_cliente, logger);
 			log_info(logger, "[CONFIRMAR_PEDIDO]ID_Pedido: %d", msg_confirmar_pedido->id_pedido);
-			uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido);
+			uint32_t resultado = procesar_confirmar_pedido(msg_confirmar_pedido->id_pedido);
 			free(msg_confirmar_pedido);
 			enviar_entero(RTA_CONFIRMAR_PEDIDO, resultado, socket_cliente, logger);
 		}
