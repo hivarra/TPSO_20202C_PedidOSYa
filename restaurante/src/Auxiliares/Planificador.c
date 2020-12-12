@@ -275,12 +275,25 @@ void inicializar_ciclo_planificacion(t_list* comidas){
 		sem_post(&sem_cola_ready[sin_afinidad->id_afinidad]);
 	}
 }
+t_cocinero* obtener_cocinero_sin_afinidad(){
+	bool no_tiene_afinidad(t_cocinero* cocinero){
+		return string_equals_ignore_case("N",cocinero->afinidad);
+	}
+	t_cocinero* cocinero=list_find(lista_cocineros,(void*)no_tiene_afinidad);
+
+	return cocinero;
+}
 void asignar_cocinero_a_pcb(t_pcb* pcb){
 	//SE ASIGNA COCINERO CON AFINIDAD PARA LUEGO EJECUTAR PLATO
 	bool cocinero_con_afinidad(t_cocinero* cocinero){
 		return string_equals_ignore_case(pcb->nombre_plato,cocinero->afinidad);
 	}
+
 	t_cocinero* cocinero_a_asignar = list_find(lista_cocineros,(void*)cocinero_con_afinidad);
+
+	if(cocinero_a_asignar == NULL)
+		cocinero_a_asignar = obtener_cocinero_sin_afinidad();
+
 	pthread_mutex_lock(&pcb->mutex_pcb);
 	pcb->cocinero_asignado = cocinero_a_asignar->id;
 	pthread_mutex_unlock(&pcb->mutex_pcb);
@@ -383,6 +396,7 @@ void inicializar_sem_mutex(){
 	pthread_mutex_init(&mutex_id_pedidos,NULL);
 	pthread_mutex_init(&mutex_cola_bloqueados_prehorno,NULL);
 	pthread_mutex_init(&mutex_cola_exit,NULL);
+	pthread_mutex_init(&mutex_cocineros,NULL);
 }
 void inicializar_sem_contadores(){
 //	log_info(logger,"[INICIALIZAR_SEM_CONTADORES]");
@@ -408,8 +422,12 @@ void inicializar_hilos_cocineros(){
 		strcpy(cocinero->afinidad,list_get(metadata_restaurante.afinidades_cocineros,i));
 		cocinero->id = i;
 		cocinero->pcb = NULL;
+		strcpy(cocinero->afinidad,list_get(metadata_restaurante.afinidades_cocineros,i));
 		pthread_mutex_init(&cocinero->mutex_cocinero,NULL);
+
+		pthread_mutex_lock(&mutex_cocineros);
 		list_add(lista_cocineros,cocinero);
+		pthread_mutex_unlock(&mutex_cocineros);
 
 		pthread_t thread_cocinero;
 		pthread_create(&thread_cocinero,NULL,(void*)hilo_cocinero,cocinero);

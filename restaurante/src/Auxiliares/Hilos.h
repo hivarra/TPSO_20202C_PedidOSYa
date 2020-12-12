@@ -19,5 +19,6 @@ pthread_mutex_t mutex_pedidos_pcbs;
 
 pthread_mutex_t mutex_pedidos_app;
 pthread_mutex_t mutex_cliente_conectados;
+pthread_mutex_t mutex_cocineros;
 
 #endif /* AUXILIARES_HILOS_H_ */

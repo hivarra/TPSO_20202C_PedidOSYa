@@ -17,7 +17,7 @@
 #include "Planificador.h"
 
 typedef struct{
-	t_rta_obtener_pedido* rta_obtener_pedido;
+	t_list* comidas;
 	uint32_t id_pedido;
 }t_args_aux;
 
