@@ -71,60 +71,60 @@ void inicializarListaClientesRest(){
 	id_rest_default = 0;
 }
 
-t_info_cliente* buscarClienteConectado(char* nombre_cliente){
-	bool cliente_igual(t_info_cliente* info_cliente){
-		return string_equals_ignore_case(info_cliente->id, nombre_cliente);
-	}
+//t_info_cliente* buscarClienteConectado(char* nombre_cliente){
+//	bool cliente_igual(t_info_cliente* info_cliente){
+//		return string_equals_ignore_case(info_cliente->id, nombre_cliente);
+//	}
+//
+//	pthread_mutex_lock(&mutexClientes);
+//	t_info_cliente* cliente = list_find(clientesConectados,(void*)cliente_igual);
+//	pthread_mutex_unlock(&mutexClientes);
+//
+//	return cliente;
+//}
+//
+//t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante) {
+//	bool restaurante_igual(t_info_restaurante* info_restaurante) {
+//		return string_equals_ignore_case(info_restaurante->id,
+//				nombre_restaurante);
+//	}
+//	t_info_restaurante* restaurante;
+//	pthread_mutex_lock(&mutexRestaurantes);
+//	if (list_size(restaurantesConectados) > 0)
+//		restaurante = list_find(restaurantesConectados, (void*)restaurante_igual);
+//	else
+//		restaurante = NULL;
+//	pthread_mutex_unlock(&mutexRestaurantes);
+//
+//	return restaurante;
+//}
 
-	pthread_mutex_lock(&mutexClientes);
-	t_info_cliente* cliente = list_find(clientesConectados,(void*)cliente_igual);
-	pthread_mutex_unlock(&mutexClientes);
-
-	return cliente;
-}
-
-t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante) {
-	bool restaurante_igual(t_info_restaurante* info_restaurante) {
-		return string_equals_ignore_case(info_restaurante->id,
-				nombre_restaurante);
-	}
-	t_info_restaurante* restaurante;
-	pthread_mutex_lock(&mutexRestaurantes);
-	if (list_size(restaurantesConectados) > 0)
-		restaurante = list_find(restaurantesConectados, (void*)restaurante_igual);
-	else
-		restaurante = NULL;
-	pthread_mutex_unlock(&mutexRestaurantes);
-
-	return restaurante;
-}
-
-t_rta_consultar_restaurantes* obtenerRestaurantes(){
-	t_rta_consultar_restaurantes* respuesta_restaurantes = malloc(sizeof(t_rta_consultar_restaurantes));
-	respuesta_restaurantes->restaurantes = list_create();
-
-	void* obtenerIdChar(t_info_restaurante* info_restaurante){
-		char* nombre_restraurante = malloc(L_ID);
-		strcpy(nombre_restraurante, info_restaurante->id);
-		return nombre_restraurante;
-	}
-
-	pthread_mutex_lock(&mutexRestaurantes);
-	if(list_size(restaurantesConectados) > 0) {
-		/*MAPPING  t_info_cliente -> char[L_ID] */
-		respuesta_restaurantes->restaurantes = list_map(restaurantesConectados,(void*)obtenerIdChar);
-		respuesta_restaurantes->cantRestaurantes = list_size(restaurantesConectados);
-	} else {
-		// Cargo el restaurante default
-		char* resto_default = calloc(1, L_ID);
-		strcpy(resto_default, infoRestoDefault->id);
-		list_add(respuesta_restaurantes->restaurantes, resto_default);
-		respuesta_restaurantes->cantRestaurantes = 1;
-	}
-	pthread_mutex_unlock(&mutexRestaurantes);
-
-	return respuesta_restaurantes;
-}
+//t_rta_consultar_restaurantes* obtenerRestaurantes(){
+//	t_rta_consultar_restaurantes* respuesta_restaurantes = malloc(sizeof(t_rta_consultar_restaurantes));
+//	respuesta_restaurantes->restaurantes = list_create();
+//
+//	void* obtenerIdChar(t_info_restaurante* info_restaurante){
+//		char* nombre_restraurante = malloc(L_ID);
+//		strcpy(nombre_restraurante, info_restaurante->id);
+//		return nombre_restraurante;
+//	}
+//
+//	pthread_mutex_lock(&mutexRestaurantes);
+//	if(list_size(restaurantesConectados) > 0) {
+//		/*MAPPING  t_info_cliente -> char[L_ID] */
+//		respuesta_restaurantes->restaurantes = list_map(restaurantesConectados,(void*)obtenerIdChar);
+//		respuesta_restaurantes->cantRestaurantes = list_size(restaurantesConectados);
+//	} else {
+//		// Cargo el restaurante default
+//		char* resto_default = calloc(1, L_ID);
+//		strcpy(resto_default, infoRestoDefault->id);
+//		list_add(respuesta_restaurantes->restaurantes, resto_default);
+//		respuesta_restaurantes->cantRestaurantes = 1;
+//	}
+//	pthread_mutex_unlock(&mutexRestaurantes);
+//
+//	return respuesta_restaurantes;
+//}
 
 void procesarMensaje(int socket_cliente, char* id_cliente){
 
@@ -359,7 +359,6 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 			enviar_confirmar_pedido(confirmarPedido, info_rest->socketEnvio, logger);
 			socket_comanda = conectar_a_comanda_simple();
 			enviar_confirmar_pedido(confirmarPedido, socket_comanda, logger);
-			free(confirmarPedido);
 			tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
 			if (tipo_rta == RTA_CONFIRMAR_PEDIDO){
 				resultado_confirmar_pedido = recibir_entero(socket_comanda, logger);
@@ -371,16 +370,17 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado de Restaurante: %s",resultado_confirmar_pedido? "OK":"FAIL");
 			}
 
-
 		}
-		free(respuesta);
 		uint32_t resultado_final = 0;
 		if(resultado_confirmar_pedido && resultado_confirmar_pedido_rest) {
 			resultado_final = 1;
 
 			//TODO: Creación de PCB
+			crearPCB(cliente, confirmarPedido->id_pedido);
 		}
 
+		free(confirmarPedido);
+		free(respuesta);
 		enviar_entero(RTA_CONFIRMAR_PEDIDO,resultado_final,socket_cliente,logger);
 	}
 	break;
@@ -659,8 +659,12 @@ void iniciar_conexion_escucha(int *socket_escucha){
 
 					// HABILITAR EL PEDIDO/PCB PARA SER RETIRADO
 					log_info(logger, "El Pedido: %d está Terminado", msg_obtener_pedido_aux->id_pedido);
+
+					notificar_pedido_listo(msg_obtener_pedido_aux->id_pedido);
+
 				}
 
+				free(respuesta);
 				free(platoListo);
 				free(msg_obtener_pedido_aux);
 			}

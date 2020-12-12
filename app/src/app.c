@@ -16,9 +16,9 @@ int main(int argc, char **argv)  {
 	char* path_config = getConfigPath(argv[1]);
 	/* 1. Configuración */
 	cargar_configuracion_app(path_config);
+	mostrar_propiedades_pantalla();
 	/* 2. Log */
 	cargar_logger_app();
-//	mostrar_propiedades();
 
 	/* 3. Conexion a Comanda */
 	conectar_a_comanda();

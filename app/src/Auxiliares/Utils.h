@@ -12,6 +12,24 @@
 #include "Logueo.h"
 #include "Configuracion.h"
 #include <math.h>
+#include <protocolo.h>
+
+typedef struct{
+	char id[L_ID];
+	char restaurante_seleccionado[L_ID];
+	int socketEscucha;
+	int pos_x;
+	int pos_y;
+	t_list* pedidos;//Pedidos que realiza un cliente
+}t_info_cliente;
+
+typedef struct{
+	char id[L_ID];
+	int socketEscucha;
+	int socketEnvio;
+	int pos_x;
+	int pos_y;
+}t_info_restaurante;
 
 typedef enum estado {
 	BUSCAR_PEDIDO
@@ -38,11 +56,13 @@ typedef struct {
 	uint32_t id_pedido;
 	uint32_t instruccion; // esto es para saber si tiene que ir a buscar el pedido o entregarlo
 	uint32_t id_repartidor;
+	char restaurante[L_ID];
 	uint32_t restaurante_posX;
 	uint32_t restaurante_posY;
 	// TODO: Lo de abajo cambiarlo porque tiene que salir de otra estructura
 	uint32_t cliente_posX;
 	uint32_t cliente_posY;
+	sem_t sem_pedido_listo;
 } t_pcb;
 
 sem_t
@@ -58,6 +78,11 @@ pthread_mutex_t
 	, mutex_bloqueados
 	, mutex_finalizados;
 
+pthread_mutex_t mutexRestaurantes,
+				mutexClientes,
+				mutex_id_rest_default,
+				mutexRepartidores;
+
 t_list* repartidores;
 t_list* pedidos_planificables;
 t_list* listos;
@@ -65,8 +90,18 @@ t_list* ejecutando;
 t_list* bloqueados;
 t_list* finalizados;
 
+t_list* restaurantesConectados;
+t_list* clientesConectados;
+t_info_restaurante* infoRestoDefault;
+
+t_info_cliente* buscarClienteConectado(char* id);
+t_info_cliente* buscarClientePorPedido(int id_pedido);
+t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante);
+t_rta_consultar_restaurantes* obtenerRestaurantes();
+
 void imprimirRepartidor(t_repartidor* repartidor);
 void imprimirPCB(t_pcb* pcb);
+void crearPCB(t_info_cliente* cliente, int id_pedido);
 void disponibilizar_repartidor(t_repartidor* repartidor);
 t_repartidor* repartidor_mas_cercano(int posX, int poxY);
 int distancia_a_posicion(t_repartidor* repartidor, int posX, int posY);
@@ -76,9 +111,11 @@ t_repartidor* obtener_repartidor(int id_repartidor);
 char* get_nombre_instruccion(t_instruccion enum_instruccion);
 void aplicar_retardo_operacion();
 void ejecutarPCB(t_pcb* pcb);
-void bloquearPCB(t_repartidor* repartidor);
+void bloquearPCB(t_repartidor* repartidor, t_instruccion instruccion_anterior);
 void retirarPedido(t_pcb* pcb);
 t_pcb* sacarPCBDeEjecutando(t_repartidor* repartidor);
 void finalizarPCB(t_repartidor* repartidor);
+void notificar_pedido_listo(int id_pedido);
+t_pcb* buscarPCB(int id_pedido);
 
 #endif /* AUXILIARES_UTILS_H_ */

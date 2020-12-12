@@ -18,7 +18,9 @@ void* planificador_fifo() {
 
 		log_info(logger, "PCP | Planificando");
 
+		pthread_mutex_lock(&mutex_listos);
 		t_pcb* pcb = list_remove(listos, 0);
+		pthread_mutex_unlock(&mutex_listos);
 		t_repartidor* repartidor = obtener_repartidor(pcb->id_repartidor);
 		int distancia = distancia_a_posicion(repartidor, repartidor->objetivo_posX, repartidor->objetivo_posY);
 		repartidor->quantum = distancia;

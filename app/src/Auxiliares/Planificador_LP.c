@@ -19,9 +19,6 @@ void* planificador_largo_plazo() {
 		log_info(logger, "Planificador Largo Plazo | Planificando");
 		t_repartidor* repartidor1 = repartidor_mas_cercano(pcb->restaurante_posX, pcb->restaurante_posY);
 
-//		imprimirPCB(pcb);
-//		imprimirRepartidor(repartidor1);
-
 		// TODO: Asignar repartidor al PCB y pasar a READY
 		asignar_repartidor(repartidor1, pcb);
 
