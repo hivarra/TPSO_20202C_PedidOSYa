@@ -81,19 +81,6 @@ void mover_una_posicion(t_repartidor* repartidor) {
 	repartidor->quantum -= 1;
 	repartidor->frecuenciaDescanso -= 1;
 
-	//TODO: REVISARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
-	aplicar_tiempo_espera_ready();
 }
 
-void aplicar_tiempo_espera_ready() {
 
-	void incrementar_tiempo_espera(t_pcb* pcb) {
-		pcb->tiempo_espera_ready++;
-	}
-
-	if(list_size(listos)> 0) {
-		pthread_mutex_lock(&mutex_listos);
-		list_iterate(listos, (void*)incrementar_tiempo_espera);
-		pthread_mutex_unlock(&mutex_listos);
-	}
-}

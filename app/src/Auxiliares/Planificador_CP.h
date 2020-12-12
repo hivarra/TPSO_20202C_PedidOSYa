@@ -20,5 +20,7 @@ t_pcb* sacar_pcb_de_listos_por_SJF();
 double calcular_estimacion_HRRN(t_pcb* pcb);
 void actualizar_estimaciones_HRRN();
 t_pcb* sacar_pcb_de_listos_por_HRRN();
+void aplicar_tiempo_espera_ready();
+void incrementar_espera_cpu();
 
 #endif /* AUXILIARES_PLANIFICADOR_CP_H_ */
