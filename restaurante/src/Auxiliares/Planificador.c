@@ -132,6 +132,7 @@ void planificar_hornos(){
 
 		pasar_pcb_a_estado(pcb,READY);
 		t_afinidad* afinidad = obtener_id_afinidad(pcb->nombre_plato);
+		log_info(logger,"PRUEBA %s,%d",afinidad->nombre_afinidad,afinidad->id_afinidad);
 		sem_post(&sem_cola_ready[afinidad->id_afinidad]);
 		sem_post(&sem_hay_espacio_en_horno);
 	}
@@ -194,6 +195,9 @@ t_pcb* obtener_proximo_pcb_a_ejecutar_por_FIFO(int id_cola_ready){
 }
 void desalojar_pcb(t_pcb* pcb){
 	pasar_pcb_a_estado(pcb,READY);
+	t_afinidad* afinidad = obtener_id_afinidad(pcb->nombre_plato);
+
+	sem_post(&sem_cola_ready[afinidad->id_afinidad]);
 }
 bool pedido_esta_terminado(uint32_t id_pedido){
 	bool pedido_terminado = false;
