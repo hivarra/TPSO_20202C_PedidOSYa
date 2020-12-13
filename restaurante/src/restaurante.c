@@ -34,7 +34,6 @@ int main(int argc, char *argv[]) {
 
 	/* 5. Servidor*/
 	escuchar_clientes();
-//	sleep(10000);
 
 	return EXIT_FAILURE;
 }

@@ -29,6 +29,7 @@ typedef struct{
 	t_list* lista_pasos;//lista de t_paso_receta
 	pthread_mutex_t mutex_pasos;
 	pthread_mutex_t mutex_pcb;
+	uint32_t quantum_consumido;
 }t_pcb;
 
 bool plato_sin_pasos_para_ejecutar(t_pcb* pcb);
