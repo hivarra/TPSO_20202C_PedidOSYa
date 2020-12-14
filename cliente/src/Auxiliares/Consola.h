@@ -10,7 +10,7 @@
 
 #include <protocolo.h>
 #include <readline/readline.h>
-//#include <readline/history.h>
+#include <readline/history.h>
 #include "Conexion.h"
 
 void leer_consola();

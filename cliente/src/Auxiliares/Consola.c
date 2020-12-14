@@ -359,6 +359,7 @@ int procesar_comando(char *line){
 		liberar_lista(parametros);
 		return -1;
 	}
+	add_history(line);
 
 	pthread_t hilo_procesar_comando;
 	pthread_create(&hilo_procesar_comando, NULL, (void*)procesar_solicitud, (void*)parametros);
