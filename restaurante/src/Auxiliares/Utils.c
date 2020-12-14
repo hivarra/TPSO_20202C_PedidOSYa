@@ -20,7 +20,7 @@ void signalHandler(int sig){
 
 	exit(EXIT_SUCCESS);
 }
-t_afinidad* obtener_id_afinidad(char nombre_plato[L_PLATO]){
+t_afinidad* obtener_afinidad(char nombre_plato[L_PLATO]){
 	bool igual_nombre_plato(t_afinidad* afinidad){
 		return string_equals_ignore_case(afinidad->nombre_afinidad,nombre_plato);
 	}

@@ -20,6 +20,7 @@ typedef struct{
 	char afinidad[L_PLATO];
 	t_pcb* pcb;
 	pthread_mutex_t mutex_cocinero;
+	bool disponible;
 }t_cocinero;
 
 t_list* lista_cocineros;
@@ -29,5 +30,7 @@ t_paso_receta* obtener_siguiente_paso(t_pcb* pcb);
 bool cocinero_esta_ejecutando(t_pcb* pcb);
 void hilo_cocinero(t_cocinero* cocinero);
 void eliminar_paso(t_paso_receta* paso,t_pcb* plato);
+t_cocinero* obtener_cocinero_por_id(uint32_t id_cocinero);
+void liberar_cocinero_asignado_a_plato(t_pcb* pcb);
 
 #endif /* AUXILIARES_COCINERO_H_ */
