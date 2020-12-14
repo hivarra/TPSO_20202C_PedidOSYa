@@ -245,7 +245,7 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 			free(msg_guardar_plato);
 			tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
 			if (tipo_rta == RTA_GUARDAR_PLATO){
-				resultado_anadir_plato = recibir_entero(socket_cliente, logger);
+				resultado_anadir_plato = recibir_entero(socket_comanda, logger);
 //				log_trace(logger, "[RTA_GUARDAR_PLATO] Resultado Comanda: %s.",resultado_anadir_plato? "OK":"FAIL");
 			}
 		}

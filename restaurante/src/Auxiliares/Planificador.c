@@ -110,7 +110,6 @@ void planificar_hornos(){
 		t_pcb* pcb = obtener_proximo_pcb_a_hornear();
 
 		realizar_paso_horno(pcb);
-		sacar_pcb_de_horno(pcb);
 		pthread_mutex_lock(&pcb->mutex_pasos);
 		t_paso_receta*paso=list_get(pcb->lista_pasos,0);
 		pthread_mutex_unlock(&pcb->mutex_pasos);
@@ -125,7 +124,7 @@ void planificar_hornos(){
 	}
 }
 void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
-	log_info(logger,"[PLANIFICADOR] Se agrega pcb con PLATO:%s de ID_PEDIDO:%d en cola E/S HORNO",pcb->nombre_plato,pcb->id_pedido);
+	log_info(logger,"[PLANIFICADOR] Se agrega pcb con PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d en cola E/S HORNO",pcb->nombre_plato,pcb->id,pcb->id_pedido);
 	pthread_mutex_lock(&pcb->mutex_pcb);
 	pcb->estado = BLOCKED_POR_HORNO;
 	pcb->quantum_consumido=0;
@@ -265,10 +264,10 @@ void ejecutar_pcb(t_pcb* pcb, int id_cola_ready){
 				liberar_pcbs_de_pedido(pcb->id_pedido);
 				break;
 			}
-			else{
-				t_afinidad* afinidad = obtener_id_afinidad(pcb->nombre_plato);
-				sem_post(&sem_cola_ready[afinidad->id_afinidad]);
-			}
+//			else{
+//				t_afinidad* afinidad = obtener_id_afinidad(pcb->nombre_plato);
+//				sem_post(&sem_cola_ready[afinidad->id_afinidad]);
+//			}
 		}
 	}
 }
@@ -422,6 +421,7 @@ void inicializar_sem_mutex(){
 void inicializar_sem_contadores(){
 	sem_init(&sem_hornear_plato,0,0);
 	sem_init(&sem_hay_espacio_en_horno,0,metadata_restaurante.cantidad_hornos);
+	sem_init(&sem_fin_paso,0,0);
 
 	sem_realizar_paso = malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
 	for(int i=0;i<list_size(metadata_restaurante.afinidades_cocineros);i++){

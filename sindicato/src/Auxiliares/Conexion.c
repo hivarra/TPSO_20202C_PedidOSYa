@@ -17,7 +17,7 @@ void connection_handler(int* socket_emisor) {
 
 	case HANDSHAKE_INICIAL:{
 		t_handshake_inicial* handshake_recibido = recibir_handshake_inicial(*socket_emisor, logger);
-		log_info(logger, "[Nueva Conexion] Se conecto un proceso %s con ID %s.", get_nombre_mensaje(handshake_recibido->tipoProceso), handshake_recibido->id);
+		log_info(logger, "[Nueva Conexion] Se conecto un proceso %s con ID %s.", get_nombre_proceso(handshake_recibido->tipoProceso), handshake_recibido->id);
 		uint32_t miTipoProceso = SINDICATO;
 		enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_emisor, logger);
 		log_info(logger, "[Respuesta] Se respondio el Handshake Inicial al proceso %s.", get_nombre_mensaje(handshake_recibido->tipoProceso));
