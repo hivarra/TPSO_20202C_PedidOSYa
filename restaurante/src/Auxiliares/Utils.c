@@ -41,3 +41,30 @@ int min(int num1, int num2){
    else
       return num2;
 }
+char* estado_pcb_enum_a_string(t_estado_pcb estado_enum){
+	if(estado_enum == READY)
+		return "READY";
+	else if (estado_enum == NEW)
+		return "NEW";
+	else if (estado_enum == BLOCKED_POR_HORNO)
+		return "BLOCKED_POR_HORNO";
+	else if (estado_enum == BLOCKED_POR_REPOSAR)
+		return "BLOCKED_POR_REPOSAR";
+	else if (estado_enum == EXEC)
+		return "EXEC";
+	else
+		return "EXIT";
+}
+t_list* duplicar_lista_pasos(t_list* lista_pasos){
+	t_list* lista_duplicada = list_create();
+	void copiar_elemento(t_paso_receta* paso){
+		t_paso_receta* paso_nuevo = calloc(1,sizeof(t_paso_receta));
+		strcpy(paso_nuevo->accion,paso->accion);
+		paso_nuevo->tiempo = paso->tiempo;
+
+		list_add(lista_duplicada,paso_nuevo);
+	}
+	list_iterate(lista_pasos,(void*)copiar_elemento);
+
+	return lista_duplicada;
+}

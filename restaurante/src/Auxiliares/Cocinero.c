@@ -9,7 +9,10 @@
 #include "Cocinero.h"
 
 t_paso_receta* obtener_siguiente_paso(t_pcb* pcb){
+	pthread_mutex_lock(&pcb->mutex_pasos);
 	t_paso_receta* siguiente_paso = list_get(pcb->lista_pasos,0);
+	pthread_mutex_unlock(&pcb->mutex_pasos);
+
 	return siguiente_paso;
 }
 void eliminar_paso_realizado(t_pcb* pcb){
@@ -20,27 +23,30 @@ void eliminar_paso_realizado(t_pcb* pcb){
 }
 void reposar(t_cocinero* cocinero){
 	pasar_pcb_a_estado(cocinero->pcb,BLOCKED_POR_REPOSAR);
-//	sem_post(&finCPUbound);
 }
 void hornear(t_cocinero* cocinero){
 	pasar_pcb_a_estado(cocinero->pcb,BLOCKED_POR_HORNO);
-//	sem_post(&finCPUbound);
 }
 void realizar_otro_paso(t_cocinero* cocinero,t_paso_receta* paso){
-	log_info(logger,"[COCINERO] Se ejecuta PASO:%s de PLATO:%s,PCB:%d,ID_PEDIDO:%d",paso->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
 	uint32_t tiempo=0;
 
 	if(algoritmo_planificacion == FIFO)
 		tiempo=paso->tiempo;
 	else{
-		tiempo = min(QUANTUM,paso->tiempo);
-		cocinero->pcb->quantum_consumido=tiempo;
-		paso->tiempo -= tiempo;
+		if(cocinero->pcb->quantum_consumido > 0){//paso_tiempo=3,
+			tiempo=QUANTUM-cocinero->pcb->quantum_consumido;
+			cocinero->pcb->quantum_consumido+=tiempo;
+			paso->tiempo-=tiempo;
+		}else{
+			tiempo = min(QUANTUM,paso->tiempo);
+			cocinero->pcb->quantum_consumido+=tiempo;
+			paso->tiempo -= tiempo;
+		}
 	}
-
 	pthread_mutex_lock(&cocinero->mutex_cocinero);
 	aplicar_retardo(tiempo);
 	pthread_mutex_unlock(&cocinero->mutex_cocinero);
+	log_info(logger,"[COCINERO] Se ejecuta %d rafagas de CPU de PASO:%s de PLATO:%s,PCB:%d,ID_PEDIDO:%d",tiempo,paso->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
 }
 void eliminar_paso(t_paso_receta* paso,t_pcb* plato){
 	if(algoritmo_planificacion==FIFO)
@@ -57,13 +63,12 @@ void hilo_cocinero(t_cocinero* cocinero){
 	while(1){
 		sem_wait(&sem_realizar_paso[cocinero->id]);
 		t_paso_receta* paso_siguiente = obtener_siguiente_paso(cocinero->pcb);
-		log_info(logger,"[HILO_COCINERO] Cocinero con ID:%d ejecuta PASO:%s del PLATO:%s de ID_PCB:%d del ID_PEDIDO:%d",cocinero->id,paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
+		log_info(logger,"[HILO_COCINERO] Cocinero con ID:%d ejecuta PASO:%s del PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",cocinero->id,paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
 		string_to_upper(paso_siguiente->accion);
-//		log_info(logger,"[HILO_COCINERO] Cocinero con ID:%d ejecuta PASO:%s del PLATO:%s del ID_PEDIDO:%d",cocinero->id,paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id_pedido);
 
 		if(string_equals_ignore_case(paso_siguiente->accion,"REPOSAR")){
 			reposar(cocinero);
-			log_info(logger,"[COCINERO] Fin de ejecución de PASO:%s de PLATO:%s del ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id_pedido);
+			log_info(logger,"[COCINERO] Fin de ejecución de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->id,cocinero->pcb->id_pedido);
 			pthread_mutex_lock(&cocinero->pcb->mutex_pasos);
 			eliminar_paso(paso_siguiente,cocinero->pcb);
 			pthread_mutex_unlock(&cocinero->pcb->mutex_pasos);
@@ -74,10 +79,8 @@ void hilo_cocinero(t_cocinero* cocinero){
 		}
 		else{
 			realizar_otro_paso(cocinero,paso_siguiente);
-			log_info(logger,"[COCINERO] Fin de ejecución de PASO:%s de PLATO:%s de ID_PCB:%d del ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
-//			pthread_mutex_lock(&cocinero->pcb->mutex_pasos);
+			log_info(logger,"[COCINERO] Fin de ejecución de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
 			eliminar_paso(paso_siguiente,cocinero->pcb);
-//			pthread_mutex_unlock(&cocinero->pcb->mutex_pasos);
 			sem_post(&sem_fin_paso);
 		}
 	}

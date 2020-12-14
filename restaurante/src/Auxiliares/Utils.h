@@ -31,5 +31,7 @@ uint32_t RETARDO_CICLO_CPU;
 void signalHandler(int);
 t_afinidad* obtener_id_afinidad(char nombre_plato[L_PLATO]);
 int min(int num1, int num2);
+char* estado_pcb_enum_a_string(t_estado_pcb estado_enum);
+t_list* duplicar_lista_pasos(t_list* lista_pasos);
 
 #endif /* AUXILIARES_UTILS_H_ */
