@@ -253,7 +253,10 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 
 	case CONFIRMAR_PEDIDO:{
 
-		uint32_t result_comanda, result_resto, result_final, pedido_pendiente = 0;
+		uint32_t result_comanda = 0;
+		uint32_t result_resto = 0;
+		uint32_t result_final = 0;
+		uint32_t pedido_pendiente = 0;
 
 		t_confirmar_pedido* confirmarPedido = recibir_confirmar_pedido(socket_cliente,logger);
 		strcpy(confirmarPedido->restaurante, cliente->restaurante_seleccionado);
@@ -273,7 +276,6 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 			list_destroy_and_destroy_elements(rta_obtener_ped->comidas, free);
 			free(rta_obtener_ped);
 		}
-		free(obtener_pedido);
 		close(socket_comanda);
 
 		/*RESULTADO DE CONFIRMAR_PEDIDO RESTAURANTE*/

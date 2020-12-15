@@ -128,8 +128,11 @@ t_pcb* sacar_pcb_de_listos_por_SJF() {
 double calcular_estimacion_HRRN(t_pcb* pcb) {
 
 	t_repartidor* repartidor = obtener_repartidor(pcb->id_repartidor);
-	int tiempo_espera_ready = pcb->tiempo_espera_ready;
-	int proxima_rafaga = distancia_a_posicion(repartidor, repartidor->objetivo_posX, repartidor->objetivo_posY);
+	double tiempo_espera_ready = pcb->tiempo_espera_ready;
+	double proxima_rafaga = distancia_a_posicion(repartidor, repartidor->objetivo_posX, repartidor->objetivo_posY);
+	if (!proxima_rafaga)
+		proxima_rafaga = distancia_a_posicion(repartidor, pcb->cliente_posX, pcb->cliente_posY);
+
 	double nueva_estimacion = (proxima_rafaga + tiempo_espera_ready) / proxima_rafaga;
 
 	log_info(logger, "Repartidor N°%d | Estimacion HRRN: %f", repartidor->id, nueva_estimacion);
@@ -188,9 +191,6 @@ void aplicar_tiempo_espera_ready() {
 void incrementar_espera_cpu() {
 
 	while(1) {
-
-
-
 		//TODO: Semaforo
 		sleep(app_conf.retardo_ciclo_cpu);
 

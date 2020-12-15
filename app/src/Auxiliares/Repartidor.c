@@ -25,7 +25,7 @@ void* correr_repartidor(t_repartidor* repartidor) {
 
 			if(repartidor->frecuenciaDescanso == 0) {
 				descansar = 1;
-//				log_info(logger, "Repartidor N°%d tiene que descansar", repartidor->id);
+				log_info(logger, "Repartidor N°%d tiene que descansar", repartidor->id);
 				break;
 			}
 

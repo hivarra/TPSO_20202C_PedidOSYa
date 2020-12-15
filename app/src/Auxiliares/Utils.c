@@ -218,7 +218,6 @@ void bloquearPCB(t_repartidor* repartidor, t_instruccion instruccion_anterior) {
 	pthread_mutex_unlock(&mutex_bloqueados);
 
 //	log_info(logger, "PCB | Pedido N°%d bloqueado por Repartidor N°%d en Estado %s", pcb->id_pedido, repartidor->id, get_nombre_instruccion(repartidor->instruccion));
-
 	if(repartidor->instruccion == DESCANSAR) {
 
 		// Descansa, y pasa a READY
@@ -228,12 +227,18 @@ void bloquearPCB(t_repartidor* repartidor, t_instruccion instruccion_anterior) {
 		repartidor->frecuenciaDescanso = atoi(app_conf.frecuencias_descanso[repartidor->id - 1]);
 		repartidor->instruccion = instruccion_anterior;
 
-		pthread_mutex_lock(&mutex_listos);
-		list_add(listos, pcb);
-		pthread_mutex_unlock(&mutex_listos);
+		int distancia = distancia_a_posicion(repartidor, repartidor->objetivo_posX, repartidor->objetivo_posY);
+		if(repartidor->instruccion == ENTREGAR_PEDIDO && !distancia)
+			finalizarPCBbloqueado(repartidor);
+		else{
+			sacarPCBDeBloqueados(repartidor);
 
-		sem_post(&sem_ready);
+			pthread_mutex_lock(&mutex_listos);
+			list_add(listos, pcb);
+			pthread_mutex_unlock(&mutex_listos);
 
+			sem_post(&sem_ready);
+		}
 	}
 
 	if(repartidor->instruccion == ESPERAR_PEDIDO) {
@@ -243,23 +248,24 @@ void bloquearPCB(t_repartidor* repartidor, t_instruccion instruccion_anterior) {
 		if(list_size(restaurantesConectados) > 0) {
 
 			sem_wait(&pcb->sem_pedido_listo);
-
 		}
-
 		retirarPedido(pcb);
-
 	}
 }
 
 void retirarPedido(t_pcb* pcb) {
 
 	t_repartidor* repartidor = obtener_repartidor(pcb->id_repartidor);
+	log_info(logger,"PCB-ID REPARTIDOR: %d", pcb->id_repartidor);
+	log_info(logger,"ID REPARTIDOR: %d", repartidor->id);
 	repartidor->instruccion = ENTREGAR_PEDIDO;
 	repartidor->objetivo_posX = pcb->cliente_posX;
 	repartidor->objetivo_posY = pcb->cliente_posY;
 
-	int esElPCB(t_pcb* pcb) {
-		return pcb->id_repartidor == repartidor->id;
+	int esElPCB(t_pcb* pcb_aux) {
+		log_info(logger,"PCB-ID REPARTIDOR: %d", pcb_aux->id_repartidor);
+		log_info(logger,"ID REPARTIDOR: %d", repartidor->id);
+		return pcb_aux->id_repartidor == repartidor->id;
 	}
 
 	pthread_mutex_lock(&mutex_bloqueados);
@@ -276,6 +282,20 @@ void retirarPedido(t_pcb* pcb) {
 
 }
 
+t_pcb* sacarPCBDeBloqueados(t_repartidor* repartidor) {
+
+	int esElPCB(t_pcb* pcb) {
+
+		return pcb->id_repartidor == repartidor->id;
+	}
+
+	pthread_mutex_lock(&mutex_bloqueados);
+	t_pcb* pcb = list_remove_by_condition(bloqueados, (void*)esElPCB);
+	pthread_mutex_unlock(&mutex_bloqueados);
+
+	return pcb;
+}
+
 t_pcb* sacarPCBDeEjecutando(t_repartidor* repartidor) {
 
 	int esElPCB(t_pcb* pcb) {
@@ -290,6 +310,45 @@ t_pcb* sacarPCBDeEjecutando(t_repartidor* repartidor) {
 	sem_post(&sem_limite_exec);
 
 	return pcb;
+}
+
+void finalizarPCBbloqueado(t_repartidor* repartidor) {
+
+	t_pcb* pcb = sacarPCBDeBloqueados(repartidor);
+
+	pthread_mutex_lock(&mutex_finalizados);
+	list_add(finalizados, pcb);
+	pthread_mutex_unlock(&mutex_finalizados);
+
+	int socket_comanda = conectar_a_comanda_simple();
+	t_finalizar_pedido* finalizar_pedido = calloc(1, sizeof(t_finalizar_pedido));
+	finalizar_pedido->id_pedido = pcb->id_pedido;
+	strcpy(finalizar_pedido->restaurante, pcb->restaurante);
+	enviar_finalizar_pedido(finalizar_pedido, socket_comanda, logger);
+	uint32_t resultado;
+	t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
+	if (tipo_rta == RTA_FINALIZAR_PEDIDO){
+		resultado = recibir_entero(socket_comanda, logger);
+		log_info(logger, "[RTA_FINALIZAR_PEDIDO]Resultado Comanda: %s",resultado? "OK":"FAIL");
+	}
+	close(socket_comanda);
+
+	if(resultado) {
+		t_info_cliente* cliente = buscarClientePorPedidoYnombreRestaurante(pcb->id_pedido,pcb->restaurante);//FIX GONZA: TOMABA EL PRIMER PEDIDO,PERO SE PUEDE REPETIR EL ID_PEDIDO PARA OTRO RESTAURANTE
+		enviar_finalizar_pedido(finalizar_pedido, cliente->socketEscucha, logger);
+		tipo_rta = recibir_tipo_mensaje(cliente->socketEscucha, logger);
+		if (tipo_rta == RTA_FINALIZAR_PEDIDO){
+			resultado = recibir_entero(cliente->socketEscucha, logger);
+			log_info(logger, "[RTA_FINALIZAR_PEDIDO]Resultado Cliente: %s",resultado? "OK":"FAIL");
+		}
+	}
+	free(finalizar_pedido);
+
+	log_info(logger, "Repartidor N°%d | Pasa a EXIT | Pedido N°%d entregado", pcb->id_repartidor, pcb->id_pedido);
+
+	disponibilizar_repartidor(repartidor);
+
+	liberarPCB(pcb);
 }
 
 void finalizarPCB(t_repartidor* repartidor) {

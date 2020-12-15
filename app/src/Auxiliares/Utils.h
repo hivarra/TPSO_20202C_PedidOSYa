@@ -119,5 +119,7 @@ void liberarPCB(t_pcb* pcb_a_liberar);
 void notificar_pedido_listo(int id_pedido,char* nombre_restaurante);
 t_pcb* buscarPCB(int id_pedido,char* nombre_restaurante);
 int conectar_a_comanda_simple();
+void finalizarPCBbloqueado(t_repartidor*);
+t_pcb* sacarPCBDeBloqueados(t_repartidor*);
 
 #endif /* AUXILIARES_UTILS_H_ */
