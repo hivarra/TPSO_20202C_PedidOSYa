@@ -301,14 +301,18 @@ void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 	uint32_t respuesta_plato_listo = FAIL;
 	if(lista_pedidos_app != NULL){
 		if(es_pedido_de_app(plato_listo->id_pedido)){
-			enviar_plato_listo(plato_listo,socket_escucha,logger);
+			int le_llego_a_app=enviar_plato_listo(plato_listo,socket_escucha,logger);
+			log_info(logger,"PRUEBA le_llego_a_app:%d",le_llego_a_app);
+
 			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a App. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
 					,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
 
-			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_escucha, logger);
-			if (tipo_rta == RTA_PLATO_LISTO){
-				respuesta_plato_listo = recibir_entero(socket_escucha, logger);
-				log_info(logger, "[RTA_PLATO_LISTO] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
+			if(le_llego_a_app!=-1){
+				t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_escucha, logger);
+				if (tipo_rta == RTA_PLATO_LISTO){
+					respuesta_plato_listo = recibir_entero(socket_escucha, logger);
+					log_info(logger, "[RTA_PLATO_LISTO] Se recibe respuesta:%s",respuesta_plato_listo?"OK":"FAIL");
+				}
 			}
 		}
 	}

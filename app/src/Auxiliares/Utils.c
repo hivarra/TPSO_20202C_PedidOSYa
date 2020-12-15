@@ -19,15 +19,15 @@ t_info_cliente* buscarClienteConectado(char* nombre_cliente){
 
 	return cliente;
 }
-
-t_info_cliente* buscarClientePorPedido(int id_pedido){
+//FIX GONZA: TOMABA EL PRIMER PEDIDO,PERO SE PUEDE REPETIR EL ID_PEDIDO PARA OTRO RESTAURANTE
+t_info_cliente* buscarClientePorPedidoYnombreRestaurante(int id_pedido,char* nombre_restaurante){
 
 	bool contiene_pedido(uint32_t* pedido){
 		return *pedido == id_pedido;
 	}
 
 	bool cliente_igual(t_info_cliente* info_cliente){
-		return list_any_satisfy(info_cliente->pedidos, (void*)contiene_pedido);
+		return list_any_satisfy(info_cliente->pedidos, (void*)contiene_pedido) && string_equals_ignore_case(info_cliente->restaurante_seleccionado,nombre_restaurante);
 	}
 
 	pthread_mutex_lock(&mutexClientes);
@@ -314,7 +314,7 @@ void finalizarPCB(t_repartidor* repartidor) {
 	close(socket_comanda);
 
 	if(resultado) {
-		t_info_cliente* cliente = buscarClientePorPedido(pcb->id_pedido);
+		t_info_cliente* cliente = buscarClientePorPedidoYnombreRestaurante(pcb->id_pedido,pcb->restaurante);//FIX GONZA: TOMABA EL PRIMER PEDIDO,PERO SE PUEDE REPETIR EL ID_PEDIDO PARA OTRO RESTAURANTE
 		enviar_finalizar_pedido(finalizar_pedido, cliente->socketEscucha, logger);
 		tipo_rta = recibir_tipo_mensaje(cliente->socketEscucha, logger);
 		if (tipo_rta == RTA_FINALIZAR_PEDIDO){
@@ -345,25 +345,58 @@ void liberarPCB(t_pcb* pcb_a_liberar) {
 	sem_destroy(&pcb_a_liberar->sem_pedido_listo);
 	free(pcb_a_liberar);
 }
+//FIX GONZA: TOMABA EL PRIMER PEDIDO,PERO SE PUEDE REPETIR EL ID_PEDIDO PARA OTRO RESTAURANTE
+void notificar_pedido_listo(int id_pedido,char* nombre_restaurante) {
 
-void notificar_pedido_listo(int id_pedido) {
-
-	t_pcb* pcb = buscarPCB(id_pedido);
+	t_pcb* pcb = buscarPCB(id_pedido,nombre_restaurante);
 	sem_post(&pcb->sem_pedido_listo);
 }
-
-t_pcb* buscarPCB(int id_pedido) {
+//FIX GONZA: TOMABA EL PRIMER PEDIDO,PERO SE PUEDE REPETIR EL ID_PEDIDO PARA OTRO RESTAURANTE
+t_pcb* buscarPCB(int id_pedido,char* nombre_restaurante) {
 
 	int esElPCB(t_pcb* pcb) {
 
-			return pcb->id_pedido == id_pedido;
-		}
-
+			return pcb->id_pedido == id_pedido && string_equals_ignore_case(pcb->restaurante,nombre_restaurante);
+	}
+	//MUTEX AGREGADOS POR EL GONZA, SI NO FUNCIONA QUITAR
+	pthread_mutex_lock(&mutex_bloqueados);
 	t_pcb* pcb = list_find(bloqueados, (void*)esElPCB);
+	pthread_mutex_unlock(&mutex_bloqueados);
+	if(pcb) log_info(logger,"SE ENCONTRO EL PCB EN BLOQUEADOS");
 
 	if(pcb == NULL) {
+		log_info(logger,"ENTRO A EJECUTANDO");
+		pthread_mutex_lock(&mutex_ejecutando);
 		pcb = list_find(ejecutando, (void*)esElPCB);
+		pthread_mutex_unlock(&mutex_ejecutando);
+
+		if(pcb) log_info(logger,"SE ENCONTRO EL PCB EN EJECUTANDO");
 	}
+	if(pcb == NULL){
+		log_info(logger,"ENTRO A FINALIZADOS");
+		pthread_mutex_lock(&mutex_finalizados);
+		pcb = list_find(finalizados, (void*)esElPCB);
+		pthread_mutex_unlock(&mutex_finalizados);
+
+		if(pcb) log_info(logger,"SE ENCONTRO EL PCB EN FINALIZADOS");
+	}
+	if(pcb == NULL){
+		log_info(logger,"ENTRO A LISTOS");
+		pthread_mutex_lock(&mutex_listos);
+		pcb = list_find(listos, (void*)esElPCB);
+		pthread_mutex_unlock(&mutex_listos);
+
+		if(pcb) log_info(logger,"SE ENCONTRO EL PCB EN LISTOS");
+	}
+	if(pcb == NULL){
+		log_info(logger,"ENTRO A NUEVOS");
+		pthread_mutex_lock(&mutex_nuevos);
+		pcb = list_find(pedidos_planificables, (void*)esElPCB);
+		pthread_mutex_unlock(&mutex_nuevos);
+
+		if(pcb) log_info(logger,"SE ENCONTRO EL PCB EN NUEVOS");
+	}
+	log_info(logger,"PRUEBA ID:PEDIDO:%d",pcb->id_pedido);
 
 	return pcb;
 }

@@ -63,8 +63,8 @@ void hilo_cocinero(t_cocinero* cocinero){
 	while(1){
 		sem_wait(&sem_realizar_paso[cocinero->id]);
 		t_paso_receta* paso_siguiente = obtener_siguiente_paso(cocinero->pcb);
-		log_info(logger,"PRUEBA ID_PCB:%d",cocinero->pcb->id);
-		log_info(logger,"PRUEBA ESTADO:%s", estado_pcb_enum_a_string(cocinero->pcb->estado));
+//		log_info(logger,"PRUEBA ID_PCB:%d",cocinero->pcb->id);
+//		log_info(logger,"PRUEBA ESTADO:%s", estado_pcb_enum_a_string(cocinero->pcb->estado));
 //		log_info(logger,"[HILO_COCINERO] Cocinero con ID:%d ejecuta PASO:%s del PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",cocinero->id,paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
 		string_to_upper(paso_siguiente->accion);
 

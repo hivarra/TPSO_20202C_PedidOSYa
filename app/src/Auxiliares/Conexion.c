@@ -571,9 +571,9 @@ void iniciar_conexion_escucha(t_info_restaurante* resto){
 				if(respuesta->estado == TERMINADO) {
 
 					// HABILITAR EL PEDIDO/PCB PARA SER RETIRADO
-					log_info(logger, "El Pedido: %d está Terminado", msg_obtener_pedido->id_pedido);
-
-					notificar_pedido_listo(msg_obtener_pedido->id_pedido);
+					log_info(logger, "El Pedido: %d está Terminado", platoListo->id_pedido);
+					//FIX GONZA: TOMABA EL PRIMER PEDIDO,PERO SE PUEDE REPETIR EL ID_PEDIDO PARA OTRO RESTAURANTE
+					notificar_pedido_listo(platoListo->id_pedido,platoListo->restaurante);
 
 				}
 

@@ -19,6 +19,7 @@ void escuchar_app(){
 			log_warning(logger, "Se desconecto del proceso App");
 			puts("Se desconecto del proceso App");
 			close(socket_envio);
+			close(socket_escucha);
 			pthread_exit(NULL);
 		}
 

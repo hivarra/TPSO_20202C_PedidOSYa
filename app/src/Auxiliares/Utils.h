@@ -95,7 +95,7 @@ t_list* clientesConectados;
 t_info_restaurante* infoRestoDefault;
 
 t_info_cliente* buscarClienteConectado(char* id);
-t_info_cliente* buscarClientePorPedido(int id_pedido);
+t_info_cliente* buscarClientePorPedidoYnombreRestaurante(int id_pedido,char* nombre_restaurante);//FIX GONZA: TOMABA EL PRIMER PEDIDO,PERO SE PUEDE REPETIR EL ID_PEDIDO PARA OTRO RESTAURANTE
 t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante);
 t_rta_consultar_restaurantes* obtenerRestaurantes();
 
@@ -116,8 +116,8 @@ void retirarPedido(t_pcb* pcb);
 t_pcb* sacarPCBDeEjecutando(t_repartidor* repartidor);
 void finalizarPCB(t_repartidor* repartidor);
 void liberarPCB(t_pcb* pcb_a_liberar);
-void notificar_pedido_listo(int id_pedido);
-t_pcb* buscarPCB(int id_pedido);
+void notificar_pedido_listo(int id_pedido,char* nombre_restaurante);
+t_pcb* buscarPCB(int id_pedido,char* nombre_restaurante);
 int conectar_a_comanda_simple();
 
 #endif /* AUXILIARES_UTILS_H_ */
