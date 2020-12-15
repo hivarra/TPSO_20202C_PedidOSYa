@@ -156,10 +156,8 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 		recibir_mensaje_vacio(socket_cliente, logger);
 		uint32_t id_pedido = 0;
 
-		if(string_equals_ignore_case(cliente->restaurante_seleccionado, infoRestoDefault->id)){
+		if(string_equals_ignore_case(cliente->restaurante_seleccionado, infoRestoDefault->id))
 			id_pedido = generar_id_pedido();
-//			log_trace(logger, "[CREAR_PEDIDO_DEFAULT] ID_Pedido generado: %d", id_pedido);
-		}
 		else{
 			t_info_restaurante* rest = buscarRestauranteConectado(cliente->restaurante_seleccionado);
 			if (rest != NULL){
@@ -167,10 +165,8 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 				tipo_rta = recibir_tipo_mensaje(rest->socketEnvio, logger);
 				if (tipo_rta == RTA_CREAR_PEDIDO){
 					id_pedido = recibir_entero(rest->socketEnvio, logger);
-//					if (id_pedido)
-//						log_trace(logger, "[CREAR_PEDIDO] ID_Pedido: %d, Restaurante: %s.", id_pedido, cliente->restaurante_seleccionado);
-//					else
-//						log_warning(logger, "[CREAR_PEDIDO] Error al crear pedido del restaurante: %s.", cliente->restaurante_seleccionado);
+					if (!id_pedido)
+						log_warning(logger, "[CREAR_PEDIDO] Error al crear pedido del restaurante: %s.", cliente->restaurante_seleccionado);
 				}
 			}
 			else
@@ -246,7 +242,7 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 			tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
 			if (tipo_rta == RTA_GUARDAR_PLATO){
 				resultado_anadir_plato = recibir_entero(socket_comanda, logger);
-//				log_trace(logger, "[RTA_GUARDAR_PLATO] Resultado Comanda: %s.",resultado_anadir_plato? "OK":"FAIL");
+				log_trace(logger, "[RTA_GUARDAR_PLATO] Resultado Comanda: %s.",resultado_anadir_plato? "OK":"FAIL");
 			}
 		}
 
@@ -257,62 +253,61 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 
 	case CONFIRMAR_PEDIDO:{
 
-		t_info_restaurante* info_rest;
-		t_rta_obtener_pedido* respuesta;
+		uint32_t result_comanda, result_resto, result_final, pedido_pendiente = 0;
 
 		t_confirmar_pedido* confirmarPedido = recibir_confirmar_pedido(socket_cliente,logger);
-
-		uint32_t resultado_confirmar_pedido, resultado_confirmar_pedido_rest;
-		if(list_size(restaurantesConectados) > 0)
-			info_rest = buscarRestauranteConectado(cliente->restaurante_seleccionado);
-
 		strcpy(confirmarPedido->restaurante, cliente->restaurante_seleccionado);
-//		log_info(logger,"RESTAURANTE:%s",confirmarPedido->restaurante);
-//		log_info(logger,"ID_PEDIDO:%d",confirmarPedido->id_pedido);
 
-		/* Obtener pedido de COMANDA */
+		/*OBTENER_PEDIDO DE COMANDA Y PEDIDO PENDIENTE*/
 		socket_comanda = conectar_a_comanda_simple();
-		t_obtener_pedido* msg_obtener_pedido = calloc(1,sizeof(t_obtener_pedido));
-		strcpy(msg_obtener_pedido->restaurante, confirmarPedido->restaurante);
-		msg_obtener_pedido->id_pedido = confirmarPedido->id_pedido;
-//		log_info(logger, "Parametros a enviar: Restaurante: %s, ID_Pedido: %d", msg_obtener_pedido->restaurante, msg_obtener_pedido->id_pedido);
-		enviar_obtener_pedido(msg_obtener_pedido, socket_comanda, logger);
-		free(msg_obtener_pedido);
+		t_obtener_pedido* obtener_pedido = calloc(1,sizeof(t_obtener_pedido));
+		strcpy(obtener_pedido->restaurante, confirmarPedido->restaurante);
+		obtener_pedido->id_pedido = confirmarPedido->id_pedido;
+		enviar_obtener_pedido(obtener_pedido, socket_comanda, logger);
+		free(obtener_pedido);
 		tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
-		if (tipo_rta == RTA_OBTENER_PEDIDO)
-			respuesta = recibir_rta_obtener_pedido(socket_comanda, logger);
+		if (tipo_rta == RTA_OBTENER_PEDIDO){
+			t_rta_obtener_pedido* rta_obtener_ped = recibir_rta_obtener_pedido(socket_comanda, logger);
+			if (rta_obtener_ped->estado == PENDIENTE)
+				pedido_pendiente = 1;
+			list_destroy_and_destroy_elements(rta_obtener_ped->comidas, free);
+			free(rta_obtener_ped);
+		}
+		free(obtener_pedido);
 		close(socket_comanda);
 
-		if(respuesta->estado == PENDIENTE && list_size(restaurantesConectados) > 0) {
-//			log_info(logger, "Parametro a enviar: ID_Pedido: %d", confirmarPedido->id_pedido);
-			enviar_confirmar_pedido(confirmarPedido, info_rest->socketEnvio, logger);
+		/*RESULTADO DE CONFIRMAR_PEDIDO RESTAURANTE*/
+		if(list_size(restaurantesConectados) > 0 && pedido_pendiente){
+			t_info_restaurante* info_rest = buscarRestauranteConectado(cliente->restaurante_seleccionado);
+			if(info_rest != NULL){
+				enviar_confirmar_pedido(confirmarPedido, info_rest->socketEnvio, logger);
+				tipo_rta = recibir_tipo_mensaje(info_rest->socketEnvio, logger);
+				if (tipo_rta == RTA_CONFIRMAR_PEDIDO)
+					result_resto = recibir_entero(info_rest->socketEnvio, logger);
+			}
+		}
+		else if(string_equals_ignore_case(cliente->restaurante_seleccionado, infoRestoDefault->id) && pedido_pendiente)
+			result_resto = 1;
+		else
+			log_warning(logger, "[CONFIRMAR_PEDIDO] El cliente %s no ha seleccionado ningun restaurante.", cliente->id);
+
+		/*RESULTADO DE CONFIRMAR_PEDIDO COMANDA*/
+		if(result_resto){
 			socket_comanda = conectar_a_comanda_simple();
 			enviar_confirmar_pedido(confirmarPedido, socket_comanda, logger);
 			tipo_rta = recibir_tipo_mensaje(socket_comanda, logger);
-			if (tipo_rta == RTA_CONFIRMAR_PEDIDO){
-				resultado_confirmar_pedido = recibir_entero(socket_comanda, logger);
-//				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado de Comanda: %s",resultado_confirmar_pedido? "OK":"FAIL");
-			}
+			if (tipo_rta == RTA_CONFIRMAR_PEDIDO)
+				result_comanda = recibir_entero(socket_comanda, logger);
 			close(socket_comanda);
-			tipo_rta = recibir_tipo_mensaje(info_rest->socketEnvio, logger);
-			if (tipo_rta == RTA_CONFIRMAR_PEDIDO){
-				resultado_confirmar_pedido_rest = recibir_entero(info_rest->socketEnvio, logger);
-//				log_info(logger, "[RTA_CONFIRMAR_PEDIDO]Resultado de Restaurante: %s",resultado_confirmar_pedido? "OK":"FAIL");
-			}
 		}
-		else
-			// Acepto la respuesta de Comanda nada más porque uso el RESTO DEFAULT
-			resultado_confirmar_pedido_rest = 1;
-		uint32_t resultado_final = 0;
-		if(resultado_confirmar_pedido && resultado_confirmar_pedido_rest) {
-			resultado_final = 1;
 
+		/*CREO EL PCB*/
+		if(result_comanda && result_resto) {
+			result_final = 1;
 			crearPCB(cliente, confirmarPedido->id_pedido);
 		}
-
 		free(confirmarPedido);
-		free(respuesta);
-		enviar_entero(RTA_CONFIRMAR_PEDIDO,resultado_final,socket_cliente,logger);
+		enviar_entero(RTA_CONFIRMAR_PEDIDO,result_final,socket_cliente,logger);
 	}
 	break;
 
