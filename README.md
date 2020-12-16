@@ -15,23 +15,23 @@ de cada proyecto, a fin de poder compilar en otras VMs.
 
 <b>SCRIPT PARA INSTALAR TODO:</b>
 
-#PASO 1
+#PASO 1 <br>
 mkdir Repositorios
 
-#PASO 2
+#PASO 2 <br>
 cd Repositorios
 
-#PASO 3
+#PASO 3 <br>
 vi deploy.sh
 (Copiar el contenido de este link: https://github.com/sisoputnfrba/tp-2020-2c-Thread-Away/blob/master/deploy.sh)
 Pegar con click derecho
 
-#PASO 4
+#PASO 4 <br>
 Escape (para cancelar el INSERTAR)
 :wq + enter
 
-#PASO 5
+#PASO 5 <br>
 chmod 777 deploy.sh
 
-#PASO 6
+#PASO 6 <br>
 ./deploy.sh -t=/home/utnso/Repositorios -d=shared -p=app -p=comanda -p=cliente -p=restaurante -p=sindicato tp-2020-2c-Thread-Away
