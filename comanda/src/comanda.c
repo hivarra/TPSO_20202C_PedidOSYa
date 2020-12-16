@@ -11,7 +11,7 @@
 #include "comanda.h"
 
 int main(int argc, char *argv[]) {
-	puts("Inicio COMANDA");
+	puts("================\nInicio COMANDA\n================");
 
 	/* 1. Configuración */
 	char* path_config = getConfigPath(argv[1]);

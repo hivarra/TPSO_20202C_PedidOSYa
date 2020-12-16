@@ -45,14 +45,13 @@ void cargar_configuracion_comanda(char * path_config) {
 	}
 }
 
-
 void cargar_logger_comanda() {
 	int carpeta_creada;
 
 	carpeta_creada = crear_carpeta_log(config_get_string_value(config, "ARCHIVO_LOG"));
 	if (carpeta_creada){
 		logger = log_create(config_get_string_value(config, "ARCHIVO_LOG"), "Comanda", 0, LOG_LEVEL_TRACE);
-		log_info(logger, "*************** NUEVO LOG ***************");
+		log_trace(logger, "*************** NUEVO LOG ***************");
 	}
 	else{
 		puts("Error al crear la carpera del log");
@@ -60,12 +59,11 @@ void cargar_logger_comanda() {
 	}
 }
 
-// Auxiliares
 void mostrar_propiedades() {
 	log_trace(logger,"Propiedades leidas:");
-	log_trace(logger,"Tamanio memoria: %d", config_get_int_value(config, "TAMANIO_MEMORIA"));
-	log_trace(logger,"Tamanio swap: %d", config_get_int_value(config, "TAMANIO_SWAP"));
-	log_trace(logger,"Algoritmo reemplazo: %s", config_get_string_value(config, "ALGORITMO_REEMPLAZO"));
-	log_trace(logger,"Puerto escucha: %s", config_get_string_value(config, "PUERTO_ESCUCHA"));
-	log_trace(logger,"Archivo log: %s", config_get_string_value(config, "ARCHIVO_LOG"));
+	log_trace(logger,"\tTamanio memoria: %d.", config_get_int_value(config, "TAMANIO_MEMORIA"));
+	log_trace(logger,"\tTamanio swap: %d.", config_get_int_value(config, "TAMANIO_SWAP"));
+	log_trace(logger,"\tAlgoritmo reemplazo: %s.", config_get_string_value(config, "ALGORITMO_REEMPLAZO"));
+	log_trace(logger,"\tPuerto escucha: %s.", config_get_string_value(config, "PUERTO_ESCUCHA"));
+	log_trace(logger,"\tArchivo log: %s.", config_get_string_value(config, "ARCHIVO_LOG"));
 }

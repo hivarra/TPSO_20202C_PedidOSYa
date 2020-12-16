@@ -93,7 +93,7 @@ void reemplazo_de_pagina(t_entrada_pagina* entrada_pagina){
 	pthread_mutex_lock(&mutex_reemplazo);
 	t_entrada_pagina* entrada_pagina_buscada;
 
-	log_info(logger, "[REEMPLAZO]Comienzo de reemplazo de pagina; Posicion de Swap a traer: %d.", entrada_pagina->nro_frame_ms);
+	log_info(logger, "[REEMPLAZO] Comienzo de reemplazo de pagina. Posicion de Swap a traer: %d.", entrada_pagina->nro_frame_ms);
 
 	int frame_libre_mp = get_free_frame_mp();
 	if (frame_libre_mp == -1){
@@ -132,11 +132,11 @@ void reemplazo_de_pagina(t_entrada_pagina* entrada_pagina){
 		}
 		t_pagina* pagina_reemplazar = memoria_fisica+entrada_pagina_buscada->nro_frame_mp*sizeof(t_pagina);
 		volcar_pagina_a_swap(entrada_pagina_buscada, pagina_reemplazar);
-		log_info(logger, "[REEMPLAZO]Frame seleccionado: %d (Plato: %s); Posicion de Swap a traer: %d.", entrada_pagina_buscada->nro_frame_mp, pagina_reemplazar, entrada_pagina->nro_frame_ms);
+		log_info(logger, "[REEMPLAZO] Frame seleccionado: %d (Plato: %s). Posicion de Swap a traer: %d.", entrada_pagina_buscada->nro_frame_mp, pagina_reemplazar, entrada_pagina->nro_frame_ms);
 		traer_pagina_de_swap(entrada_pagina_buscada->nro_frame_mp, entrada_pagina);
 	}
 	else{
-		log_info(logger, "[REEMPLAZO]Frame seleccionado: %d (LIBRE); Posicion de Swap a traer: %d.", frame_libre_mp, entrada_pagina->nro_frame_ms);
+		log_info(logger, "[REEMPLAZO] Frame seleccionado: %d (LIBRE). Posicion de Swap a traer: %d.", frame_libre_mp, entrada_pagina->nro_frame_ms);
 		traer_pagina_de_swap(frame_libre_mp, entrada_pagina);
 	}
 	pthread_mutex_unlock(&mutex_reemplazo);

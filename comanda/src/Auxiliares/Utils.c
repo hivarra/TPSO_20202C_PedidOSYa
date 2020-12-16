@@ -36,7 +36,7 @@ void signalHandler(int sig){
 	destruir_logger(logger);
 	destruir_config(config);
 
-	puts("Fin COMANDA");
+	puts("\n================\nFin COMANDA\n================");
 
 	exit(EXIT_SUCCESS);
 }

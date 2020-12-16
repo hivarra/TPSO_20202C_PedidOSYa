@@ -164,7 +164,7 @@ uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
 		/*SI NO EXISTE, SE CREA TABLA DE SEGMENTOS */
 		t_list* tabla_segmentos = inicializar_tabla_segmentos(info_guardar_pedido->restaurante);
 		if (tabla_segmentos == NULL){
-			log_warning(logger, "No se pudo crear la tabla de segmentos para el restaurante %s", info_guardar_pedido->restaurante);
+			log_warning(logger, "No se pudo crear la tabla de segmentos para el restaurante %s.", info_guardar_pedido->restaurante);
 			return false;
 		}
 		/*SE CREA SEGMENTO*/
@@ -176,7 +176,7 @@ uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
 		if (segmento_pedido != NULL)
 			ret = true;
 		else
-			log_warning(logger, "No se pudo crear el segmento para el pedido %d del restaurante %s", info_guardar_pedido->id_pedido, info_guardar_pedido->restaurante);
+			log_warning(logger, "No se pudo crear el segmento para el pedido %d del restaurante %s.", info_guardar_pedido->id_pedido, info_guardar_pedido->restaurante);
 	}
 	else{
 		/*SE VALIDA SI EL PEDIDO YA TENIA UN SEGMENTO ASOCIADO*/
@@ -192,10 +192,10 @@ uint32_t procesar_guardar_pedido(t_guardar_pedido* info_guardar_pedido){
 			if (segmento_pedido != NULL)
 				ret = true;
 			else
-				log_warning(logger, "No se pudo crear el segmento para el pedido %d del restaurante %s", info_guardar_pedido->id_pedido, info_guardar_pedido->restaurante);
+				log_warning(logger, "No se pudo crear el segmento para el pedido %d del restaurante %s.", info_guardar_pedido->id_pedido, info_guardar_pedido->restaurante);
 		}
 		else
-			log_warning(logger,"El pedido %d ya existia en la tabla de segmentos del restaurante %s",info_guardar_pedido->id_pedido,info_guardar_pedido->restaurante);
+			log_warning(logger,"El pedido %d ya existia en la tabla de segmentos del restaurante %s.",info_guardar_pedido->id_pedido,info_guardar_pedido->restaurante);
 	}
 	return ret;
 }
@@ -238,7 +238,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 					pagina_nueva->cant_total = info_guardar_plato->cantPlato;
 					pagina_nueva->cant_lista = 0;
 					volcar_pagina_a_swap(entrada_nueva, pagina_nueva);
-					log_info(logger, "Se almaceno el plato %s en la posicion %d del area de Swap.", pagina_nueva->nombre_comida, free_frame_swap);
+					log_info(logger, "[PLATO ALMACENADO] Se almaceno el plato %s en la posicion %d del area de Swap.", pagina_nueva->nombre_comida, free_frame_swap);
 					free(pagina_nueva);
 					ret = true;
 				}
@@ -387,10 +387,10 @@ uint32_t procesar_finalizar_pedido(t_finalizar_pedido* info_finalizar_pedido){
 				t_entrada_pagina* entrada_i = list_get(segmento->tabla_paginas, i);
 				if (entrada_i->presencia){
 					free_frame_mp(entrada_i->nro_frame_mp);
-					log_info(logger, "Se elimino el plato que se encontraba en el frame nro. %d de MP.", entrada_i->nro_frame_mp);
+					log_info(logger, "[PARTICION MP ELIMINADA] Se elimino el plato que se encontraba en el frame nro. %d de MP.", entrada_i->nro_frame_mp);
 				}
 				free_frame_ms(entrada_i->nro_frame_ms);
-				log_info(logger, "Se elimino el plato que se encontraba en la posicion %d del area de Swap.", entrada_i->nro_frame_ms);
+				log_info(logger, "[PARTICION SWAP ELIMINADA] Se elimino el plato que se encontraba en la posicion %d del area de Swap.", entrada_i->nro_frame_ms);
 				borrar_entrada_en_lista_global(entrada_i);
 			}
 			list_destroy_and_destroy_elements(segmento->tabla_paginas, free);
