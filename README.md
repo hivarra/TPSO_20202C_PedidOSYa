@@ -13,7 +13,15 @@ Tener en cuenta que esto se debe hacer tambien en las VM pruebas y en la entrega
 En cuanto a las entregas finales, upload al repo los archivos makefile, objects.mk y sources.mk
 de cada proyecto, a fin de poder compilar en otras VMs.
 
-<b>SCRIPT PARA INSTALAR TODO:</b>
+<h1>Pasos para bailar salsa AHRE INSTALAR TODO:</h1>
+
+#PASO 0 <br>
+- vi .bashrc
+- Ir al final de todo y presionar la tecla "i" para que permita ingresar texto
+- Pegar el siguiente texto: <br>
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/Repositorios/tp-2020-2c-Thread-Away/shared/Debug/
+- Escape (para cancelar el INSERTAR)
+- :wq + enter
 
 #PASO 1 <br>
 mkdir Repositorios
