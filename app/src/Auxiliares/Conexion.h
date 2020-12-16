@@ -8,7 +8,7 @@
 #ifndef AUXILIARES_CONEXION_H_
 #define AUXILIARES_CONEXION_H_
 
-#define IP_APP "127.0.0.1"
+//#define IP_APP "127.0.0.1"
 
 #include <protocolo.h>
 #include "Configuracion.h"

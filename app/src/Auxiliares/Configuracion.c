@@ -10,6 +10,11 @@
 void cargar_configuracion_app(char * path_config) {
 	t_config* config = config_create(path_config);
 
+	if (config_has_property(config, "IP_APP")) {
+		app_conf.ip_app = config_get_string_value(config, "IP_APP");
+	} else {
+		error_show("Error al cargar IP_APP de archivo de configuracion");
+	}
 	if (config_has_property(config, "PUERTO_ESCUCHA")) {
 		app_conf.puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
 	} else {

@@ -469,7 +469,7 @@ void crearServidor() {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo(IP_APP, app_conf.puerto_escucha, &hints, &servinfo);
+	getaddrinfo(app_conf.ip_app, app_conf.puerto_escucha, &hints, &servinfo);
 
 	for (p=servinfo; p != NULL; p = p->ai_next)
 	{

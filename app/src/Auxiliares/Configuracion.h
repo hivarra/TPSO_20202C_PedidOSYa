@@ -12,6 +12,7 @@
 
 // Definición de tipos
 typedef struct {
+	char* ip_app;
 	char* puerto_escucha;
 	char* ip_comanda;
 	char* puerto_comanda;
