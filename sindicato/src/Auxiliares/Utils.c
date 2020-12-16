@@ -16,7 +16,19 @@ void liberar_bit_bloque(int pos){
 		log_warning(logger, "No se pudo actualizar el bitmap.");
 }
 
-int asignarBloqueLibre() {
+char* reducir_path_completo(char* path_completo){
+	char** separado = string_split(path_completo, "/");
+
+	int contador = 0;
+	while(separado[contador]){
+		contador++;
+	}
+	char* reducido = string_from_format("/%s/%s", separado[contador-2], separado[contador-1]);
+	liberar_lista(separado);
+	return reducido;
+}
+
+int asignarBloqueLibre(char* path_completo) {
 	int pos = -2;
 
 	pthread_mutex_lock(&mutex_bitmap);
@@ -34,11 +46,16 @@ int asignarBloqueLibre() {
 		log_warning(logger, "No se pudo actualizar el bitmap.");
 
 	if(pos == -2){
-		log_error(logger, "No hay mas bloques libres, va a rompeeer!!!!!");
-		puts("No hay mas bloques libres, va a rompeeer!!!!!");
+		log_error(logger, "[FIN DEL PROCESO] NO EXISTEN BLOQUES LIBRES.");
+		puts("[ERROR] NO EXISTEN BLOQUES LIBRES.");
+		signalHandler(SIGINT);
 	}
-	else
-		log_info(logger, "[Asignacion Bloque] Se asigna el bloque %d a un archivo.", pos+1);
+	else{
+		char* path_reducido = reducir_path_completo(path_completo);
+		log_info(logger, "[Bloque Asignado] Se asigna el bloque %d al archivo %s.", pos+1, path_reducido);
+		free(path_reducido);
+	}
+
 	return pos+1;
 }
 
@@ -55,11 +72,13 @@ void vaciar_bloque(int num_bloque){
 	fclose(file_bloque);
 }
 
-void liberar_bloque(int num_bloque){
+void liberar_bloque(int num_bloque, char* path_completo){
 
 	vaciar_bloque(num_bloque);
 	liberar_bit_bloque(num_bloque);
-	log_info(logger, "[Desasignacion Bloque] Se desasigna el bloque %d a un archivo.", num_bloque);
+	char* path_reducido = reducir_path_completo(path_completo);
+	log_info(logger, "[Bloque Desasignado] Se desasigna el bloque %d del archivo %s.", num_bloque, path_reducido);
+	free(path_reducido);
 }
 
 int calcularBloquesNecesarios(int cant_bytes){
@@ -72,20 +91,20 @@ int calcularBloquesNecesarios(int cant_bytes){
 	return bloques_nec;
 }
 
-int* listar_bloques_necesarios_file_nuevo(int size_nuevo){
+int* listar_bloques_necesarios_file_nuevo(int size_nuevo, char* path_completo){
 
 	int bloques_nec = calcularBloquesNecesarios(size_nuevo);//Se agrega el caracter '\0'
 
 	int* array = (int*) malloc(bloques_nec*sizeof(int));//Pido memoria para los bloques necesarios.
 
 	for(int i = 0; i < bloques_nec; i++){
-		array[i] = asignarBloqueLibre();
+		array[i] = asignarBloqueLibre(path_completo);
 	}
 
 	return array;
 }
 
-int* listar_bloques_necesarios_file_existente(int size_nuevo, int size_viejo, int* array_bloques_asignados){
+int* listar_bloques_necesarios_file_existente(int size_nuevo, int size_viejo, int* array_bloques_asignados, char* path_completo){
 
 	int bloques_nec = calcularBloquesNecesarios(size_nuevo);
 
@@ -95,13 +114,13 @@ int* listar_bloques_necesarios_file_existente(int size_nuevo, int size_viejo, in
 	if (bloques_actuales < bloques_nec){
 		array_bloques_asignados = realloc(array_bloques_asignados, bloques_nec*sizeof(int));
 		for (int i = bloques_actuales; i < bloques_nec; i++){
-			array_bloques_asignados[i] = asignarBloqueLibre();
+			array_bloques_asignados[i] = asignarBloqueLibre(path_completo);
 		}
 	}
 	/*SI SOBRAN BLOQUES, LOS LIBERO, LOS VACIO, Y LOS SACO DEL ARRAY*/
 	else if (bloques_actuales > bloques_nec){
 		for(int i = bloques_nec; i < bloques_actuales; i++){
-			liberar_bloque(array_bloques_asignados[i]);
+			liberar_bloque(array_bloques_asignados[i], path_completo);
 		}
 		vaciar_bloque(array_bloques_asignados[bloques_nec-1]);//Se vacia el ultimo bloque asignado para que la escritura quede limpia
 		array_bloques_asignados = realloc(array_bloques_asignados, bloques_nec*sizeof(int));

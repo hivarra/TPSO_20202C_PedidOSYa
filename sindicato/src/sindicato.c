@@ -12,7 +12,7 @@
 
 int main(int argc, char **argv) {
 
-	puts("Inicio Proceso SINDICATO");
+	puts("================\nInicio SINDICATO\n================");
 
 	/* 0. Setear config path */
 	char* path_config = getConfigPath(argv[1]);
@@ -27,15 +27,16 @@ int main(int argc, char **argv) {
 	/* 3. File System */
 	montarFileSystem();
 
-	/* 4. Crear hilo para consola */
-	pthread_create(&thread_consola, NULL, (void*)crear_consola, NULL);
-	pthread_detach(thread_consola);
-
 	/*Extra. Liberar bien con ctrl+c*/
 	signal(SIGINT, &signalHandler);
 
-	/* 5. Escuchando conexiones*/
-	escuchar_conexiones_sindicato();
+	/* 4. Escuchando conexiones*/
+	pthread_create(&thread_server, NULL, (void*)escuchar_conexiones_sindicato, NULL);
+	pthread_detach(thread_server);
+
+	/* 5. Crear hilo para consola */
+	crear_consola();
+	signalHandler(SIGINT);
 
 	return EXIT_FAILURE;
 }
@@ -47,9 +48,12 @@ void signalHandler(int sig){
 		free(semaforo);
 	}
 
+	pthread_cancel(thread_server);
+	puts("\nFinishing listening thread...");
+	sleep(2);
+
 	close(socket_servidor);
 
-	//bitarray_destroy(bitmap);
 	pthread_mutex_destroy(&mutex_bitmap);
 	pthread_mutex_destroy(&mutexSemaforosPedidos);
 	dictionary_destroy_and_destroy_elements(semaforos_pedidos, (void*)_destruir_semaforos_pedidos);
@@ -63,7 +67,7 @@ void signalHandler(int sig){
 	destruir_config(config);
 	destruir_logger(logger);
 
-	puts("Fin Proceso SINDICATO");
+	puts("================\nFin SINDICATO\n================");
 
 	exit(EXIT_SUCCESS);
 }

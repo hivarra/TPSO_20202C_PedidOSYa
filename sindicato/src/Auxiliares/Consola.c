@@ -33,7 +33,7 @@ void crear_consola() {
 	char *line;
 	int consolaActiva = 1;
 
-	while (consolaActiva) {
+	while(consolaActiva){
 
 		line = readline("Ingrese un comando> ");
 
@@ -45,7 +45,6 @@ void crear_consola() {
 		switch (comando_e) {
 
 		case crearRestaurante_:;
-			log_trace(logger, "Se ingresó comando CrearRestaurante.");
 			if(!validar_crear_restaurante(comando))
 				puts("Faltan ingresar datos para la creación del restaurante.");
 			else{
@@ -66,7 +65,6 @@ void crear_consola() {
 			break;
 
 		case crearReceta_:;
-			log_trace(logger, "Se ingresó comando CrearReceta.");
 			if(!validar_crear_receta(comando))
 				puts("Faltan ingresar datos para la creación de la receta.");
 			else{
@@ -91,7 +89,6 @@ void crear_consola() {
 		}
 		liberar_lista(comando);
 	}
-	/*Si se eligio exit, termina solo la consola*/
 }
 
 t_tipoComando buscar_enum_sfs(char *sval) {
@@ -147,7 +144,7 @@ int crearRestaurante(t_crear_restaurante* argsCrearRestaurante){
 		char* linea = generarContenidoRestauranteEnBloques(argsCrearRestaurante);
 		// 3. Calcular cantidad de bloques necesarios
 		int tamanio = strlen(linea)+1;
-		int* bloques_necesarios = listar_bloques_necesarios_file_nuevo(tamanio);
+		int* bloques_necesarios = listar_bloques_necesarios_file_nuevo(tamanio, ruta_info);
 		// 4. Guardo la información en los bloques
 		persistirDatos(linea, bloques_necesarios);
 		// 5. Creo info.AFIP
@@ -159,7 +156,7 @@ int crearRestaurante(t_crear_restaurante* argsCrearRestaurante){
 		//aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
 		free(linea);
 		free(bloques_necesarios);
-		log_info(logger, "[Creacion nuevo archivo] Restaurante creado: %s.", argsCrearRestaurante->nombreRestaurante);
+		log_info(logger, "[Archivo Creado] Restaurante %s creado por consola.", argsCrearRestaurante->nombreRestaurante);
 		result = 1;
 	}
 	free(ruta_restaurante);
@@ -178,7 +175,7 @@ int crearReceta(t_crear_receta* argsCrearReceta){
 		char* linea = generarContenidoRecetaEnBloques(argsCrearReceta);
 		// 2. Calcular cantidad de bloques necesarios
 		int tamanio = strlen(linea)+1;
-		int* bloques_necesarios = listar_bloques_necesarios_file_nuevo(tamanio);
+		int* bloques_necesarios = listar_bloques_necesarios_file_nuevo(tamanio, ruta_receta);
 		// 3. Guardo la información en los bloques
 		persistirDatos(linea, bloques_necesarios);
 		// 4. Creo nombreReceta.AFIP
@@ -190,7 +187,7 @@ int crearReceta(t_crear_receta* argsCrearReceta){
 		//aplicar_retardo_fs("Creación de Restaurante");LO DEJO COMENTADO PORQUE SEGURO SE LES OLVIDO A LOS AYUDANTES
 		free(linea);
 		free(bloques_necesarios);
-		log_info(logger, "[Creacion nuevo archivo] Receta creada: %s.", argsCrearReceta->nombre);
+		log_info(logger, "[Archivo Creado] Receta %s creada por consola.", argsCrearReceta->nombre);
 		result = 1;
 	}
 	free(ruta_receta);

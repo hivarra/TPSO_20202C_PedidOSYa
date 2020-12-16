@@ -87,13 +87,15 @@ uint32_t procesar_guardar_pedido(t_guardar_pedido* msg_guardar_pedido){
 			t_metadata* file_mdata = malloc(sizeof(t_metadata));
 			file_mdata->size = strlen(contenido)+1;
 			/*Solicito bloques nuevos*/
-			int* bloques = listar_bloques_necesarios_file_nuevo(file_mdata->size);
+			int* bloques = listar_bloques_necesarios_file_nuevo(file_mdata->size, path_pedido);
 			file_mdata->initial_block = bloques[0];
 			/*Guardo contenido en los bloques*/
 			persistirDatos(contenido, bloques);
 			/*Creo el archivo metadata*/
 			crearMetadataArchivo(path_pedido, file_mdata);
-			log_info(logger, "[Creacion nuevo archivo] Pedido creado: %s.", path_pedido);
+			char* reducido = reducir_path_completo(path_pedido);
+			log_info(logger, "[Archivo Creado] Pedido creado solicitado por mensaje: %s.", reducido);
+			free(reducido);
 
 			free(contenido);
 			free(bloques);
@@ -216,7 +218,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* msg_guardar_plato){
 				//Creo un nuevo super string concatenando todas las lineas modificadas
 				char* nuevo_contenido = concatenarLineasModificadas(lineas_info);
 				/*Actualizo los files*/
-				contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques);
+				contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques, path_pedido);
 				persistirDatos(nuevo_contenido, contenido_file->array_bloques);
 				actualizarSizeMetadataArchivo(path_pedido, strlen(nuevo_contenido)+1);
 				free(nuevo_contenido);
@@ -267,7 +269,7 @@ uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 				//Creo un nuevo super string concatenando todas las lineas modificadas
 				char* nuevo_contenido = concatenarLineasModificadas(lineas_info);
 				/*Actualizo los files*/
-				contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques);
+				contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques, path_pedido);
 				persistirDatos(nuevo_contenido, contenido_file->array_bloques);
 				actualizarSizeMetadataArchivo(path_pedido, strlen(nuevo_contenido)+1);
 				free(nuevo_contenido);
@@ -518,13 +520,13 @@ uint32_t procesar_plato_listo(t_plato_listo* msg_plato_listo){
 					//Creo un nuevo super string concatenando todas las lineas modificadas
 					char* nuevo_contenido = concatenarLineasModificadas(lineas_info);
 					/*Actualizo los files*/
-					contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques);
+					contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques, path_pedido);
 					persistirDatos(nuevo_contenido, contenido_file->array_bloques);
 					actualizarSizeMetadataArchivo(path_pedido, strlen(nuevo_contenido)+1);
 					free(nuevo_contenido);
 				}
 				else
-					log_warning(logger, "El plato %s no se encuentra dentro del pedido pedido %d del restaurante %s.", msg_plato_listo->plato, msg_plato_listo->id_pedido, msg_plato_listo->restaurante);
+					log_warning(logger, "El plato %s no se encuentra dentro del pedido %d del restaurante %s.", msg_plato_listo->plato, msg_plato_listo->id_pedido, msg_plato_listo->restaurante);
 			}
 			liberar_lista(lineas_info);
 			free(contenido_file->array_bloques);
@@ -570,7 +572,7 @@ uint32_t procesar_terminar_pedido(t_terminar_pedido* msg_terminar_pedido){
 				//Creo un nuevo super string concatenando todas las lineas modificadas
 				char* nuevo_contenido = concatenarLineasModificadas(lineas_info);
 				/*Actualizo los files*/
-				contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques);
+				contenido_file->array_bloques = listar_bloques_necesarios_file_existente(strlen(nuevo_contenido)+1, file_mdata->size, contenido_file->array_bloques, path_pedido);
 				persistirDatos(nuevo_contenido, contenido_file->array_bloques);
 				actualizarSizeMetadataArchivo(path_pedido, strlen(nuevo_contenido)+1);
 				free(nuevo_contenido);

@@ -26,10 +26,10 @@ void montarFileSystem() {
 		ruta_files = string_from_format("%s/Files/", config_get_string_value(config, "PUNTO_MONTAJE"));
 		ruta_restaurantes = string_from_format("%s/Restaurantes/", ruta_files);
 		ruta_recetas = string_from_format("%s/Recetas/", ruta_files);
-		log_trace(logger,"Blocks: %d", cantidad_bloques);
-		log_trace(logger,"Block size: %d", tamanio_bloques);
-		log_trace(logger,"Magic number: %s", config_get_string_value(metadata_global, "MAGIC_NUMBER"));
-		log_trace(logger, "File System AFIP: Se leyo el FS existente.");
+		log_trace(logger,"\tBlocks: %d.", cantidad_bloques);
+		log_trace(logger,"\tBlock size: %d.", tamanio_bloques);
+		log_trace(logger,"\tMagic number: %s.", config_get_string_value(metadata_global, "MAGIC_NUMBER"));
+		log_trace(logger,"File System AFIP: Se leyo el FS existente.");
 		config_destroy(metadata_global);
 	}
 	else{
@@ -41,10 +41,10 @@ void montarFileSystem() {
 		crearDirectorioFiles();
 		crearDirectorioRestaurantes();
 		crearDirectorioRecetas();
-		log_trace(logger,"Blocks: %d", cantidad_bloques);
-		log_trace(logger,"Block size: %d", tamanio_bloques);
-		log_trace(logger,"Magic number: %s", config_get_string_value(config, "MAGIC_NUMBER"));
-		log_trace(logger, "File System AFIP: Creación finalizada.");
+		log_trace(logger,"\tBlocks: %d.", cantidad_bloques);
+		log_trace(logger,"\tBlock size: %d.", tamanio_bloques);
+		log_trace(logger,"\tMagic number: %s.", config_get_string_value(config, "MAGIC_NUMBER"));
+		log_trace(logger,"File System AFIP: Creación finalizada.");
 	}
 	free(path_metadata);
 	semaforos_pedidos = dictionary_create();
@@ -105,7 +105,7 @@ void leerBitmap(){
 		exit(-1);
 	}
 
-	bitmap = (void*)&bmap;
+	bitmap = (t_bitarray*)&bmap;
 
 	if (msync(bmap, cantidad_bloques/8, MS_SYNC) == -1)
 		log_warning(logger, "No se pudo actualizar el bitmap.");

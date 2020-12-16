@@ -7,6 +7,7 @@
 #include "Configuracion.h"
 #include "Mensajes.h"
 
+pthread_t thread_server;
 int socket_servidor;
 
 void escuchar_conexiones_sindicato();

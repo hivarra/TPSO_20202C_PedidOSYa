@@ -49,8 +49,8 @@ void cargar_logger_sindicato() {
 void mostrar_propiedades() {
 
 	log_trace(logger,"Propiedades cargadas:");
-	log_trace(logger,"Archivo log: %s", config_get_string_value(config, "ARCHIVO_LOG"));
-	log_trace(logger,"Punto montaje: %s", config_get_string_value(config, "PUNTO_MONTAJE"));
-	log_trace(logger,"Puerto escucha: %s", config_get_string_value(config, "PUERTO_ESCUCHA"));
+	log_trace(logger,"\tArchivo log: %s.", config_get_string_value(config, "ARCHIVO_LOG"));
+	log_trace(logger,"\tPunto montaje: %s.", config_get_string_value(config, "PUNTO_MONTAJE"));
+	log_trace(logger,"\tPuerto escucha: %s.", config_get_string_value(config, "PUERTO_ESCUCHA"));
 	//Las propiedades restantes se loguaran de acuerdo a si existe el FS.
 }
