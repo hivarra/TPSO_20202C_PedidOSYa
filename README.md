@@ -13,3 +13,25 @@ Tener en cuenta que esto se debe hacer tambien en las VM pruebas y en la entrega
 En cuanto a las entregas finales, upload al repo los archivos makefile, objects.mk y sources.mk
 de cada proyecto, a fin de poder compilar en otras VMs.
 
+<b>SCRIPT PARA INSTALAR TODO:</b>
+
+#PASO 1
+mkdir Repositorios
+
+#PASO 2
+cd Repositorios
+
+#PASO 3
+vi deploy.sh
+(Copiar el contenido de este link: https://github.com/sisoputnfrba/tp-2020-2c-Thread-Away/blob/master/deploy.sh)
+Pegar con click derecho
+
+#PASO 4
+Escape (para cancelar el INSERTAR)
+:wq + enter
+
+#PASO 5
+chmod 777 deploy.sh
+
+#PASO 6
+./deploy.sh -t=/home/utnso/Repositorios -d=shared -p=app -p=comanda -p=cliente -p=restaurante -p=sindicato tp-2020-2c-Thread-Away
