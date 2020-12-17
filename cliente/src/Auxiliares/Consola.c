@@ -39,10 +39,10 @@ void procesar_solicitud_app_restaurante(char** parametros){
 	free(handshake);
 
 	t_tipoMensaje tipo_mensaje = tipo_mensaje_string_to_enum(parametros[0]);
-	log_info(logger, "[Enviar Mensaje] A enviar: %s.", parametros[0]);
 
 	switch(tipo_mensaje) {
 		case CONSULTAR_RESTAURANTES:{
+			log_info(logger, "[CONSULTAR_RESTAURANTES] Se envia sin parametros.");
 			enviar_mensaje_vacio(CONSULTAR_RESTAURANTES, socket_envio, logger);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
 			if (tipo_rta == RTA_CONSULTAR_RESTAURANTES){
@@ -59,7 +59,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		case SELECCIONAR_RESTAURANTE:{
 			char* nombre_restaurante = calloc(1,L_ID);
 			strcpy(nombre_restaurante, parametros[1]);
-			log_info(logger, "\tParametro a enviar: Restaurante: %s.", nombre_restaurante);
+			log_info(logger, "[SELECCIONAR_RESTAURANTE] Parametro a enviar: Restaurante: %s.", nombre_restaurante);
 			enviar_seleccionar_restaurante(nombre_restaurante, socket_envio, logger);
 			free(nombre_restaurante);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
@@ -70,6 +70,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		case CONSULTAR_PLATOS:{
+			log_info(logger, "[CONSULTAR_PLATOS] Se envia sin parametros.");
 			char* msg_consultar_platos = calloc(1,L_ID);
 			strcpy(msg_consultar_platos, "N");//APP Y RESTAURANTE NO NECESITAN ESTE PARAMETRO
 			enviar_consultar_platos(msg_consultar_platos, socket_envio, logger);
@@ -88,6 +89,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		}
 		break;
 		case CREAR_PEDIDO:{
+			log_info(logger, "[CREAR_PEDIDO] Se envia sin parametros.");
 			enviar_mensaje_vacio(CREAR_PEDIDO, socket_envio, logger);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
 			if (tipo_rta == RTA_CREAR_PEDIDO){
@@ -100,7 +102,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			t_anadir_plato* msg_anadir_plato = calloc(1,sizeof(t_anadir_plato));
 			strcpy(msg_anadir_plato->plato, parametros[1]);
 			msg_anadir_plato->id_pedido = atoi(parametros[2]);
-			log_info(logger, "\tParametro a enviar: Plato: %s, ID_Pedido: %d.", msg_anadir_plato->plato, msg_anadir_plato->id_pedido);
+			log_info(logger, "[ANADIR_PLATO] Parametro a enviar: Plato: %s, ID_Pedido: %d.", msg_anadir_plato->plato, msg_anadir_plato->id_pedido);
 			enviar_anadir_plato(msg_anadir_plato, socket_envio, logger);
 			free(msg_anadir_plato);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
@@ -114,7 +116,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			t_confirmar_pedido* msg_confirmar_pedido = calloc(1,sizeof(t_confirmar_pedido));
 			strcpy(msg_confirmar_pedido->restaurante, "N");//APP NO NECESITA ESTE PARAMETRO
 			msg_confirmar_pedido->id_pedido = atoi(parametros[1]);
-			log_info(logger, "\tParametro a enviar: ID_Pedido: %d.", msg_confirmar_pedido->id_pedido);
+			log_info(logger, "[CONFIRMAR_PEDIDO] Parametro a enviar: ID_Pedido: %d.", msg_confirmar_pedido->id_pedido);
 			enviar_confirmar_pedido(msg_confirmar_pedido, socket_envio, logger);
 			free(msg_confirmar_pedido);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
@@ -129,7 +131,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 			strcpy(msg_plato_listo->restaurante, parametros[1]);
 			msg_plato_listo->id_pedido = atoi(parametros[2]);
 			strcpy(msg_plato_listo->plato, parametros[3]);
-			log_info(logger, "\tParametros a enviar: Restaurante: %s, ID_Pedido: %d, Comida: %s.", msg_plato_listo->restaurante, msg_plato_listo->id_pedido, msg_plato_listo->plato);
+			log_info(logger, "[PLATO_LISTO] Parametros a enviar: Restaurante: %s, ID_Pedido: %d, Comida: %s.", msg_plato_listo->restaurante, msg_plato_listo->id_pedido, msg_plato_listo->plato);
 			enviar_plato_listo(msg_plato_listo, socket_envio, logger);
 			free(msg_plato_listo);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
@@ -141,7 +143,7 @@ void procesar_solicitud_app_restaurante(char** parametros){
 		break;
 		case CONSULTAR_PEDIDO:{
 			uint32_t id_pedido = atoi(parametros[1]);
-			log_info(logger, "\tParametro a enviar: ID_Pedido: %d.", id_pedido);
+			log_info(logger, "[CONSULTAR_PEDIDO] Parametro a enviar: ID_Pedido: %d.", id_pedido);
 			enviar_entero(CONSULTAR_PEDIDO, id_pedido, socket_envio, logger);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_envio, logger);
 			if (tipo_rta == RTA_CONSULTAR_PEDIDO){
@@ -167,7 +169,6 @@ void procesar_solicitud_app_restaurante(char** parametros){
 void procesar_solicitud_comanda_sindicato(char** parametros){
 
 	t_tipoMensaje tipo_mensaje = tipo_mensaje_string_to_enum(parametros[0]);
-	log_info(logger, "[Enviar Mensaje] A enviar: %s.", parametros[0]);
 
 	int socket_bidireccional = conectar_a_server();
 
@@ -175,7 +176,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		case OBTENER_RESTAURANTE:{
 			char* msg_obtener_restaurante = calloc(1,L_ID);
 			strcpy(msg_obtener_restaurante, parametros[1]);
-			log_info(logger, "\tParametro a enviar: Restaurante: %s.", msg_obtener_restaurante);
+			log_info(logger, "[OBTENER_RESTAURANTE] Parametro a enviar: Restaurante: %s.", msg_obtener_restaurante);
 			enviar_obtener_restaurante(msg_obtener_restaurante, socket_bidireccional, logger);
 			free(msg_obtener_restaurante);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
@@ -201,7 +202,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		case CONSULTAR_PLATOS:{
 			char* msg_consultar_platos = calloc(1,L_ID);
 			strcpy(msg_consultar_platos, parametros[1]);
-			log_info(logger, "\tParametro a enviar: Restaurante: %s.", msg_consultar_platos);
+			log_info(logger, "[CONSULTAR_PLATOS] Parametro a enviar: Restaurante: %s.", msg_consultar_platos);
 			enviar_consultar_platos(msg_consultar_platos, socket_bidireccional, logger);
 			free(msg_consultar_platos);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
@@ -221,7 +222,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_guardar_pedido* msg_guardar_pedido = calloc(1,sizeof(t_guardar_pedido));
 			strcpy(msg_guardar_pedido->restaurante, parametros[1]);
 			msg_guardar_pedido->id_pedido = atoi(parametros[2]);
-			log_info(logger, "\tParametros a enviar: Restaurante: %s, ID_Pedido: %d.", msg_guardar_pedido->restaurante, msg_guardar_pedido->id_pedido);
+			log_info(logger, "[GUARDAR_PEDIDO] Parametros a enviar: Restaurante: %s, ID_Pedido: %d.", msg_guardar_pedido->restaurante, msg_guardar_pedido->id_pedido);
 			enviar_guardar_pedido(msg_guardar_pedido, socket_bidireccional, logger);
 			free(msg_guardar_pedido);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
@@ -237,7 +238,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			msg_guardar_plato->id_pedido = atoi(parametros[2]);
 			strcpy(msg_guardar_plato->plato, parametros[3]);
 			msg_guardar_plato->cantPlato = atoi(parametros[4]);
-			log_info(logger, "\tParametros a enviar: Restaurante: %s, ID_Pedido: %d, Comida: %s, Cantidad: %d.", msg_guardar_plato->restaurante, msg_guardar_plato->id_pedido, msg_guardar_plato->plato, msg_guardar_plato->cantPlato);
+			log_info(logger, "[GUARDAR_PLATO] Parametros a enviar: Restaurante: %s, ID_Pedido: %d, Comida: %s, Cantidad: %d.", msg_guardar_plato->restaurante, msg_guardar_plato->id_pedido, msg_guardar_plato->plato, msg_guardar_plato->cantPlato);
 			enviar_guardar_plato(msg_guardar_plato, socket_bidireccional, logger);
 			free(msg_guardar_plato);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
@@ -251,7 +252,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_confirmar_pedido* msg_confirmar_pedido = calloc(1,sizeof(t_confirmar_pedido));
 			strcpy(msg_confirmar_pedido->restaurante, parametros[1]);
 			msg_confirmar_pedido->id_pedido = atoi(parametros[2]);
-			log_info(logger, "\tParametros a enviar: ID_Pedido: %d, Restaurante: %s.", msg_confirmar_pedido->id_pedido, msg_confirmar_pedido->restaurante);
+			log_info(logger, "[CONFIRMAR_PEDIDO] Parametros a enviar: ID_Pedido: %d, Restaurante: %s.", msg_confirmar_pedido->id_pedido, msg_confirmar_pedido->restaurante);
 			enviar_confirmar_pedido(msg_confirmar_pedido, socket_bidireccional, logger);
 			free(msg_confirmar_pedido);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
@@ -266,7 +267,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			strcpy(msg_plato_listo->restaurante, parametros[1]);
 			msg_plato_listo->id_pedido = atoi(parametros[2]);
 			strcpy(msg_plato_listo->plato, parametros[3]);
-			log_info(logger, "\tParametros a enviar: Restaurante: %s, ID_Pedido: %d, Comida: %s.", msg_plato_listo->restaurante, msg_plato_listo->id_pedido, msg_plato_listo->plato);
+			log_info(logger, "[PLATO_LISTO] Parametros a enviar: Restaurante: %s, ID_Pedido: %d, Comida: %s.", msg_plato_listo->restaurante, msg_plato_listo->id_pedido, msg_plato_listo->plato);
 			enviar_plato_listo(msg_plato_listo, socket_bidireccional, logger);
 			free(msg_plato_listo);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
@@ -280,7 +281,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_obtener_pedido* msg_obtener_pedido = calloc(1,sizeof(t_obtener_pedido));
 			strcpy(msg_obtener_pedido->restaurante, parametros[1]);
 			msg_obtener_pedido->id_pedido = atoi(parametros[2]);
-			log_info(logger, "\tParametros a enviar: Restaurante: %s, ID_Pedido: %d.", msg_obtener_pedido->restaurante, msg_obtener_pedido->id_pedido);
+			log_info(logger, "[OBTENER_PEDIDO] Parametros a enviar: Restaurante: %s, ID_Pedido: %d.", msg_obtener_pedido->restaurante, msg_obtener_pedido->id_pedido);
 			enviar_obtener_pedido(msg_obtener_pedido, socket_bidireccional, logger);
 			free(msg_obtener_pedido);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
@@ -301,7 +302,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_finalizar_pedido* msg_finalizar_pedido = calloc(1,sizeof(t_finalizar_pedido));
 			strcpy(msg_finalizar_pedido->restaurante, parametros[1]);
 			msg_finalizar_pedido->id_pedido = atoi(parametros[2]);
-			log_info(logger, "\tParametros a enviar: Restaurante: %s, ID_Pedido: %d.", msg_finalizar_pedido->restaurante, msg_finalizar_pedido->id_pedido);
+			log_info(logger, "[FINALIZAR_PEDIDO] Parametros a enviar: Restaurante: %s, ID_Pedido: %d.", msg_finalizar_pedido->restaurante, msg_finalizar_pedido->id_pedido);
 			enviar_finalizar_pedido(msg_finalizar_pedido, socket_bidireccional, logger);
 			free(msg_finalizar_pedido);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
@@ -315,7 +316,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 			t_terminar_pedido* msg_terminar_pedido = calloc(1,sizeof(t_terminar_pedido));
 			strcpy(msg_terminar_pedido->restaurante, parametros[1]);
 			msg_terminar_pedido->id_pedido = atoi(parametros[2]);
-			log_info(logger, "\tParametros a enviar: Restaurante: %s, ID_Pedido: %d.", msg_terminar_pedido->restaurante, msg_terminar_pedido->id_pedido);
+			log_info(logger, "[TERMINAR_PEDIDO] Parametros a enviar: Restaurante: %s, ID_Pedido: %d.", msg_terminar_pedido->restaurante, msg_terminar_pedido->id_pedido);
 			enviar_terminar_pedido(msg_terminar_pedido, socket_bidireccional, logger);
 			free(msg_terminar_pedido);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
@@ -328,7 +329,7 @@ void procesar_solicitud_comanda_sindicato(char** parametros){
 		case OBTENER_RECETA:{
 			char* msg_obtener_receta = calloc(1,L_PLATO);
 			strcpy(msg_obtener_receta, parametros[1]);
-			log_info(logger, "\tParametro a enviar: Comida: %s.", msg_obtener_receta);
+			log_info(logger, "[OBTENER_RECETA] Parametro a enviar: Comida: %s.", msg_obtener_receta);
 			enviar_obtener_receta(msg_obtener_receta, socket_bidireccional, logger);
 			free(msg_obtener_receta);
 			t_tipoMensaje tipo_rta = recibir_tipo_mensaje(socket_bidireccional, logger);
