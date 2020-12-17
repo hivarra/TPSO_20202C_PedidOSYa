@@ -116,7 +116,7 @@ void escuchar_conexiones_comanda(){
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo(IP_COMANDA, config_get_string_value(config, "PUERTO_ESCUCHA"), &hints, &servinfo);
+	getaddrinfo(config_get_string_value(config, "IP_COMANDA"), config_get_string_value(config, "PUERTO_ESCUCHA"), &hints, &servinfo);
 
 	for (p=servinfo; p != NULL; p = p->ai_next)
 	{

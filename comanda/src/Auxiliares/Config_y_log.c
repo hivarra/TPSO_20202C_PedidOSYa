@@ -15,6 +15,11 @@ void cargar_configuracion_comanda(char * path_config) {
 		exit(-1);
 	}
 
+	if (!config_has_property(config, "IP_COMANDA")) {
+		puts("Error al leer IP_COMANDA de archivo de configuracion");
+		exit(2);
+	}
+
 	if (!config_has_property(config, "TAMANIO_MEMORIA")) {
 		puts("Error al leer TAMANIO_MEMORIA de archivo de configuracion");
 		exit(2);
@@ -61,6 +66,7 @@ void cargar_logger_comanda() {
 
 void mostrar_propiedades() {
 	log_trace(logger,"Propiedades leidas:");
+	log_trace(logger,"\tIp Comanda: %s.", config_get_string_value(config, "IP_COMANDA"));
 	log_trace(logger,"\tTamanio memoria: %d.", config_get_int_value(config, "TAMANIO_MEMORIA"));
 	log_trace(logger,"\tTamanio swap: %d.", config_get_int_value(config, "TAMANIO_SWAP"));
 	log_trace(logger,"\tAlgoritmo reemplazo: %s.", config_get_string_value(config, "ALGORITMO_REEMPLAZO"));
