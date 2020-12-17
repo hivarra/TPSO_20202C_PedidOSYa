@@ -13,7 +13,7 @@ int conectar_a_server(){
 	socket_aux = crear_conexion(cliente_config.ip, cliente_config.puerto);
 
 	if (socket_aux  == -1){
-		log_error(logger, "No se pudo conectar al servidor. Se cierra el modulo Cliente.");
+		log_error(logger, "[Conexion] No se pudo conectar al servidor. Se cierra el modulo Cliente.");
 		puts("No se pudo conectar al servidor. Se cierra el modulo Cliente.");
 		terminar_programa(-1);
 	}
@@ -37,7 +37,7 @@ int realizar_handshake_inicial(){
 	if(tipo_mensaje == RTA_HANDSHAKE){
 		uint32_t respuesta_entero = recibir_entero(socket_handshake, logger);
 		tipo_proceso_server = respuesta_entero;
-		log_info(logger, "Se realizo el HANDSHAKE INICIAL con proceso %s.", get_nombre_proceso(tipo_proceso_server));
+		log_info(logger, "[Conexion] Se ha conectado exitosamente al modulo %s.", get_nombre_proceso(tipo_proceso_server));
 	}
 
 	return socket_handshake;
@@ -68,10 +68,10 @@ void terminar_programa(int result){
 	if (socket_escucha != -1){
 		close(socket_escucha);
 		pthread_cancel(hilo_escucha);
-		puts("Ending listening thread...");
+		puts("\nFinishing listening thread...");
 		sleep(2);
 	}
 
-	puts("Fin CLIENTE");
+	puts("\n================\nFin CLIENTE\n================");
 	exit(result);
 }

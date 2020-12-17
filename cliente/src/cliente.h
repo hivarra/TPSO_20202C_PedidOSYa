@@ -11,7 +11,9 @@
 #include "Auxiliares/Configuracion.h"
 #include "Auxiliares/Conexion.h"
 #include "Auxiliares/Consola.h"
+#include <signal.h>
 
 void configurarProceso();
+void signalHandler(int);
 
 #endif /* CLIENTE_H_ */
