@@ -336,7 +336,7 @@ void escuchar_clientes(){
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo(IP_RESTAURANTE, config_get_string_value(config, "PUERTO_ESCUCHA"), &hints, &servinfo);
+	getaddrinfo(config_get_string_value(config, "IP_RESTAURANTE"), config_get_string_value(config, "PUERTO_ESCUCHA"), &hints, &servinfo);
 
 	for (p=servinfo; p != NULL; p = p->ai_next)
 	{

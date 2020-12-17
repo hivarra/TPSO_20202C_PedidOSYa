@@ -15,6 +15,11 @@ void cargar_configuracion_restaurante(char * path_config) {
 		exit(-1);
 	}
 
+	if (!config_has_property(config, "IP_RESTAURANTE")) {
+		puts("Error al leer IP_RESTAURANTE de archivo de configuracion");
+		exit(2);
+	}
+
 	if (!config_has_property(config, "PUERTO_ESCUCHA")) {
 		puts("Error al leer PUERTO_ESCUCHA de archivo de configuracion");
 		exit(2);
@@ -99,6 +104,7 @@ void cargar_logger_restaurante() {
 void mostrar_propiedades() {
 
 	log_info(logger,"Propiedades leidas:");
+	log_info(logger,"IP Restaurante: %s", config_get_string_value(config, "IP_RESTAURANTE"));
 	log_info(logger,"Puerto escucha: %s", config_get_string_value(config, "PUERTO_ESCUCHA"));
 	log_info(logger,"IP Sindicato: %s", restaurante_conf.ip_sindicato);
 	log_info(logger,"Puerto Sindicato: %s", restaurante_conf.puerto_sindicato);
