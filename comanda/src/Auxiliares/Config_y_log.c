@@ -34,8 +34,8 @@ void cargar_configuracion_comanda(char * path_config) {
 		puts("Error al leer ALGORITMO_REEMPLAZO de archivo de configuracion");
 		exit(2);
 	}
-	else if (strcmp(config_get_string_value(config, "ALGORITMO_REEMPLAZO"), "LRU")!= 0
-			&& strcmp(config_get_string_value(config, "ALGORITMO_REEMPLAZO"), "CLOCK_MEJ")!= 0){
+	else if (!string_equals_ignore_case(config_get_string_value(config, "ALGORITMO_REEMPLAZO"), "LRU")
+			&& !string_equals_ignore_case(config_get_string_value(config, "ALGORITMO_REEMPLAZO"), "CLOCK_MEJ")){
 		puts("ALGORITMO_REEMPLAZO no valido");
 		exit(2);
 	}

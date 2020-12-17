@@ -149,7 +149,7 @@ t_entrada_pagina* obtener_pagina_de_plato(t_list* lista_paginas,char* plato){//M
 
 		t_pagina* pagina = memoria_fisica + entrada_i->nro_frame_mp*sizeof(t_pagina);
 		actualizar_bits_de_uso(entrada_i);
-		if (strcmp(pagina->nombre_comida,plato) == 0){
+		if (string_equals_ignore_case(pagina->nombre_comida,plato)){
 			entrada_buscada = entrada_i;
 			break;
 		}
