@@ -97,7 +97,7 @@ t_tipoComando buscar_enum_sfs(char *sval) {
 	if (sval == NULL)
 		return -2;
 	for (int i = 0; comandos_str[i] != NULL; i++, result++)
-		if (strcmp(sval, comandos_str[i]) == 0)
+		if (string_equals_ignore_case(sval, comandos_str[i]))
 			return result;
 	return -1;
 }

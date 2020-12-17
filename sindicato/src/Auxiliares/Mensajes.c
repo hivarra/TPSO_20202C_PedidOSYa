@@ -112,7 +112,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* msg_guardar_plato){
 	int precioPlato(){
 		int precio = -1;
 		bool _contienePlato(t_plato* platoIterado){
-			return strcmp(platoIterado->nombre, msg_guardar_plato->plato) == 0;
+			return string_equals_ignore_case(platoIterado->nombre, msg_guardar_plato->plato);
 		}
 		t_rta_consultar_platos* consultar_platos = procesar_consultar_platos(msg_guardar_plato->restaurante);
 		t_plato* platoYprecio = list_find(consultar_platos->platos,(void*)_contienePlato);
@@ -145,7 +145,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* msg_guardar_plato){
 			free(contenido_file->string_leido);
 			/*Valido el estado del pedido*/
 			char* estadoPedido = string_substring_from(lineas_info[0], 14);
-			if (strcmp(estadoPedido, "Pendiente") != 0)
+			if (!string_equals_ignore_case(estadoPedido, "Pendiente"))
 				log_warning(logger, "El pedido %d del restaurante %s no se encuentra PENDIENTE.", msg_guardar_plato->id_pedido, msg_guardar_plato->restaurante);
 			else{
 				/*Verifico si el plato ya existe en el pedido*/
@@ -184,7 +184,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* msg_guardar_plato){
 					char* newLineaCantidades = string_from_format("CANTIDAD_PLATOS=[");
 					int i = 0;
 					while(arrayPlatos[i]!=NULL && arrayCantidades[i]!=NULL){
-						if (strcmp(arrayPlatos[i], msg_guardar_plato->plato) == 0){
+						if (string_equals_ignore_case(arrayPlatos[i], msg_guardar_plato->plato)){
 							int nuevaCantidad = atoi(arrayCantidades[i]) + msg_guardar_plato->cantPlato;
 							if(arrayCantidades[i+1]!=NULL)
 								string_append_with_format(&newLineaCantidades, "%d,", nuevaCantidad);
@@ -258,7 +258,7 @@ uint32_t procesar_confirmar_pedido(t_confirmar_pedido* msg_confirmar_pedido){
 			free(contenido_file->string_leido);
 			/*Valido el estado del pedido*/
 			char* estadoPedido = string_substring_from(lineas_info[0], 14);
-			if (strcmp(estadoPedido, "Pendiente") != 0)
+			if (!string_equals_ignore_case(estadoPedido, "Pendiente"))
 				log_warning(logger, "El pedido %d del restaurante %s no se encuentra PENDIENTE.", msg_confirmar_pedido->id_pedido, msg_confirmar_pedido->restaurante);
 			else{
 				//Actualizo el estado del pedido
@@ -314,11 +314,11 @@ t_rta_obtener_pedido* procesar_obtener_pedido(t_obtener_pedido* msg_obtener_pedi
 			free(contenido_file);
 			/*Obtengo el estado del pedido*/
 			char* estadoPedido = string_substring_from(lineas_info[0], 14);
-			if (strcmp(estadoPedido, "Pendiente") == 0)
+			if (string_equals_ignore_case(estadoPedido, "Pendiente"))
 				respuesta->estado = PENDIENTE;
-			else if(strcmp(estadoPedido, "Confirmado") == 0)
+			else if(string_equals_ignore_case(estadoPedido, "Confirmado"))
 				respuesta->estado = CONFIRMADO;
-			else if(strcmp(estadoPedido, "Terminado") == 0)
+			else if(string_equals_ignore_case(estadoPedido, "Terminado"))
 				respuesta->estado = TERMINADO;
 			free(estadoPedido);
 			/*Obtengo la cantidad de platos*/
@@ -478,7 +478,7 @@ uint32_t procesar_plato_listo(t_plato_listo* msg_plato_listo){
 			free(contenido_file->string_leido);
 			/*Valido el estado del pedido*/
 			char* estadoPedido = string_substring_from(lineas_info[0], 14);
-			if (strcmp(estadoPedido, "Confirmado") != 0)
+			if (!string_equals_ignore_case(estadoPedido, "Confirmado"))
 				log_warning(logger, "El pedido %d del restaurante %s no se encuentra PENDIENTE.", msg_plato_listo->id_pedido, msg_plato_listo->restaurante);
 			else{
 				/*Verifico si el plato ya existe en el pedido*/
@@ -494,7 +494,7 @@ uint32_t procesar_plato_listo(t_plato_listo* msg_plato_listo){
 
 					int i = 0;
 					while(arrayPlatos[i]!=NULL && arrayCantidadesListas[i]!=NULL){
-						if (strcmp(arrayPlatos[i], msg_plato_listo->plato) == 0){
+						if (string_equals_ignore_case(arrayPlatos[i], msg_plato_listo->plato)){
 								int nuevaCantidad = atoi(arrayCantidadesListas[i]) + 1;
 								if(arrayCantidadesListas[i+1]!=NULL)
 									string_append_with_format(&newLineaCantidadesLista, "%d,", nuevaCantidad);
@@ -561,7 +561,7 @@ uint32_t procesar_terminar_pedido(t_terminar_pedido* msg_terminar_pedido){
 			free(contenido_file->string_leido);
 			/*Valido el estado del pedido*/
 			char* estadoPedido = string_substring_from(lineas_info[0], 14);
-			if (strcmp(estadoPedido, "Confirmado") != 0)
+			if (!string_equals_ignore_case(estadoPedido, "Confirmado"))
 				log_warning(logger, "El pedido %d del restaurante %s no se encuentra CONFIRMADO.", msg_terminar_pedido->id_pedido, msg_terminar_pedido->restaurante);
 			else{
 				//Actualizo el estado del pedido
