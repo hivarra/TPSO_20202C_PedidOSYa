@@ -4,6 +4,11 @@ void cargarConfigSindicato(char* path) {
 
 	config = config_create(path);
 
+	if (!config_has_property(config, "IP_SINDICATO")){
+		puts("Error al leer IP_SINDICATO de archivo de configuracion.");
+		exit(2);
+	}
+
 	if (!config_has_property(config, "PUNTO_MONTAJE")){
 		puts("Error al leer PUNTO_MONTAJE de archivo de configuracion.");
 		exit(2);
@@ -49,6 +54,7 @@ void cargar_logger_sindicato() {
 void mostrar_propiedades() {
 
 	log_trace(logger,"Propiedades cargadas:");
+	log_trace(logger,"\tIp Sindicato: %s.", config_get_string_value(config, "IP_SINDICATO"));
 	log_trace(logger,"\tArchivo log: %s.", config_get_string_value(config, "ARCHIVO_LOG"));
 	log_trace(logger,"\tPunto montaje: %s.", config_get_string_value(config, "PUNTO_MONTAJE"));
 	log_trace(logger,"\tPuerto escucha: %s.", config_get_string_value(config, "PUERTO_ESCUCHA"));
