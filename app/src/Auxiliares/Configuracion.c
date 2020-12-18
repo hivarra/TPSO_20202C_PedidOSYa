@@ -99,7 +99,7 @@ void cargar_logger_app() {
 	carpeta_creada = crear_carpeta_log(app_conf.archivo_log);
 	if (carpeta_creada){
 		logger = log_create(app_conf.archivo_log, "App", 0, LOG_LEVEL_TRACE);
-		log_info(logger, "*************** NUEVO LOG ***************");
+		log_trace(logger, "*************** NUEVO LOG ***************");
 	}
 	else{
 		puts("Error al crear la carpera del log");
@@ -109,28 +109,25 @@ void cargar_logger_app() {
 
 void mostrar_propiedades() {
 
-	log_info(logger,"Propiedades cargadas:");
-	log_info(logger,"Puerto escucha: %s", app_conf.puerto_escucha);
-	log_info(logger,"IP comanda: %s", app_conf.ip_comanda);
-	log_info(logger,"Puerto comanda: %s", app_conf.puerto_comanda);
-	log_info(logger,"Grado multiprocesamiento: %d", app_conf.grado_multiprocesamiento);
-	log_info(logger,"Algoritmo planificacion: %s", app_conf.algoritmo_planificacion);
-	log_info(logger,"Alpha: %f", app_conf.alpha);
-	log_info(logger,"Estimacion inicial: %d", app_conf.estimacion_inicial);
-	log_info(logger,"Archivo log: %s", app_conf.archivo_log);
-	log_info(logger,"Pos rest default x: %d", app_conf.pos_rest_default_x);
-	log_info(logger,"Pos rest default y: %d", app_conf.pos_rest_default_y);
+	log_trace(logger,"Propiedades cargadas:");
+	log_trace(logger,"\tPuerto escucha: %s.", app_conf.puerto_escucha);
+	log_trace(logger,"\tIP comanda: %s.", app_conf.ip_comanda);
+	log_trace(logger,"\tPuerto comanda: %s.", app_conf.puerto_comanda);
+	log_trace(logger,"\tGrado multiprocesamiento: %d.", app_conf.grado_multiprocesamiento);
+	log_trace(logger,"\tAlgoritmo planificacion: %s.", app_conf.algoritmo_planificacion);
+	log_trace(logger,"\tAlpha: %f.", app_conf.alpha);
+	log_trace(logger,"\tEstimacion inicial: %d.", app_conf.estimacion_inicial);
+	log_trace(logger,"\tArchivo log: %s.", app_conf.archivo_log);
+	log_trace(logger,"\tPos rest. default X: %d.", app_conf.pos_rest_default_x);
+	log_trace(logger,"\tPos rest. default Y: %d.", app_conf.pos_rest_default_y);
 	int i=0;
 	while(app_conf.repartidores[i]){
-		log_info(logger, "REPARTIDOR %d", i+1);
-		log_info(logger, "Posicion:%s", app_conf.repartidores[i]);
-		log_info(logger, "Frecuencia de descanso:%s", app_conf.frecuencias_descanso[i]);
-		log_info(logger, "Tiempo de descanso:%s", app_conf.tiempos_descanso[i]);
+		log_trace(logger, "\tREPARTIDOR %d: Posicion:%s, Frecuencia descanso:%s, Tiempo descanso:%s.",i+1,app_conf.repartidores[i],app_conf.frecuencias_descanso[i],app_conf.tiempos_descanso[i]);
 		i++;
 	}
 	int j=0;
 	while(app_conf.platos_default[j]){
-		log_info(logger, "Plato default:%s", app_conf.platos_default[j]);
+		log_trace(logger, "\tPlato default: %s.", app_conf.platos_default[j]);
 		j++;
 	}
 }
