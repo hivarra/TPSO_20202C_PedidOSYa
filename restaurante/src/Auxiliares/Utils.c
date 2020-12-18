@@ -8,15 +8,37 @@
 
 void signalHandler(int sig){
 
+	if(socket_envio != -1)
+		close(socket_envio);
+	if(socket_escucha != -1)
+		close(socket_escucha);
+	close(socket_servidor);
+
+	pthread_mutex_destroy(&mutex_id_pcb);
+	pthread_mutex_destroy(&mutex_id_pedidos);
+	pthread_mutex_destroy(&mutex_cola_bloqueados_prehorno);
+	pthread_mutex_destroy(&mutex_cola_exit);
+	pthread_mutex_destroy(&mutex_cocineros);
+	pthread_mutex_destroy(&mutex_afinidades_maestro);
+
+	list_destroy_and_destroy_elements(metadata_restaurante.afinidades_cocineros,free);
+	list_destroy_and_destroy_elements(metadata_restaurante.platos,free);
+	list_destroy_and_destroy_elements(cola_exit,free);
+	list_destroy_and_destroy_elements(cola_bloqueados_prehorno,free);
+	list_destroy_and_destroy_elements(pedidos_pcbs,free);
+
+	void destruir_cliente(t_cliente* cliente){
+		close(cliente->socket_escucha);
+		list_destroy_and_destroy_elements(cliente->pedidos,free);
+		pthread_mutex_destroy(&cliente->mutex_pedidos);
+		free(cliente);
+	}
+	list_destroy_and_destroy_elements(clientes_conectados, (void*)destruir_cliente);
+
 	destruir_logger(logger);
 	destruir_config(config);
 
-	if(socket_servidor != -1)
-		close(socket_servidor);
-
-	list_destroy_and_destroy_elements(clientes_conectados, free);
-
-	puts("Fin RESTAURANTE");
+	puts("\n================\nFin RESTAURANTE\n================");
 
 	exit(EXIT_SUCCESS);
 }

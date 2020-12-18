@@ -93,7 +93,7 @@ void cargar_logger_restaurante() {
 	carpeta_creada = crear_carpeta_log(config_get_string_value(config, "ARCHIVO_LOG"));
 	if (carpeta_creada){
 		logger = log_create(config_get_string_value(config, "ARCHIVO_LOG"), "Restaurante", 1, LOG_LEVEL_TRACE);
-		log_info(logger, "*************** NUEVO LOG ***************");
+		log_trace(logger, "*************** NUEVO LOG ***************");
 	}
 	else{
 		puts("Error al crear la carpera del log");
@@ -103,16 +103,16 @@ void cargar_logger_restaurante() {
 
 void mostrar_propiedades() {
 
-	log_info(logger,"Propiedades leidas:");
-	log_info(logger,"IP Restaurante: %s", config_get_string_value(config, "IP_RESTAURANTE"));
-	log_info(logger,"Puerto escucha: %s", config_get_string_value(config, "PUERTO_ESCUCHA"));
-	log_info(logger,"IP Sindicato: %s", restaurante_conf.ip_sindicato);
-	log_info(logger,"Puerto Sindicato: %s", restaurante_conf.puerto_sindicato);
-	log_info(logger,"IP app: %s", config_get_string_value(config, "IP_APP"));
-	log_info(logger,"Puerto App: %s", config_get_string_value(config, "PUERTO_APP"));
-	log_info(logger,"Quantum: %d", restaurante_conf.quantum);
-	log_info(logger,"Algoritmo planificacion: %s", config_get_string_value(config, "ALGORITMO_PLANIFICACION"));
-	log_info(logger,"Nombre restaurante: %s", restaurante_conf.nombre_restaurante);
-	log_info(logger,"Archvo log: %s", config_get_string_value(config, "ARCHIVO_LOG"));
-	log_info(logger,"Retardo ciclo cpu:%d",restaurante_conf.retardo_ciclo_cpu);
+	log_trace(logger,"Propiedades leidas:");
+	log_trace(logger,"\tIP Restaurante: %s", config_get_string_value(config, "IP_RESTAURANTE"));
+	log_trace(logger,"\tPuerto escucha: %s", config_get_string_value(config, "PUERTO_ESCUCHA"));
+	log_trace(logger,"\tIP Sindicato: %s", restaurante_conf.ip_sindicato);
+	log_trace(logger,"\tPuerto Sindicato: %s", restaurante_conf.puerto_sindicato);
+	log_trace(logger,"\tIP app: %s", config_get_string_value(config, "IP_APP"));
+	log_trace(logger,"\tPuerto App: %s", config_get_string_value(config, "PUERTO_APP"));
+	log_trace(logger,"\tQuantum: %d", restaurante_conf.quantum);
+	log_trace(logger,"\tAlgoritmo planificacion: %s", config_get_string_value(config, "ALGORITMO_PLANIFICACION"));
+	log_trace(logger,"\tRetardo ciclo cpu:%d",restaurante_conf.retardo_ciclo_cpu);
+	log_trace(logger,"\tNombre restaurante: %s", restaurante_conf.nombre_restaurante);
+	log_trace(logger,"\tArchvo log: %s", config_get_string_value(config, "ARCHIVO_LOG"));
 }

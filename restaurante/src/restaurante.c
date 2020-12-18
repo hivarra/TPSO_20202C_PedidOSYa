@@ -11,7 +11,7 @@
 #include "restaurante.h"
 
 int main(int argc, char *argv[]) {
-	puts("Inicio RESTAURANTE");
+	puts("================\nInicio RESTAURANTE\n================");
 
 	/* 1. Configuración */
 	char* path_config = getConfigPath(argv[1]);

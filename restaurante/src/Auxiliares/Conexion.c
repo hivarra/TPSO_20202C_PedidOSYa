@@ -183,7 +183,6 @@ void connection_handler_cliente(int* socket_emisor){
 }
 
 void crear_socket_envio(){
-	socket_envio = -1;//Para saber si hay que cerrarlo
 
 	int socket_envio_aux = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
 	if (socket_envio_aux == -1)
@@ -207,6 +206,7 @@ void crear_socket_envio(){
 
 void conectar_a_app(){
 	socket_escucha = -1;//Para saber si hay que cerrarlo
+	socket_envio = -1;//Para saber si hay que cerrarlo
 
 	int socket_handshake = crear_conexion(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_APP"));
 	if (socket_handshake == -1)

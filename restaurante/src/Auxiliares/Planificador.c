@@ -441,6 +441,7 @@ void inicializar_colas_ready(){
 	AFINIDADES_MAESTRO = list_create();
 	pthread_mutex_init(&mutex_afinidades_maestro,NULL);
 
+	//TODO: NO DEBERIA SER LIST_SIZE(afinidades_distinct)?;
 	lista_colas_ready =  malloc(sizeof(t_list)*list_size(metadata_restaurante.afinidades_cocineros));
 
 	for(int i=0;i<list_size(afinidades_distinct);i++){
@@ -456,7 +457,7 @@ void inicializar_colas_ready(){
 		//SE CREA MUTEX PARA CADA COLA READY
 		pthread_mutex_init(&mutex_colas_ready[i],NULL);
 	}
-	free(afinidades_distinct);
+	list_destroy(afinidades_distinct);
 }
 void inicializar_sem_mutex(){
 	pthread_mutex_init(&mutex_id_pcb,NULL);
