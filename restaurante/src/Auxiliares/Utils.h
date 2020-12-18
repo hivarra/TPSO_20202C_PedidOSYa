@@ -17,6 +17,11 @@ typedef struct{
 	char nombre_afinidad[L_PLATO];
 }t_afinidad;
 
+typedef struct{
+	int id_horno;
+	bool disponible;
+}t_horno;
+
 typedef enum{
 	FIFO,
 	RR

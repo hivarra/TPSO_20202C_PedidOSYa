@@ -31,6 +31,7 @@ t_list* AFINIDADES_MAESTRO;
 t_list** lista_colas_ready;
 t_list* cola_exit;
 t_list* cola_bloqueados_prehorno;
+t_list* lista_hornos;
 uint32_t id_pcb_global;
 
 t_list* pedidos_pcbs;//lista t_pedido_pcb;

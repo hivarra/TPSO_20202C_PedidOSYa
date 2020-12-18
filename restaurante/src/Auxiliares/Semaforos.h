@@ -10,8 +10,9 @@
 
 #include <semaphore.h>
 
-sem_t sem_hornear_plato;
+sem_t* sem_hornear_plato;
 sem_t sem_hay_espacio_en_horno;
+sem_t sem_planificar_cola_hornos;
 sem_t* sem_fin_paso;
 sem_t* sem_realizar_paso;
 sem_t* sem_hilos_cocineros;

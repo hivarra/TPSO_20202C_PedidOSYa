@@ -100,11 +100,31 @@ void realizar_paso_horno(t_pcb* pcb){
 	log_info(logger,"[HORNO] Se ejecuta %d rafagas de CPU de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso->tiempo,paso->accion,pcb->nombre_plato,pcb->id,pcb->id_pedido);
 	aplicar_retardo(paso->tiempo);
 }
-void planificar_hornos(){
+void ocupar_horno(int id_horno){
+	bool es_horno(t_horno* horno){
+		return horno->id_horno==id_horno;
+	}
+	pthread_mutex_lock(&mutex_lista_hornos);
+	t_horno* horno=list_find(lista_hornos,(void*)es_horno);
+	pthread_mutex_unlock(&mutex_lista_hornos);
+
+	horno->disponible=false;
+}
+void liberar_horno(int id_horno){
+	bool es_horno(t_horno* horno){
+		return horno->id_horno==id_horno;
+	}
+	pthread_mutex_lock(&mutex_lista_hornos);
+	t_horno* horno=list_find(lista_hornos,(void*)es_horno);
+	pthread_mutex_unlock(&mutex_lista_hornos);
+
+	horno->disponible=true;
+}
+void planificar_horno(int* id_horno){
 
 	while(1){
-		sem_wait(&sem_hornear_plato);
-		sem_wait(&sem_hay_espacio_en_horno);
+		sem_wait(&sem_hornear_plato[*id_horno]);
+		ocupar_horno(*id_horno);
 		t_pcb* pcb = obtener_proximo_pcb_a_hornear();
 
 		realizar_paso_horno(pcb);
@@ -117,7 +137,31 @@ void planificar_hornos(){
 		pasar_pcb_a_estado(pcb,READY);
 		t_afinidad* afinidad = obtener_afinidad(pcb->nombre_plato);
 		sem_post(&sem_cola_ready[afinidad->id_afinidad]);
+
+		liberar_horno(*id_horno);
 		sem_post(&sem_hay_espacio_en_horno);
+	}
+}
+t_horno* obtener_horno_disponible(){
+	bool horno_esta_disponible(t_horno* horno){
+		return horno->disponible;
+	}
+
+	pthread_mutex_lock(&mutex_lista_hornos);
+	t_horno* horno =list_find(lista_hornos,(void*)horno_esta_disponible);
+	pthread_mutex_unlock(&mutex_lista_hornos);
+
+	return horno;
+}
+void planificar_cola_hornos(){
+
+	while(1){
+		sem_wait(&sem_planificar_cola_hornos);
+		sem_wait(&sem_hay_espacio_en_horno);
+		t_horno* horno = obtener_horno_disponible();
+
+		if(horno!=NULL)
+			sem_post(&sem_hornear_plato[horno->id_horno]);
 	}
 }
 void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
@@ -134,7 +178,7 @@ void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
 
 	t_afinidad* afinidad=obtener_afinidad(cocinero->afinidad);
 	sem_post(&sem_fin_paso[afinidad->id_afinidad]);
-	sem_post(&sem_hornear_plato);
+	sem_post(&sem_planificar_cola_hornos);
 
 }
 void agregar_pcb_a_cola_exit(t_pcb* pcb){
@@ -422,8 +466,9 @@ void inicializar_sem_mutex(){
 	pthread_mutex_init(&mutex_cocineros,NULL);
 }
 void inicializar_sem_contadores(){
-	sem_init(&sem_hornear_plato,0,0);
+//	sem_init(&sem_hornear_plato,0,0);
 	sem_init(&sem_hay_espacio_en_horno,0,metadata_restaurante.cantidad_hornos);
+	sem_init(&sem_planificar_cola_hornos,0,0);
 
 	sem_realizar_paso = malloc(sizeof(sem_t)*list_size(metadata_restaurante.afinidades_cocineros));
 	for(int i=0;i<list_size(metadata_restaurante.afinidades_cocineros);i++){
@@ -436,6 +481,11 @@ void inicializar_sem_contadores(){
 	for(int i=0;i<list_size(AFINIDADES_MAESTRO);i++){
 			sem_init(&sem_cola_ready[i],0,0);
 			sem_init(&sem_fin_paso[i],0,0);
+	}
+
+	sem_hornear_plato = malloc(sizeof(sem_t)*metadata_restaurante.cantidad_hornos);
+	for(int i=0;i<metadata_restaurante.cantidad_hornos;i++){
+		sem_init(&sem_hornear_plato[i],0,0);
 	}
 }
 void inicializar_hilos_cocineros(){
@@ -469,9 +519,30 @@ void inicializar_hilos_planificadores(){
 	}
 }
 void inicializar_hilo_horno(){
-	pthread_t hilo_horno;
-	pthread_create(&hilo_horno,NULL,(void*)planificar_hornos,NULL);
-	pthread_detach(hilo_horno);
+	lista_hornos=list_create();
+
+	pthread_t hilo_planificador_hornos;
+	pthread_create(&hilo_planificador_hornos,NULL,(void*)planificar_cola_hornos,NULL);
+	pthread_detach(hilo_planificador_hornos);
+
+	pthread_mutex_init(&mutex_lista_hornos,NULL);
+	mutex_hornos = malloc(sizeof(pthread_mutex_t)*metadata_restaurante.cantidad_hornos);
+
+	for(int i=0;i<metadata_restaurante.cantidad_hornos;i++){
+		t_horno* horno = malloc(sizeof(t_horno));
+		horno->id_horno = i;
+		horno->disponible = true;
+
+		pthread_mutex_lock(&mutex_lista_hornos);
+		list_add(lista_hornos,horno);
+		pthread_mutex_unlock(&mutex_lista_hornos);
+
+		pthread_mutex_init(&mutex_hornos[i],NULL);
+
+		pthread_t hilo_horno;
+		pthread_create(&hilo_horno,NULL,(void*)planificar_horno,&horno->id_horno);
+		pthread_detach(hilo_horno);
+	}
 }
 void inicializar_cola_exit(){
 	cola_exit = list_create();
