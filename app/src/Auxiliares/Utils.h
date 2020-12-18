@@ -49,6 +49,7 @@ typedef struct {
 	uint32_t objetivo_posX;
 	uint32_t objetivo_posY;
 	uint32_t quantum;
+	pthread_t thread_repartidor;//Para finalizar el proceso y terminar el hilo
 } t_repartidor;
 
 typedef struct {
@@ -99,8 +100,6 @@ t_info_cliente* buscarClientePorPedidoYnombreRestaurante(int id_pedido,char* nom
 t_info_restaurante* buscarRestauranteConectado(char* nombre_restaurante);
 t_rta_consultar_restaurantes* obtenerRestaurantes();
 
-void imprimirRepartidor(t_repartidor* repartidor);
-void imprimirPCB(t_pcb* pcb);
 void crearPCB(t_info_cliente* cliente, int id_pedido);
 void disponibilizar_repartidor(t_repartidor* repartidor);
 t_repartidor* repartidor_mas_cercano(int posX, int poxY);

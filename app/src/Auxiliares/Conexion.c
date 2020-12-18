@@ -103,11 +103,12 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 	break;
 
 	case CONSULTAR_PLATOS:{
-		char* restaurante = recibir_consultar_platos(socket_cliente,logger);
-		log_trace(logger, "[Recepcion Mensaje] Se recibio CONSULTAR_PLATOS: Cliente: %s, Restaurante: %s.", id_cliente,restaurante);
+		char* ene = recibir_consultar_platos(socket_cliente,logger);
+		free(ene);//NO IMPORTA
+		log_trace(logger, "[Recepcion Mensaje] Se recibio CONSULTAR_PLATOS: Cliente: %s, Restaurante seleccionado: %s.", id_cliente,cliente->restaurante_seleccionado);
 		t_rta_consultar_platos* respuesta;
 
-		if(string_equals_ignore_case(restaurante, infoRestoDefault->id)){
+		if(string_equals_ignore_case(cliente->restaurante_seleccionado, infoRestoDefault->id)){
 			respuesta = malloc(sizeof(t_rta_consultar_platos));
 			respuesta->platos = list_create();
 			int i = 0;
@@ -121,7 +122,7 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 			respuesta->cantPlatos = i;
 		}
 		else {
-			t_info_restaurante* info_restaurante = buscarRestauranteConectado(restaurante);
+			t_info_restaurante* info_restaurante = buscarRestauranteConectado(cliente->restaurante_seleccionado);
 			if(info_restaurante != NULL){
 				char* msg_consultar_platos = calloc(1,L_ID);
 				strcpy(msg_consultar_platos, "N");//EL RESTAURANTE NO NECESITA ESTE PARAMETRO
@@ -146,8 +147,6 @@ void procesarMensaje(int socket_cliente, char* id_cliente){
 		enviar_rta_consultar_platos(respuesta, socket_cliente, logger);
 		list_destroy_and_destroy_elements(respuesta->platos, free);
 		free(respuesta);
-
-		free(restaurante);
 	}
 	break;
 
@@ -366,6 +365,7 @@ void procesar_handshake_inicial(t_handshake_inicial* handshake_inicial, int sock
 	case CLIENTE:{
 		t_info_cliente* new_client = calloc(1,sizeof(t_info_cliente));
 		strcpy(new_client->id, handshake_inicial->id);
+		strcpy(new_client->restaurante_seleccionado, "N");
 		new_client->pos_x = handshake_inicial->posX;
 		new_client->pos_y = handshake_inicial->posY;
 		new_client->socketEscucha = socket_emisor;
@@ -402,7 +402,7 @@ void atenderConexion(int* socket_emisor) {
 
 	t_tipoMensaje tipoMensaje = recibir_tipo_mensaje(*socket_emisor, logger);
 
-	if (tipoMensaje == -1){
+	if (tipoMensaje == -1) {
 		close(*socket_emisor);
 		free(socket_emisor);
 		pthread_exit(NULL);
@@ -416,8 +416,8 @@ void atenderConexion(int* socket_emisor) {
 			free(handshake_inicial);
 			uint32_t miTipoProceso = APP;
 			enviar_entero(RTA_HANDSHAKE, miTipoProceso, *socket_emisor, logger);
-			break;
 		}
+		break;
 		case HANDSHAKE:{
 			t_handshake* handshake = recibir_handshake(*socket_emisor, logger);
 			/*SI SE CONECTA UN CLIENTE, RECIBO EL MENSAJE QUE QUIERA ENVIAR*/
@@ -436,8 +436,8 @@ void atenderConexion(int* socket_emisor) {
 				}
 			}
 			free(handshake);
-			break;
 		}
+		break;
 		default:
 			log_error(logger, "[Atender_conexion] Tipo de mensaje no admitido.");
 			close(*socket_emisor);
@@ -470,7 +470,7 @@ void crearServidor() {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo(app_conf.ip_app, app_conf.puerto_escucha, &hints, &servinfo);
+	getaddrinfo(config_get_string_value(config, "IP_APP"), config_get_string_value(config, "PUERTO_ESCUCHA"), &hints, &servinfo);
 
 	for (p=servinfo; p != NULL; p = p->ai_next)
 	{
@@ -489,9 +489,6 @@ void crearServidor() {
 	freeaddrinfo(servinfo);
 
 	log_trace(logger, "SERVIDOR | Escuchando conexiones");
-
-	/*Inicializaciones*/
-	inicializarListaClientesRest();
 
 	while(1)
 		esperar_cliente(socket_app);

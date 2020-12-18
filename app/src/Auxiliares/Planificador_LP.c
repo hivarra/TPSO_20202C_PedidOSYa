@@ -25,7 +25,7 @@ void* planificador_largo_plazo() {
 		pthread_mutex_lock(&mutex_listos);
 		list_add(listos, pcb);
 		pthread_mutex_unlock(&mutex_listos);
-		log_info(logger, "Repartidor N°%d | Pasa a READY | Asignado a pedido N°%d", pcb->id_repartidor, pcb->id_pedido);
+		log_info(logger, "Repartidor N°%d | Pasa a READY | Asignado a pedido N°%d, Restaurante %s", pcb->id_repartidor, pcb->id_pedido, pcb->restaurante);
 
 		sem_post(&sem_ready);
 

@@ -10,6 +10,8 @@
 
 #include "Planificador_LP.h"
 
+pthread_t hilo_espera_cpu;
+
 void* planificador_fifo();
 void* planificador_hrrn();
 void* planificador_sjf();

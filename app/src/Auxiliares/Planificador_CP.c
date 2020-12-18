@@ -33,10 +33,8 @@ void* planificador_fifo() {
 
 void* planificador_hrrn() {
 
-	pthread_t hilo_espera_cpu;
 	pthread_create(&hilo_espera_cpu, NULL, (void*)incrementar_espera_cpu, NULL);
 	pthread_detach(hilo_espera_cpu);
-
 
 	while(1) {
 
@@ -85,7 +83,7 @@ double calcular_estimacion_SJF(t_pcb* pcb) {
 	int est_real = distancia_a_posicion(repartidor, repartidor->objetivo_posX, repartidor->objetivo_posY);
 	double nueva_estimacion = (alpha * est_real) + ((1 - alpha) * pcb->ultima_estimacion);
 
-	log_info(logger, "Repartidor N°%d | Estimacion | Ultima: %f | Real: %d | Nueva: %f", repartidor->id, pcb->ultima_estimacion, est_real, nueva_estimacion);
+	log_trace(logger, "Repartidor N°%d | Estimacion | Ultima: %f | Real: %d | Nueva: %f", repartidor->id, pcb->ultima_estimacion, est_real, nueva_estimacion);
 
 	pcb->ultima_estimacion = nueva_estimacion;
 
@@ -109,17 +107,16 @@ t_pcb* sacar_pcb_de_listos_por_SJF() {
 	t_pcb* pcb_SJF = list_get(listos, 0);
 
 	void asignar(t_pcb* pcb_lista) {
-		if(pcb_SJF->ultima_estimacion > pcb_lista->ultima_estimacion) {
+		if(pcb_lista->ultima_estimacion < pcb_SJF->ultima_estimacion)
 			pcb_SJF = pcb_lista;
-		}
 	}
+	list_iterate(listos, (void*)asignar);
 
 	int comparar(t_pcb* pcb_lista) {
-		return pcb_SJF->id_pedido == pcb_lista->id_pedido;
+		return pcb_SJF->id_pedido == pcb_lista->id_pedido && pcb_SJF->id_repartidor == pcb_lista->id_repartidor;
 	}
-
-	list_iterate(listos, (void*)asignar);
 	list_remove_by_condition(listos, (void*)comparar);
+
 	pthread_mutex_unlock(&mutex_listos);
 //	log_info(logger, "PCP | Repartidor N°%d eliminado de LISTOS", pcb_SJF->id_repartidor);
 	return pcb_SJF;
@@ -135,7 +132,7 @@ double calcular_estimacion_HRRN(t_pcb* pcb) {
 
 	double nueva_estimacion = (proxima_rafaga + tiempo_espera_ready) / proxima_rafaga;
 
-	log_info(logger, "Repartidor N°%d | Estimacion HRRN: %f", repartidor->id, nueva_estimacion);
+	log_trace(logger, "Repartidor N°%d | Estimacion HRRN: %f", repartidor->id, nueva_estimacion);
 
 	pcb->ultima_estimacion = nueva_estimacion;
 
@@ -156,23 +153,22 @@ t_pcb* sacar_pcb_de_listos_por_HRRN() {
 
 	actualizar_estimaciones_HRRN();
 
-	t_pcb* pcb_SJF = list_get(listos, 0);
+	t_pcb* pcb_HRRN = list_get(listos, 0);
 
 	void asignar(t_pcb* pcb_lista) {
-		if(pcb_SJF->ultima_estimacion < pcb_lista->ultima_estimacion) {
-			pcb_SJF = pcb_lista;
-		}
+		if(pcb_lista->ultima_estimacion > pcb_HRRN->ultima_estimacion)
+			pcb_HRRN = pcb_lista;
 	}
+	list_iterate(listos, (void*)asignar);
 
 	int comparar(t_pcb* pcb_lista) {
-		return pcb_SJF->id_pedido == pcb_lista->id_pedido;
+		return pcb_HRRN->id_pedido == pcb_lista->id_pedido && pcb_HRRN->id_repartidor == pcb_lista->id_repartidor;
 	}
-
-	list_iterate(listos, (void*)asignar);
 	list_remove_by_condition(listos, (void*)comparar);
+
 	pthread_mutex_unlock(&mutex_listos);
-	log_info(logger, "PCP | Repartidor N°%d eliminado de LISTOS", pcb_SJF->id_repartidor);
-	return pcb_SJF;
+	//log_info(logger, "PCP | Repartidor N°%d eliminado de LISTOS", pcb_HRRN->id_repartidor);
+	return pcb_HRRN;
 }
 
 void aplicar_tiempo_espera_ready() {

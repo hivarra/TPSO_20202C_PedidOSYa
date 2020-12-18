@@ -17,6 +17,7 @@
 int socket_app;
 uint32_t id_rest_default;
 
+void inicializarListaClientesRest(void);
 void conectar_a_comanda(void);
 void crearServidor(void);
 char* estado_string(uint32_t estado_num);

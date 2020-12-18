@@ -25,10 +25,9 @@ void* correr_repartidor(t_repartidor* repartidor) {
 
 			if(repartidor->frecuenciaDescanso == 0) {
 				descansar = 1;
-				log_info(logger, "Repartidor N°%d tiene que descansar", repartidor->id);
+				//log_info(logger, "Repartidor N°%d tiene que descansar", repartidor->id);
 				break;
 			}
-
 		}
 
 //		if(repartidor->quantum != 0) {
@@ -40,14 +39,13 @@ void* correr_repartidor(t_repartidor* repartidor) {
 			repartidor->instruccion = ESPERAR_PEDIDO;
 		}
 
-		log_info(logger, "Repartidor N°%d | Pasó a estado %s", repartidor->id, get_nombre_instruccion(repartidor->instruccion));
+		//log_info(logger, "Repartidor N°%d | Pasó a estado %s", repartidor->id, get_nombre_instruccion(repartidor->instruccion));
 
 		if(repartidor->instruccion == ESPERAR_PEDIDO || repartidor->instruccion == DESCANSAR) {
 			bloquearPCB(repartidor, instruccion_anterior);
 		} else {
 			finalizarPCB(repartidor);
 		}
-
 	}
 
 	return NULL;
@@ -75,13 +73,10 @@ void mover_una_posicion(t_repartidor* repartidor) {
 	}
 
 	aplicar_retardo_operacion();
-
-	char* desc = string_from_format("Repartidor N°%d", repartidor->id);
-	log_info(logger, "%s | Se movió a la posición: %d,%d", desc, repartidor->posX, repartidor->posY);
+	log_info(logger, "Repartidor N°%d | Se movió a la posición: %d,%d", repartidor->id, repartidor->posX, repartidor->posY);
 
 	repartidor->quantum -= 1;
 	repartidor->frecuenciaDescanso -= 1;
-
 }
 
 
