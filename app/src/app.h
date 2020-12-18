@@ -9,6 +9,7 @@
 #define APP_H_
 
 #include <shared.h>
+#include <signal.h>
 #include "Auxiliares/Configuracion.h"
 #include "Auxiliares/Conexion.h"
 #include "Auxiliares/Utils.h"
@@ -36,5 +37,7 @@ void iniciarRepartidores();
 
 void crear_hilo_PLP();
 void crear_hilo_PCP();
+
+void signalHandler(int);
 
 #endif /* APP_H_ */

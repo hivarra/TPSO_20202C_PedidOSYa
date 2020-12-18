@@ -11,14 +11,15 @@
 #include "app.h"
 
 int main(int argc, char **argv)  {
-	puts("Inicio APP");
+	puts("================\nInicio APP\n================");
 	/* 0. Setear config path */
 	char* path_config = getConfigPath(argv[1]);
 	/* 1. Configuración */
 	cargar_configuracion_app(path_config);
-	mostrar_propiedades_pantalla();
+
 	/* 2. Log */
 	cargar_logger_app();
+	mostrar_propiedades();
 
 	/* 3. Conexion a Comanda */
 	conectar_a_comanda();
@@ -28,15 +29,13 @@ int main(int argc, char **argv)  {
 	crear_hilo_PLP();
 	crear_hilo_PCP();
 
-//	prueba_planificacion();
+	/*Extra. Liberar bien con ctrl+c*/
+	signal(SIGINT, &signalHandler);
 
 	/* 5. Servidor */
 	crearServidor();
 
-	destruir_logger(logger);
-	destruir_config(config);
-	puts("Fin APP");
-	return EXIT_SUCCESS;
+	return EXIT_FAILURE;
 }
 
 void inicializar() {
@@ -44,6 +43,7 @@ void inicializar() {
 	iniciarListas();
 	iniciarSemaforos();
 	iniciarRepartidores();
+	inicializarListaClientesRest();
 }
 
 void iniciarListas() {
@@ -75,7 +75,6 @@ void iniciarRepartidores() {
 
 	int i = 0;
 	while(app_conf.repartidores[i] != NULL) {
-		pthread_t thread_repartidor;
 
 		char** coordenada = string_split(app_conf.repartidores[i], "|");
 
@@ -92,8 +91,8 @@ void iniciarRepartidores() {
 		disponibilizar_repartidor(repartidor);
 		list_add(repartidores, repartidor);
 
-		pthread_create(&thread_repartidor, NULL, (void*) correr_repartidor, repartidor);
-		pthread_detach(thread_repartidor);
+		pthread_create(&repartidor->thread_repartidor, NULL, (void*)correr_repartidor, repartidor);
+		pthread_detach(repartidor->thread_repartidor);
 
 		liberar_lista(coordenada);
 		i++;
@@ -138,5 +137,68 @@ void crear_hilo_PCP(){
 		if (hilo_pcp == -1)
 			log_error(logger, "No se pudo generar el hilo PCP");
 	}
+}
 
+void signalHandler(int sig){
+	liberar_lista(app_conf.repartidores);
+	liberar_lista(app_conf.frecuencias_descanso);
+	liberar_lista(app_conf.tiempos_descanso);
+	liberar_lista(app_conf.platos_default);
+
+	pthread_cancel(thread_PLP);
+	pthread_cancel(thread_PCP);
+	if(string_equals_ignore_case("HRRN", app_conf.algoritmo_planificacion))
+		pthread_cancel(hilo_espera_cpu);
+
+	void finalizar_repartidor(t_repartidor* repartidor){
+		sem_destroy(&repartidor->sem_moverse);
+		pthread_cancel(repartidor->thread_repartidor);
+	}
+	list_iterate(repartidores, (void*)finalizar_repartidor);
+	puts("\nFinishing threads...");
+	list_destroy_and_destroy_elements(repartidores, free);
+
+	list_destroy_and_destroy_elements(pedidos_planificables, free);
+	list_destroy_and_destroy_elements(listos, free);
+	list_destroy_and_destroy_elements(ejecutando, free);
+	list_destroy_and_destroy_elements(bloqueados, free);
+	list_destroy_and_destroy_elements(finalizados, free);
+
+	sem_destroy(&sem_repartidor_disponible);
+	sem_destroy(&sem_pedidos);
+	sem_destroy(&sem_ready);
+	sem_destroy(&sem_limite_exec);
+
+	pthread_mutex_destroy(&mutex_nuevos);
+	pthread_mutex_destroy(&mutex_listos);
+	pthread_mutex_destroy(&mutex_ejecutando);
+	pthread_mutex_destroy(&mutex_bloqueados);
+	pthread_mutex_destroy(&mutex_finalizados);
+	pthread_mutex_destroy(&mutexClientes);
+	pthread_mutex_destroy(&mutexRestaurantes);
+	pthread_mutex_destroy(&mutex_id_rest_default);
+
+	void destruir_cliente(t_info_cliente* cliente){
+		close(cliente->socketEscucha);
+		list_destroy_and_destroy_elements(cliente->pedidos,free);
+		free(cliente);
+	}
+	void destruir_restaurante(t_info_restaurante* resto){
+		close(resto->socketEscucha);
+		close(resto->socketEnvio);
+		free(resto);
+	}
+	list_destroy_and_destroy_elements(clientesConectados, (void*)destruir_cliente);
+	list_destroy_and_destroy_elements(restaurantesConectados, (void*)destruir_restaurante);
+	free(infoRestoDefault);
+
+	close(socket_app);
+
+	destruir_logger(logger);
+	destruir_config(config);
+
+	sleep(2);
+
+	puts("\n================\nFin APP\n================");
+	exit(EXIT_SUCCESS);
 }
