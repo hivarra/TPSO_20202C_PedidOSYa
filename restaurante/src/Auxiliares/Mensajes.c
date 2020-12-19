@@ -303,7 +303,7 @@ void enviar_actualizacion_plato_listo(t_plato_listo* plato_listo){
 	if(lista_pedidos_app != NULL){
 		if(es_pedido_de_app(plato_listo->id_pedido)){
 			int le_llego_a_app=enviar_plato_listo(plato_listo,socket_escucha,logger);
-			log_info(logger,"PRUEBA le_llego_a_app:%d",le_llego_a_app);
+//			log_info(logger,"PRUEBA le_llego_a_app:%d",le_llego_a_app);
 
 			log_info(logger, "[ENVIAR_PLATO_LISTO_A_MODULO_SOLICITANTE] Se envia actualizacion de PLATO_LISTO a App. Info enviada: RESTAURANTE:%s,PLATO:%s,ID_PEDIDO:%d."
 					,plato_listo->restaurante,plato_listo->plato,plato_listo->id_pedido);
