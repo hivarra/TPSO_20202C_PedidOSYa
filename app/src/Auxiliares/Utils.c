@@ -103,17 +103,16 @@ void crearPCB(t_info_cliente* cliente, int id_pedido) {
 	list_add(pedidos_planificables, pcb);
 	pthread_mutex_unlock(&mutex_nuevos);
 	sem_init(&pcb->sem_pedido_listo, 0, 0);
-	sem_post(&sem_pedidos);
 	log_trace(logger, "PCB Creado | Cliente: %s | Rest: %s | Pedido: %d", cliente->id,pcb->restaurante,pcb->id_pedido);
+	sem_post(&sem_pedidos);
 }
 
 void disponibilizar_repartidor(t_repartidor* repartidor) {
 
 	repartidor->instruccion = BUSCAR_PEDIDO;
 	repartidor->disponible = 1;
-	sem_post(&sem_repartidor_disponible);
-
 	log_info(logger, "Repartidor N°%d | DISPONIBLE.", repartidor->id);
+	sem_post(&sem_repartidor_disponible);
 }
 
 t_repartidor* repartidor_mas_cercano(int posX, int posY) {
@@ -262,7 +261,6 @@ void retirarPedido(t_pcb* pcb) {
 	pthread_mutex_unlock(&mutex_listos);
 
 	log_info(logger, "Repartidor N°%d | Pasa a READY | Retiró pedido N°%d  (restaurante %s).", pcb->id_repartidor, pcb->id_pedido, pcb->restaurante);
-
 	sem_post(&sem_ready);
 
 }
