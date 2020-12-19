@@ -171,15 +171,14 @@ void connection_handler_cliente(int* socket_emisor){
 				escuchar_cliente_existente(*socket_emisor, handshake);
 				free(handshake);
 				close(*socket_emisor);
-				free(socket_emisor);
 				break;
 			}
 			default:
 				log_error(logger, "Tipo de mensaje no admitido.");
 				close(*socket_emisor);
-				free(socket_emisor);
 				break;
 		}
+		free(socket_emisor);
 }
 
 void crear_socket_envio(){
