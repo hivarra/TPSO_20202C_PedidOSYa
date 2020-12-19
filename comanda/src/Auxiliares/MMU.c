@@ -244,7 +244,7 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 					if (free_frame_mp != -1){
 						entrada_nueva->nro_frame_mp = free_frame_mp;
 						entrada_nueva->presencia = 1;
-						entrada_nueva->uso = 1;
+						actualizar_bits_de_uso(entrada_nueva);
 						memcpy(memoria_fisica+entrada_nueva->nro_frame_mp*sizeof(t_pagina),pagina_nueva,sizeof(t_pagina));
 					}
 					else
@@ -356,26 +356,48 @@ uint32_t procesar_plato_listo(t_plato_listo* info_plato_listo){
 		t_segmento* segmento = obtener_segmento_del_pedido(info_plato_listo->id_pedido,info_plato_listo->restaurante);
 		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
 		if(segmento!=NULL){
-			if(segmento->estado_pedido == CONFIRMADO){/*SE VALIDA QUE EL PEDIDO ESTE CONFIRMADO*/
-				t_entrada_pagina* entrada_pagina = obtener_pagina_de_plato(segmento->tabla_paginas, info_plato_listo->plato);
-				/*SE VALIDA SI EL PLATO ESTA EN MEMORIA*/
-				if(entrada_pagina != NULL){
-					t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
-					if(pagina->cant_lista < pagina->cant_total){
-						pagina->cant_lista++;
-						actualizar_bits_de_uso(entrada_pagina);
-						entrada_pagina->modificado = 1;
-						if (pagina->cant_lista == pagina->cant_total)
-							segmento->cant_platos_listos++;
-						if (segmento->cant_platos_listos == list_size(segmento->tabla_paginas))
-							segmento->estado_pedido = TERMINADO;
-						ret = true;
-					}
-					else
-						log_warning(logger,"El plato %s del pedido %d para el restaurante %s ya se encuantra terminado.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
+			t_entrada_pagina* entrada_pagina = obtener_pagina_de_plato(segmento->tabla_paginas, info_plato_listo->plato);
+			/*SE VALIDA SI EL PLATO ESTA EN MEMORIA*/
+			if(entrada_pagina != NULL){
+				t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
+				if(pagina->cant_lista < 999999){//if(pagina->cant_lista < pagina->cant_total){
+					pagina->cant_lista++;
+					actualizar_bits_de_uso(entrada_pagina);
+					entrada_pagina->modificado = 1;
+					if (pagina->cant_lista == pagina->cant_total)
+						segmento->cant_platos_listos++;
+					if (segmento->cant_platos_listos == list_size(segmento->tabla_paginas))
+						segmento->estado_pedido = TERMINADO;
+					ret = true;
 				}
-				else
-					log_warning(logger,"El plato %s del pedido %d para el restaurante %s no se encuentra en memoria.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
+				else;
+					//log_warning(logger,"El plato %s del pedido %d para el restaurante %s ya se encuantra terminado.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
+			}
+			else
+				log_warning(logger,"El plato %s del pedido %d para el restaurante %s no se encuentra en memoria.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
+
+			if(segmento->estado_pedido == CONFIRMADO){/*SE VALIDA QUE EL PEDIDO ESTE CONFIRMADO*/
+//				t_entrada_pagina* entrada_pagina = obtener_pagina_de_plato(segmento->tabla_paginas, info_plato_listo->plato);
+//				/*SE VALIDA SI EL PLATO ESTA EN MEMORIA*/
+//				if(entrada_pagina != NULL){
+//					t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
+//					if(pagina->cant_lista < pagina->cant_total){
+//						pagina->cant_lista++;
+//						actualizar_bits_de_uso(entrada_pagina);
+//						entrada_pagina->modificado = 1;
+//						if (pagina->cant_lista == pagina->cant_total)
+//							segmento->cant_platos_listos++;
+//						if (segmento->cant_platos_listos == list_size(segmento->tabla_paginas))
+//							segmento->estado_pedido = TERMINADO;
+//						ret = true;
+//					}
+//					else
+//						log_warning(logger,"El plato %s del pedido %d para el restaurante %s ya se encuantra terminado.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
+//				}
+//				else{
+//					log_warning(logger,"El plato %s del pedido %d para el restaurante %s no se encuentra en memoria.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
+//				}
+				log_trace(logger,"El pedido %d para el restaurante %s se encuentra confirmado.",info_plato_listo->id_pedido,info_plato_listo->restaurante);
 			}
 			else
 				log_warning(logger,"El pedido %d para el restaurante %s no se encuentra confirmado.",info_plato_listo->id_pedido,info_plato_listo->restaurante);
