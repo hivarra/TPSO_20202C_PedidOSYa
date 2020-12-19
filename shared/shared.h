@@ -10,14 +10,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <stdarg.h>
+//#include <stdbool.h>
+//#include <stdarg.h>
 #include <unistd.h>
-#include <arpa/inet.h>
+//#include <arpa/inet.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <netdb.h>
-#include <sys/socket.h>
+//#include <sys/socket.h>
 #include <pthread.h>
 #include <libgen.h>
 #include <semaphore.h>
@@ -74,7 +74,7 @@ typedef enum{
 }t_tipoMensaje;
 
 /* ---------- Logger ---------- */
-t_log* configurar_logger(char* nombreLog, char* nombreProceso);
+//t_log* configurar_logger(char* nombreLog, char* nombreProceso);
 void destruir_logger(t_log* logger);
 
 /* ---------- Configuración ---------- */
@@ -83,18 +83,13 @@ void destruir_config(t_config* config);
 /* ---------- Conexiónes ---------- */
 int crear_conexion(char*, char*);//Recibe char* ip, char* puerto, y se conecta al servidor devolviendo el socket creado, si no se conecta devuelve -1
 
-int definirSocket(t_log* logger);
-int bindearSocketYEscuchar(int socket, char *ip, int puerto, t_log* logger);
-int aceptarConexiones(int socket, t_log* logger);
-int conectar_a_servidor(char* ip, int puerto, t_log* logger);
-int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
-
-/* ---------- Exit ---------- */
-void exit_gracefully(int return_nr, t_log* logger);
-void _exit_with_error(char* error_msg, void * buffer, t_log* logger);
+//int definirSocket(t_log* logger);
+//int bindearSocketYEscuchar(int socket, char *ip, int puerto, t_log* logger);
+//int aceptarConexiones(int socket, t_log* logger);
+//int conectar_a_servidor(char* ip, int puerto, t_log* logger);
+//int conectarseAServidor(int socket, char* ip, int puerto, t_log* logger);
 
 /* ---------- Tipos mensajes y procesos ---------- */
-t_tipoProceso tipo_proceso_string_to_enum(char*);//Recibe en string el tipo de proceso y lo devuelve en t_tipoProceso(Int)
 t_tipoMensaje tipo_mensaje_string_to_enum(char*);//Recibe en string el tipo de msj y lo devuelve en t_tipoMensaje(Int)
 
 char* get_nombre_proceso(int);//Recibe en ENUM el nombre del proceso y lo devuelve en string
@@ -109,15 +104,5 @@ char* getConfigPath(char*);//ATENCION: Liberar el string devuelto. Recibe un "co
 uint64_t timestamp(void);
 void liberar_lista(char**);//Recibe una lista de strings, generalmente devuelta por las commons, y libera la memoria usada
 int crear_carpeta_log(char* path_log);//recibe el path completo del log y crea una carpeta para poder guardar el log. Devuelve 1 si se creo o si estaba creada, 0 si no se creo
-
-
-/**************************************************/
-/* ---------- Posiblemente no usados ---------- */
-void loggear(t_log* logger, t_log_level level, const char* message_format, ...) ;
-t_config* cargarConfiguracion(char *nombreArchivo, t_log* logger);
-void eliminar_blancos(char* text);
-void imprimir_lista_strings(t_list* lista, char* nombre_lista);
-char* getLogPath(char* nombre_archivo);
-
 
 #endif /* SHARED_H_ */
