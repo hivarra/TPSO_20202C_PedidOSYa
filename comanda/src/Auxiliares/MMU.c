@@ -232,13 +232,25 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 
 					entrada_nueva->nro_frame_ms = free_frame_swap;
 					entrada_nueva->modificado = 1;
+
 					/*ESCRIBO LA PAGINA EN SWAP*/
 					t_pagina* pagina_nueva = calloc(1,sizeof(t_pagina));
 					strcpy(pagina_nueva->nombre_comida, info_guardar_plato->plato);
 					pagina_nueva->cant_total = info_guardar_plato->cantPlato;
 					pagina_nueva->cant_lista = 0;
 					volcar_pagina_a_swap(entrada_nueva, pagina_nueva);
+
+					int free_frame_mp = get_free_frame_mp();
+					if (free_frame_mp != -1){
+						entrada_nueva->nro_frame_mp = free_frame_mp;
+						memcpy(memoria_fisica+entrada_nueva->nro_frame_mp*sizeof(t_pagina),pagina_nueva,sizeof(t_pagina));
+					}
+					else
+						reemplazo_de_pagina(entrada_nueva);
+
 					log_info(logger, "[PLATO ALMACENADO] Se almaceno el plato %s en la posicion %d del area de Swap.", pagina_nueva->nombre_comida, free_frame_swap);
+					log_info(logger, "[PLATO ALMACENADO] Se almaceno el plato %s en la posicion %d de MP.", pagina_nueva->nombre_comida, entrada_nueva->nro_frame_mp);
+
 					free(pagina_nueva);
 					ret = true;
 				}
