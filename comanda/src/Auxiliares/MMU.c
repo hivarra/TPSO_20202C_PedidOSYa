@@ -210,8 +210,6 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 		t_segmento* segmento = obtener_segmento_del_pedido(info_guardar_plato->id_pedido,info_guardar_plato->restaurante);
 		/*SE VALIDA SI EXISTE EL SEGMENTO PARA EL PEDIDO DEL RESTAURANTE*/
 		if(segmento!=NULL){
-
-
 			t_entrada_pagina* entrada_pagina = obtener_pagina_de_plato(segmento->tabla_paginas, info_guardar_plato->plato);
 			/*SE VALIDA SI EL PLATO YA TIENE ASIGNADO UN FRAME*/
 			if(entrada_pagina != NULL){
