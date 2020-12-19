@@ -360,7 +360,7 @@ uint32_t procesar_plato_listo(t_plato_listo* info_plato_listo){
 			/*SE VALIDA SI EL PLATO ESTA EN MEMORIA*/
 			if(entrada_pagina != NULL){
 				t_pagina* pagina = memoria_fisica + entrada_pagina->nro_frame_mp*sizeof(t_pagina);
-				if(pagina->cant_lista < pagina->cant_total){
+				if(pagina->cant_lista < 999999){//if(pagina->cant_lista < pagina->cant_total){
 					pagina->cant_lista++;
 					actualizar_bits_de_uso(entrada_pagina);
 					entrada_pagina->modificado = 1;
@@ -370,8 +370,8 @@ uint32_t procesar_plato_listo(t_plato_listo* info_plato_listo){
 						segmento->estado_pedido = TERMINADO;
 					ret = true;
 				}
-				else
-					log_warning(logger,"El plato %s del pedido %d para el restaurante %s ya se encuantra terminado.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
+				else;
+					//log_warning(logger,"El plato %s del pedido %d para el restaurante %s ya se encuantra terminado.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
 			}
 			else
 				log_warning(logger,"El plato %s del pedido %d para el restaurante %s no se encuentra en memoria.",info_plato_listo->plato,info_plato_listo->id_pedido,info_plato_listo->restaurante);
