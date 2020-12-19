@@ -33,14 +33,14 @@ t_pcb* generar_pcb(uint32_t id_pedido,t_rta_obtener_receta* rta_obtener_receta){
 	pthread_mutex_init(&pcb->mutex_pcb,NULL);
 	pthread_mutex_init(&pcb->mutex_pasos,NULL);
 
-	log_info(logger,"[CREACION PLATO] SE CREA PCB CON:");
-	log_info(logger,"[CREACION PLATO] ID_PCB:%d",pcb->id);
-	log_info(logger,"[CREACION PLATO] ID_PEDIDO:%d",pcb->id_pedido);
-	log_info(logger,"[CREACION PLATO] NOMBRE_PLATO:%s",pcb->nombre_plato);
-	log_info(logger,"[CREACION PLATO] ESTADO:%s",estado_pcb_enum_a_string(pcb->estado));
-	log_info(logger,"[CREACION PLATO] LISTA_PASOS:");
+	log_info(logger,"[PLATO %s] | Creacion asociada al PCB %d",pcb->nombre_plato,pcb->id);
+//	log_info(logger,"[CREACION PLATO] ID_PCB:%d",pcb->id);
+//	log_info(logger,"[CREACION PLATO] ID_PEDIDO:%d",pcb->id_pedido);
+//	log_info(logger,"[CREACION PLATO] NOMBRE_PLATO:%s",pcb->nombre_plato);
+//	log_info(logger,"[CREACION PLATO] ESTADO:%s",estado_pcb_enum_a_string(pcb->estado));
+//	log_info(logger,"[CREACION PLATO] LISTA_PASOS:");
 
-	list_iterate(pcb->lista_pasos,(void*)loggear_pasos);
+//	list_iterate(pcb->lista_pasos,(void*)loggear_pasos);
 
 	return pcb;
 }
@@ -59,7 +59,7 @@ void pasar_pcb_a_ready(t_pcb* pcb){
 //	log_info(logger,"[PASAR_PCB_A_READY]");
 	t_afinidad* afinidad = obtener_afinidad(pcb->nombre_plato);
 	agregar_pcb_en_cola_ready_con_afinidad(pcb,afinidad->id_afinidad);
-	log_info(logger,"[PLANIFICADOR]Se agrega PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d en cola READY con AFINIDAD:%s",pcb->nombre_plato,pcb->id,pcb->id_pedido,afinidad->nombre_afinidad);
+//	log_info(logger,"[PLANIFICADOR]Se agrega PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d en cola READY con AFINIDAD:%s",pcb->nombre_plato,pcb->id,pcb->id_pedido,afinidad->nombre_afinidad);
 }
 void pasar_pcb_a_blocked_por_reposar(t_pcb* pcb){
 	pthread_mutex_lock(&pcb->mutex_pcb);
@@ -68,7 +68,7 @@ void pasar_pcb_a_blocked_por_reposar(t_pcb* pcb){
 	pthread_mutex_unlock(&pcb->mutex_pcb);
 
 	t_paso_receta* paso = obtener_siguiente_paso(pcb);
-	log_info(logger,"[REPOSAR] Se ejecuta %d rafagas de CPU de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso->tiempo,paso->accion,pcb->nombre_plato,pcb->id,pcb->id_pedido);
+//	log_info(logger,"[REPOSAR] Se ejecuta %d rafagas de CPU de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso->tiempo,paso->accion,pcb->nombre_plato,pcb->id,pcb->id_pedido);
 
 	t_cocinero* cocinero=obtener_cocinero_por_id(pcb->cocinero_asignado);
 	cocinero->disponible=true;
@@ -76,7 +76,9 @@ void pasar_pcb_a_blocked_por_reposar(t_pcb* pcb){
 	t_afinidad* afinidad=obtener_afinidad(cocinero->afinidad);
 	sem_post(&sem_fin_paso[afinidad->id_afinidad]);
 
+	log_info(logger,"[PASO %s] | Pedido %d | PCB %d | PLATO %s | INICIO de ejecución de %d ráfagas de CPU",paso->accion,pcb->id_pedido,pcb->id,pcb->nombre_plato,paso->tiempo);
 	aplicar_retardo(paso->tiempo);
+	log_info(logger,"[PASO %s] | Pedido %d | PCB %d | PLATO %s | FIN de ejecución de %d ráfagas de CPU",paso->accion,pcb->id_pedido,pcb->id,pcb->nombre_plato,paso->tiempo);
 	pasar_pcb_a_ready(pcb);
 
 	sem_post(&sem_cola_ready[afinidad->id_afinidad]);
@@ -97,8 +99,10 @@ void realizar_paso_horno(t_pcb* pcb){
 	pthread_mutex_lock(&pcb->mutex_pasos);
 	t_paso_receta* paso = list_get(pcb->lista_pasos,0);
 	pthread_mutex_unlock(&pcb->mutex_pasos);
-	log_info(logger,"[HORNO] Se ejecuta %d rafagas de CPU de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso->tiempo,paso->accion,pcb->nombre_plato,pcb->id,pcb->id_pedido);
+
+	log_info(logger,"[PASO %s] | Pedido %d | PCB %d | PLATO %s | INICIO de ejecución de %d ráfagas de CPU",paso->accion,pcb->id_pedido,pcb->id,pcb->nombre_plato,paso->tiempo);
 	aplicar_retardo(paso->tiempo);
+	log_info(logger,"[PASO %s] | Pedido %d | PCB %d | PLATO %s | FIN de ejecución de %d ráfagas de CPU",paso->accion,pcb->id_pedido,pcb->id,pcb->nombre_plato,paso->tiempo);
 }
 void ocupar_horno(int id_horno){
 	bool es_horno(t_horno* horno){
@@ -165,7 +169,7 @@ void planificar_cola_hornos(){
 	}
 }
 void pasar_pcb_a_blocked_por_horno(t_pcb* pcb){
-	log_info(logger,"[PLANIFICADOR] Se agrega pcb con PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d en cola E/S HORNO",pcb->nombre_plato,pcb->id,pcb->id_pedido);
+//	log_info(logger,"[PLANIFICADOR] Se agrega pcb con PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d en cola E/S HORNO",pcb->nombre_plato,pcb->id,pcb->id_pedido);
 	pthread_mutex_lock(&pcb->mutex_pcb);
 	pcb->estado = BLOCKED_POR_HORNO;
 	pcb->quantum_consumido=0;
@@ -257,14 +261,23 @@ bool pedido_esta_terminado(uint32_t id_pedido){
 
 	return pedido_terminado;
 }
+void liberar_pcb(t_pcb* pcb){
+	pthread_mutex_destroy(&pcb->mutex_pasos);
+	pthread_mutex_destroy(&pcb->mutex_pcb);
+
+	list_destroy_and_destroy_elements(pcb->lista_pasos,free);
+}
 void liberar_pcbs_de_pedido(uint32_t id_pedido){
 	pthread_mutex_lock(&mutex_cola_exit);
-	for(int i=0;i<list_size(cola_exit);i++){
+	int i = 0;
+	while(i<list_size(cola_exit)){
 		t_pcb* pcb = list_get(cola_exit,i);
 		if(pcb->id_pedido == id_pedido){
-			list_destroy(pcb->lista_pasos);
+			liberar_pcb(pcb);
 			list_remove_and_destroy_element(cola_exit,i,free);
 		}
+		else
+			i++;
 	}
 	pthread_mutex_unlock(&mutex_cola_exit);
 
@@ -276,12 +289,36 @@ void liberar_pcbs_de_pedido(uint32_t id_pedido){
 		}
 	pthread_mutex_unlock(&mutex_pedidos_pcbs);
 }
+char* concatenar_platos(t_pcb* pcb){
+	bool es_el_pcb(t_pcb* pcb_aux){
+		return pcb_aux->id_pedido==pcb->id_pedido;
+	}
+	t_list* lista_filtrada=list_filter(cola_exit,(void*)es_el_pcb);
+	int tamanio_lista=list_size(lista_filtrada);
+
+	char* buffer=string_new();
+
+	for(int i=0;i<tamanio_lista;i++){
+		t_pcb* pcb_f=list_get(lista_filtrada,i);
+
+		if(i==tamanio_lista-1){
+			string_append(&buffer,pcb_f->nombre_plato);
+		}
+		else{
+			string_append(&buffer,pcb_f->nombre_plato);
+			string_append(&buffer,", ");
+		}
+	}
+	list_destroy(lista_filtrada);
+
+	return buffer;
+}
 void ejecutar_pcb(t_pcb* pcb, int id_cola_ready){
 	pasar_pcb_a_estado(pcb, EXEC);
 
 	while(cocinero_esta_ejecutando(pcb)){
 		if(evaluar_desalojo(pcb,id_cola_ready)){
-			log_info(logger,"[PLANIFICADOR] Se desaloja PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",pcb->nombre_plato,pcb->id,pcb->id_pedido);
+//			log_info(logger,"[PLANIFICADOR] Se desaloja PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",pcb->nombre_plato,pcb->id,pcb->id_pedido);
 			desalojar_pcb(pcb);
 			liberar_cocinero_asignado_a_plato(pcb);
 			t_afinidad* afinidad = obtener_afinidad(pcb->nombre_plato);
@@ -293,12 +330,16 @@ void ejecutar_pcb(t_pcb* pcb, int id_cola_ready){
 
 		if(plato_sin_pasos_para_ejecutar(pcb)){
 			pasar_pcb_a_estado(pcb,EXIT);
+			log_info(logger,"[PLATO %s] Pedido %d | PCB %d | Plato Finalizado",pcb->nombre_plato,pcb->id_pedido,pcb->id);
 			liberar_cocinero_asignado_a_plato(pcb);
 			enviar_plato_listo_a_sindicato(pcb->id_pedido,pcb->nombre_plato);
 			enviar_plato_listo_a_modulo_solicitante(pcb->id_pedido,pcb->nombre_plato);
 			if(pedido_esta_terminado(pcb->id_pedido)){
 				enviar_terminar_pedido_a_sindicato(pcb->id_pedido);
 				enviar_finalizar_pedido_a_cliente(pcb->id_pedido);
+				char* platos=concatenar_platos(pcb);
+				log_info(logger,"[PEDIDO %d] Finaliza con los siguientes platos %s",pcb->id_pedido,platos);
+				free(platos);
 				liberar_pcbs_de_pedido(pcb->id_pedido);
 				break;
 			}
@@ -441,8 +482,7 @@ void inicializar_colas_ready(){
 	AFINIDADES_MAESTRO = list_create();
 	pthread_mutex_init(&mutex_afinidades_maestro,NULL);
 
-	//TODO: NO DEBERIA SER LIST_SIZE(afinidades_distinct)?;
-	lista_colas_ready =  malloc(sizeof(t_list)*list_size(metadata_restaurante.afinidades_cocineros));
+	lista_colas_ready =  malloc(sizeof(t_list)*list_size(afinidades_distinct));
 
 	for(int i=0;i<list_size(afinidades_distinct);i++){
 		//SE GUARDAN LAS DISTINTAS AFINIDADES
@@ -522,7 +562,6 @@ void inicializar_hilos_planificadores(){
 void inicializar_hilo_horno(){
 	lista_hornos=list_create();
 
-	pthread_t hilo_planificador_hornos;
 	pthread_create(&hilo_planificador_hornos,NULL,(void*)planificar_cola_hornos,NULL);
 	pthread_detach(hilo_planificador_hornos);
 

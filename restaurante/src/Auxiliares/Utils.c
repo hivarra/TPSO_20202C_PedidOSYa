@@ -21,11 +21,39 @@ void signalHandler(int sig){
 	pthread_mutex_destroy(&mutex_cocineros);
 	pthread_mutex_destroy(&mutex_afinidades_maestro);
 
+	pthread_cancel(hilo_planificador_hornos);
+
+	for(int i=0;i<list_size(AFINIDADES_MAESTRO);i++){
+		list_destroy_and_destroy_elements(lista_colas_ready[i],free);
+		pthread_mutex_destroy(&mutex_colas_ready[i]);
+		sem_destroy(&sem_cola_ready[i]);
+		sem_destroy(&sem_fin_paso[i]);
+	}
+	free(mutex_colas_ready);
+	free(lista_colas_ready);
+	free(sem_cola_ready);
+	free(sem_fin_paso);
+
+	for(int i=0;i<list_size(metadata_restaurante.afinidades_cocineros);i++){
+		sem_destroy(&sem_realizar_paso[i]);
+	}
+	free(sem_realizar_paso);
+
+	for(int i=0;i<metadata_restaurante.cantidad_hornos;i++){
+		sem_destroy(&sem_hornear_plato[i]);
+		pthread_mutex_destroy(&mutex_hornos[i]);
+	}
+	free(sem_hornear_plato);
+	free(mutex_hornos);
+
 	list_destroy_and_destroy_elements(metadata_restaurante.afinidades_cocineros,free);
 	list_destroy_and_destroy_elements(metadata_restaurante.platos,free);
 	list_destroy_and_destroy_elements(cola_exit,free);
 	list_destroy_and_destroy_elements(cola_bloqueados_prehorno,free);
 	list_destroy_and_destroy_elements(pedidos_pcbs,free);
+	list_destroy_and_destroy_elements(AFINIDADES_MAESTRO,free);
+	list_destroy_and_destroy_elements(lista_hornos,free);
+
 
 	void destruir_cliente(t_cliente* cliente){
 		close(cliente->socket_escucha);
@@ -35,10 +63,18 @@ void signalHandler(int sig){
 	}
 	list_destroy_and_destroy_elements(clientes_conectados, (void*)destruir_cliente);
 
+	void destruir_cocinero(t_cocinero* cocinero){
+		pthread_mutex_destroy(&cocinero->mutex_cocinero);
+		free(cocinero);
+	}
+	list_destroy_and_destroy_elements(lista_cocineros, (void*)destruir_cocinero);
+
 	destruir_logger(logger);
 	destruir_config(config);
 
-	puts("\n================\nFin RESTAURANTE\n================");
+	puts("\n===================\nFin RESTAURANTE\n===================");
+
+	sleep(2);
 
 	exit(EXIT_SUCCESS);
 }

@@ -33,7 +33,7 @@ void realizar_otro_paso(t_cocinero* cocinero,t_paso_receta* paso){
 	if(algoritmo_planificacion == FIFO)
 		tiempo=paso->tiempo;
 	else{
-		if(cocinero->pcb->quantum_consumido > 0){//paso_tiempo=3,
+		if(cocinero->pcb->quantum_consumido > 0){
 			tiempo=QUANTUM-cocinero->pcb->quantum_consumido;
 			cocinero->pcb->quantum_consumido+=tiempo;
 			paso->tiempo-=tiempo;
@@ -43,10 +43,11 @@ void realizar_otro_paso(t_cocinero* cocinero,t_paso_receta* paso){
 			paso->tiempo -= tiempo;
 		}
 	}
+	log_info(logger,"[PASO %s] Pedido %d | PCB %d | PLATO %s | INICIO de ejecución de %d ráfagas de CPU",paso->accion,cocinero->pcb->id_pedido,cocinero->pcb->id,cocinero->pcb->nombre_plato,tiempo);
 	pthread_mutex_lock(&cocinero->mutex_cocinero);
 	aplicar_retardo(tiempo);
 	pthread_mutex_unlock(&cocinero->mutex_cocinero);
-	log_info(logger,"[COCINERO] Se ejecuta %d rafagas de CPU de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",tiempo,paso->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
+	log_info(logger,"[PASO %s] Pedido %d | PCB %d | PLATO %s | FIN de ejecución de %d ráfagas de CPU",paso->accion,cocinero->pcb->id_pedido,cocinero->pcb->id,cocinero->pcb->nombre_plato,tiempo);
 }
 void eliminar_paso(t_paso_receta* paso,t_pcb* plato){
 	if(algoritmo_planificacion==FIFO)
@@ -70,7 +71,7 @@ void hilo_cocinero(t_cocinero* cocinero){
 
 		if(string_equals_ignore_case(paso_siguiente->accion,"REPOSAR")){
 			reposar(cocinero);
-			log_info(logger,"[COCINERO] Fin de ejecución de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->id,cocinero->pcb->id_pedido);
+//			log_info(logger,"[COCINERO] Fin de ejecución de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->id,cocinero->pcb->id_pedido);
 			pthread_mutex_lock(&cocinero->pcb->mutex_pasos);
 			eliminar_paso(paso_siguiente,cocinero->pcb);
 			pthread_mutex_unlock(&cocinero->pcb->mutex_pasos);
@@ -80,7 +81,7 @@ void hilo_cocinero(t_cocinero* cocinero){
 		}
 		else{
 			realizar_otro_paso(cocinero,paso_siguiente);
-			log_info(logger,"[COCINERO] Fin de ejecución de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
+//			log_info(logger,"[COCINERO] Fin de ejecución de PASO:%s de PLATO:%s,ID_PCB:%d,ID_PEDIDO:%d",paso_siguiente->accion,cocinero->pcb->nombre_plato,cocinero->pcb->id,cocinero->pcb->id_pedido);
 			eliminar_paso(paso_siguiente,cocinero->pcb);
 			t_afinidad* afinidad=obtener_afinidad(cocinero->afinidad);
 			sem_post(&sem_fin_paso[afinidad->id_afinidad]);
