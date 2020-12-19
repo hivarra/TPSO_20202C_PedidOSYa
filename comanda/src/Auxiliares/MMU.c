@@ -243,6 +243,8 @@ uint32_t procesar_guardar_plato(t_guardar_plato* info_guardar_plato){
 					int free_frame_mp = get_free_frame_mp();
 					if (free_frame_mp != -1){
 						entrada_nueva->nro_frame_mp = free_frame_mp;
+						entrada_nueva->presencia = 1;
+						entrada_nueva->uso = 1;
 						memcpy(memoria_fisica+entrada_nueva->nro_frame_mp*sizeof(t_pagina),pagina_nueva,sizeof(t_pagina));
 					}
 					else
