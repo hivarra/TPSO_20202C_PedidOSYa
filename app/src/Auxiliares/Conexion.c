@@ -382,9 +382,8 @@ void procesar_handshake_inicial(t_handshake_inicial* handshake_inicial, int sock
 		new_resto->pos_x = handshake_inicial->posX;
 		new_resto->pos_y = handshake_inicial->posY;
 		new_resto->socketEscucha = socket_emisor;
-		pthread_t hilo_escucha;
-		pthread_create(&hilo_escucha, NULL, (void*) iniciar_conexion_escucha, new_resto);
-		pthread_detach(hilo_escucha);
+		pthread_create(&new_resto->hilo_escucha, NULL, (void*) iniciar_conexion_escucha, new_resto);
+		pthread_detach(new_resto->hilo_escucha);
 		pthread_mutex_lock(&mutexRestaurantes);
 		list_add(restaurantesConectados, new_resto);
 		pthread_mutex_unlock(&mutexRestaurantes);

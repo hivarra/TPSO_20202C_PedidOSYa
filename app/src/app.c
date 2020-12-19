@@ -186,6 +186,7 @@ void signalHandler(int sig){
 	void destruir_restaurante(t_info_restaurante* resto){
 		close(resto->socketEscucha);
 		close(resto->socketEnvio);
+		pthread_cancel(resto->hilo_escucha);
 		free(resto);
 	}
 	list_destroy_and_destroy_elements(clientesConectados, (void*)destruir_cliente);

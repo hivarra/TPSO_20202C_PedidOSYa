@@ -28,6 +28,7 @@ typedef struct{
 	int socketEnvio;
 	int pos_x;
 	int pos_y;
+	pthread_t hilo_escucha;
 }t_info_restaurante;
 
 typedef enum estado {
